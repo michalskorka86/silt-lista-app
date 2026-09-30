@@ -20,8 +20,8 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 
 ## 0. Przygotowanie
 - [ ] Założyć konto Google Play Console (osobiste, na firmowym koncie Google) (Ty) — Jednorazowo 25 USD + potwierdzenie tożsamości. Bez D-U-N-S. Dystrybucja tylko przez test wewnętrzny.
-- [ ] Założyć darmowe konto Expo (expo.dev) (Ty) — Budowanie APK, aktualizacje w powietrzu, wysyłka do Google Play.
-- [ ] Założyć konto GitHub + prywatne repozytorium (Ty) — Kod z historią; GitHub zleca build w Expo po każdej zmianie.
+- [x] Założyć darmowe konto Expo (expo.dev) (Ty) — Budowanie APK, aktualizacje w powietrzu, wysyłka do Google Play.
+- [x] Założyć konto GitHub + prywatne repozytorium (Ty) — Kod z historią; GitHub zleca build w Expo po każdej zmianie.
 - [x] Podać model tabletu Lenovo (Ty) — Lenovo Tab M10 (3. gen.) LTE.
 - [ ] Sprawdzić wersję Androida na tablecie (Ty) — Ustawienia → Informacje o tablecie.
 - [ ] Założyć nową bazę MySQL dla Listy na filedops.pl (Ty) — Osobna, trzecia baza. Statystyki i rezerwacje zostają bez zmian.
@@ -39,7 +39,7 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 - [ ] Przenieść istniejące listy z folderu data/ do bazy (Claude) — Żeby archiwum z v19 było widoczne w nowej aplikacji.
 
 ## 2. Aplikacja — podstawa
-- [ ] Projekt Expo / React Native: nazwa, ikona, podpis (Claude)
+- [x] Projekt Expo / React Native: nazwa, ikona, podpis (Claude)
 - [ ] Zrzuty ekranów v19 jako wzór wyglądu (Claude) — Wygląd zostaje jak w v19 (kolory, układ, zakładki, karty). Poprawki tylko po uzgodnieniu.
 - [ ] Baza SQLite na tablecie + automatyczny zapis każdej zmiany (Claude) — Nic nie ginie po restarcie ani rozładowaniu.
 - [ ] Logowanie tabletu hasłem (Claude) — Jak w v19: raz na tablecie, potem pamięta.
@@ -88,3 +88,8 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 - [ ] Powiadomienie wieczorem o jutrzejszych rezerwacjach (Claude)
 - [ ] Tryb kiosku + profile Admin / Instruktor (Razem) — Instruktor widzi tylko aplikację i Wi-Fi.
 - [ ] Kilka tabletów na jednej liście jednocześnie (Claude)
+
+## Stan (30.09.2026)
+- Repozytorium: github.com/michalskorka86/silt-lista-app (szkielet: ekran startowy z v19, motyw, SQLite, workflow EAS).
+- Expo: projekt michal198926s-team/silt-lista, pierwszy APK (preview) zbudowany i zainstalowany na Samsungu S20 FE — działa, wygląd OK.
+- Następny krok: etap 1 — nowa baza MySQL dla Listy (Michał zakłada) + schemat i API.
