@@ -45,8 +45,10 @@ jobs:
           SILT_MOCK_DIR: /tmp
           PHP_CLI_SERVER_WORKERS: 4
         run: |
-          sh server/testy/config-test.sh /tmp/config-test.php 127.0.0.1 root root http://127.0.0.1:8765
+          # atrapy Statystyk i SMSAPI na osobnym serwerze (8766), żeby API nie czekało samo na siebie
+          sh server/testy/config-test.sh /tmp/config-test.php 127.0.0.1 root root http://127.0.0.1:8766
           php -S 127.0.0.1:8765 -t server > /tmp/php.log 2>&1 &
+          php -S 127.0.0.1:8766 -t server > /tmp/php-atrapy.log 2>&1 &
           sleep 1
           php server/testy/test_api.php http://127.0.0.1:8765 > /tmp/test-serwer.txt 2>&1 || { cat /tmp/test-serwer.txt; grep -E "✘|Fatal|Error" /tmp/test-serwer.txt | head -20 | sed 's/^/::error::/'; exit 1; }
           cat /tmp/test-serwer.txt

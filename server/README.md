@@ -56,9 +56,11 @@ Statystyki i SMSAPI są w testach zastąpione atrapami (`testy/mock/`), nic nie 
 ```bash
 mysql -uroot -e "CREATE DATABASE silt_test CHARACTER SET utf8mb4"
 for f in server/sql/0*.sql; do mysql -uroot silt_test < $f; done
-sh server/testy/config-test.sh /tmp/config-test.php localhost UŻYTKOWNIK HASŁO http://127.0.0.1:8765
+sh server/testy/config-test.sh /tmp/config-test.php localhost UŻYTKOWNIK HASŁO http://127.0.0.1:8766
 export SILT_CONFIG=/tmp/config-test.php SILT_MOCK_DIR=/tmp PHP_CLI_SERVER_WORKERS=4
-php -S 127.0.0.1:8765 -t server &
+php -S 127.0.0.1:8765 -t server &     # API
+php -S 127.0.0.1:8766 -t server &     # atrapy Statystyk i SMSAPI
 php server/testy/test_api.php http://127.0.0.1:8765
+SILT_API=http://127.0.0.1:8765/api.php npm test   # aplikacja (na świeżej bazie)
 ```
 To samo uruchamia GitHub przy każdej zmianie (workflow „Sprawdź kod”, zadanie „serwer”).
