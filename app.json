@@ -10,7 +10,6 @@
     "backgroundColor": "#0f0f11",
     "android": {
       "package": "pl.silt.lista",
-      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#F97316",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
