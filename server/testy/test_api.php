@@ -77,7 +77,7 @@ $token = $r['token'] ?? '';
 
 echo "Start i cennik\n";
 $r = api('start');
-sprawdz('start: min_wersja 1.0.0, bez aktualizacji', ($r['min_wersja'] ?? '') === '1.0.0' && ($r['aktualizacja'] ?? true) === false, $r);
+sprawdz('start: min_wersja 0.1.0, bez aktualizacji', ($r['min_wersja'] ?? '') === '0.1.0' && ($r['aktualizacja'] ?? true) === false, $r);
 $r = api('cennik');
 $klasyk = $r['atrakcje'][0] ?? [];
 sprawdz('cennik: 7 atrakcji, Klasyk ma 3 pakiety, SILT 130 zł', count($r['atrakcje'] ?? []) === 7 && count($klasyk['pakiety'] ?? []) === 3 && ($klasyk['pakiety'][1]['cena'] ?? 0) == 130, $r);
@@ -139,9 +139,9 @@ sprawdz('po usunięciu grupy pobieranie od ostatniego rev → tylko ta grupa, z 
     count($r['dane']['grupy'] ?? []) === 1 && ($r['dane']['grupy'][0]['usunieto'] ?? null) === '2026-09-30T11:00:00.000Z' && count($r['dane']['listy'] ?? []) === 0, $r);
 
 echo "Stara wersja aplikacji\n";
-$WERSJA = '0.9.0';
+$WERSJA = '0.0.9';
 $r = api('wyslij', ['zmiany' => [$lista]]);
-sprawdz('wersja 0.9.0 → 426 aktualizacja', $r['_http'] === 426 && ($r['kod'] ?? '') === 'aktualizacja', $r);
+sprawdz('wersja 0.0.9 → 426 aktualizacja', $r['_http'] === 426 && ($r['kod'] ?? '') === 'aktualizacja', $r);
 $r = api('start');
 sprawdz('start dalej działa i mówi „aktualizacja”', ($r['aktualizacja'] ?? false) === true, $r);
 $WERSJA = '1.0.0';

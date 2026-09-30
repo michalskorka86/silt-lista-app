@@ -41,8 +41,8 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 ## 2. Aplikacja — podstawa
 - [x] Projekt Expo / React Native: nazwa, ikona, podpis (Claude)
 - [ ] Zrzuty ekranów v19 jako wzór wyglądu (Claude) — Wygląd zostaje jak w v19 (kolory, układ, zakładki, karty). Poprawki tylko po uzgodnieniu.
-- [ ] Baza SQLite na tablecie + automatyczny zapis każdej zmiany (Claude) — Nic nie ginie po restarcie ani rozładowaniu.
-- [ ] Logowanie tabletu hasłem (Claude) — Jak w v19: raz na tablecie, potem pamięta.
+- [x] Baza SQLite na tablecie + automatyczny zapis każdej zmiany (Claude) — src/db/zapis.ts, kolejka zmian. — Nic nie ginie po restarcie ani rozładowaniu.
+- [x] Logowanie tabletu hasłem (Claude) — ekran jak auth_lista.php z v19. — Jak w v19: raz na tablecie, potem pamięta.
 - [ ] Start: Utwórz listę / Rezerwacje / Archiwum (Claude)
 - [ ] Lista dnia: zakładki instruktorów, dodawanie grup (Claude)
 - [ ] Karta grupy i gracze (Claude)
@@ -55,7 +55,7 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 - [ ] Podgląd rezerwacji (SILT / Arsenał, działa offline) (Claude)
 - [ ] Kafelek menu: Cennik / Raport / Rezerwacje / Opcje (Claude) — Popup na środku ekranu.
 - [ ] Zdjęcie kartki z graczami → odczyt (OCR / Claude) (Claude)
-- [ ] Praca bez zasięgu + wysyłka w tle, znacznik „⏳ Niewysłane” (Claude)
+- [x] Praca bez zasięgu + wysyłka w tle, znacznik „⏳ Niewysłane” (Claude) — src/sync/.
 
 ## 3. Nowe funkcje v1
 - [ ] Ustalić wygląd raportu PDF (co jest na wydruku) (Razem)
@@ -89,10 +89,9 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 - [ ] Tryb kiosku + profile Admin / Instruktor (Razem) — Instruktor widzi tylko aplikację i Wi-Fi.
 - [ ] Kilka tabletów na jednej liście jednocześnie (Claude)
 
-## Stan (30.09.2026, noc)
-- Repozytorium: github.com/michalskorka86/silt-lista-app (szkielet: ekran startowy z v19, motyw, SQLite, workflow EAS).
-- Expo: projekt michal198926s-team/silt-lista, pierwszy APK (preview) zbudowany i zainstalowany na Samsungu S20 FE — działa, wygląd OK.
-- Etap 1 (serwer) ZAKOŃCZONY: baza serwer432573_lista + API na filedops.pl/lista-api/ (wgrane, działa). Logowanie tabletu, wysyłanie zmian, pobieranie, cennik, pracownicy, statystyki na żądanie, zgłoszenia błędów, blokada wersji. Cron o 6:00: Statystyki + SMS faktur + kosz. Testy w GitHub „Sprawdź kod”.
-- Ustalenia etapu 1: jedna lista na dzień z zakładkami instruktorów (jak v19); kwoty grup liczy tablet, serwer ich nie przelicza; kosz 7 dni na tablecie, 30 dni na serwerze; znaczniki czasu w bazie w UTC; v19 nie ma danych do przeniesienia.
-- Do zrobienia przez Michała: import sql/002_statystyki.sql, nowe pliki lib/, dopisanie SMSAPI_TOKEN do config.php, cron na 6:00.
-- Następny krok: etap 2 — aplikacja: tabele list w SQLite + kolejka i synchronizacja z API.
+## Stan (01.10.2026)
+- Repozytorium: github.com/michalskorka86/silt-lista-app. Expo: projekt michal198926s-team/silt-lista.
+- Etap 1 (serwer) ZAKOŃCZONY: baza serwer432573_lista + API na filedops.pl/lista-api/ (wgrane, działa). Cron 6:00: Statystyki + SMS faktur + kosz.
+- Etap 2 — fundament danych gotowy: tabele list w SQLite (migracja 2), zapis z kolejką, obliczenia grupy (port calc() z v19, zgodny na 5000 losowych grupach), synchronizacja (wysyłka, pobieranie, cennik, pracownicy), logowanie tabletu, „⏳ Niewysłane” w górnym pasku. Testy z prawdziwym serwerem PHP w GitHub.
+- Ustalenia: jedna lista na dzień z zakładkami instruktorów (jak v19); kwoty grup liczy tablet; kosz 7 dni na tablecie, 30 dni na serwerze; czas w bazie UTC; v19 nie ma danych do przeniesienia; wersje testowe aplikacji 0.x (min_wersja_app 0.1.0 do wydania 1.0).
+- Następny krok: ekrany — Utwórz listę, lista dnia (zakładki instruktorów, grupy), karta grupy i gracze.

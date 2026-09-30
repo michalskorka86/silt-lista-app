@@ -13,17 +13,24 @@ import { SQLiteProvider } from 'expo-sqlite';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 
+import { Logowanie } from '@/components/Logowanie';
 import { DB_NAME, migrateDbIfNeeded } from '@/db/migrations';
+import { SyncProvider, useSync } from '@/sync/SyncProvider';
 import { MotywProvider, useMotyw } from '@/theme/motyw';
 
 SplashScreen.preventAutoHideAsync();
 
 function Nawigacja() {
   const { c, motyw } = useMotyw();
+  const { zalogowany } = useSync();
   return (
     <>
       <StatusBar style={motyw === 'dark' ? 'light' : 'dark'} />
-      <Stack screenOptions={{ headerShown: false, animation: 'fade', contentStyle: { backgroundColor: c.bg } }} />
+      {zalogowany === false ? (
+        <Logowanie />
+      ) : (
+        <Stack screenOptions={{ headerShown: false, animation: 'fade', contentStyle: { backgroundColor: c.bg } }} />
+      )}
     </>
   );
 }
@@ -47,7 +54,9 @@ export default function RootLayout() {
   return (
     <SQLiteProvider databaseName={DB_NAME} onInit={migrateDbIfNeeded}>
       <MotywProvider>
-        <Nawigacja />
+        <SyncProvider>
+          <Nawigacja />
+        </SyncProvider>
       </MotywProvider>
     </SQLiteProvider>
   );

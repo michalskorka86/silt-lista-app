@@ -17,7 +17,15 @@ Czytaj też `AGENTS.md` (zasady Expo) i `docs/PLAN.md` (ustalenia i zakres).
 - Pakiety dodawaj przez `npx expo install` (bez dostępu do api.expo.dev: `EXPO_OFFLINE=1 npx expo install …`).
 - Baza: `src/db/migrations.ts` — migracje przez `PRAGMA user_version`; starych migracji nie zmieniamy, dopisujemy nowe.
 - Nazwy w kodzie domenowym po polsku (lista, grupa, gracz, kulki, dym, wydatki, pensje) — zgodnie z v19 i API.
-- Przed commitem: `npx tsc --noEmit` i `npx expo lint`.
+- Przed commitem: `npx tsc --noEmit`, `npx expo lint` i `npm test` (z serwerem testowym — opis w `server/README.md`).
+
+## Dane na tablecie i synchronizacja
+- Tabele list: `src/db/tabele.ts` (typy + kolumny) = `server/lib/tabele.php`. Zmiana kolumny = nowa migracja SQLite + nowy plik SQL na serwerze + obie listy kolumn.
+- Każda zmiana listy TYLKO przez `zapisz()/zapiszWiele()/usun()/przywroc()` z `src/db/zapis.ts` — zapisują wiersz i wpis w kolejce w jednej transakcji. Po zmianie graczy/pozycji/dodatków/pól grupy: `przeliczGrupe()`.
+- Obliczenia grupy: `src/logika/obliczenia.ts` (port 1:1 `calc()` z v19 — nie zmieniać bez uzgodnienia).
+- Id nowych wierszy: `nowyId('g')` itd. Czas: ISO UTC (`teraz()`). Dzień listy: data lokalna.
+- Wysyłka w tle: `src/sync/SyncProvider.tsx` (po zmianie, co minutę, po powrocie do aplikacji); logika bez React Native w `src/sync/synchronizacja.ts` — testowana w Node (`testy/`).
+- `src/db`, `src/logika`, `src/sync/klient.ts`, `src/sync/synchronizacja.ts` bez importów React Native i aliasu `@/` (względne ścieżki), żeby testy w Node działały.
 
 ## Serwer (`server/`)
 - PHP 7.4+ bez frameworka, PDO MySQL/MariaDB; wgrywany ręcznie na filedops.pl/lista-api/ (instrukcja: `server/README.md`).

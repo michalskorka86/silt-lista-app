@@ -28,6 +28,9 @@ jobs:
         options: --health-cmd="mysqladmin ping -proot" --health-interval=5s --health-timeout=5s --health-retries=20
     steps:
       - uses: actions/checkout@v5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '7.4'
@@ -46,4 +49,9 @@ jobs:
           php -S 127.0.0.1:8765 -t server > /tmp/php.log 2>&1 &
           sleep 1
           php server/testy/test_api.php http://127.0.0.1:8765
+          # aplikacja (obliczenia + synchronizacja) na świeżej bazie, z tym samym serwerem
+          mysql -h127.0.0.1 -uroot -proot -e "DROP DATABASE silt_test; CREATE DATABASE silt_test CHARACTER SET utf8mb4"
+          for f in server/sql/0*.sql; do mysql -h127.0.0.1 -uroot -proot --default-character-set=utf8mb4 silt_test < "$f"; done
+          rm -f /tmp/stat.json /tmp/sms.json
+          SILT_API=http://127.0.0.1:8765/api.php node --test --experimental-strip-types --no-warnings --import ./testy/rejestruj.mjs 'testy/*.test.ts'
           ! grep -iE "warning|notice|fatal|deprecated" /tmp/php.log

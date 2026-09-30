@@ -6,7 +6,7 @@ i jej nie rusza — obie działają równolegle do czasu wyłączenia PWA.
 ## Instalacja na filedops.pl
 
 1. **Baza** — phpMyAdmin → baza `serwer432573_lista` → Import, po kolei pliki z `sql/`
-   (kodowanie utf-8): `001_schemat.sql` (tabele + cennik z v19), `002_statystyki.sql`.
+   (kodowanie utf-8): `001_schemat.sql` (tabele + cennik z v19), `002_statystyki.sql`, `003_min_wersja.sql`.
    Każdy plik importuje się raz; przy aktualizacji wgrywa się tylko nowe numery.
 2. **Pliki** — wgraj do nowego folderu `lista-api/` (obok `lista/` i `statystyka/`):
    `api.php`, `cron.php`, `.htaccess`, cały folder `lib/`.
