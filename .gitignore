@@ -41,3 +41,6 @@ example
 # generated native folders
 /ios
 /android
+
+# Serwer PHP — konfiguracja z hasłami zostaje tylko na serwerze
+server/config.php

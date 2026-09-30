@@ -15,3 +15,35 @@ jobs:
       - run: npm ci
       - run: npx tsc --noEmit
       - run: npx expo lint
+
+  serwer:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: silt_test
+        ports: ['3306:3306']
+        options: --health-cmd="mysqladmin ping -proot" --health-interval=5s --health-timeout=5s --health-retries=20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.4'
+          extensions: pdo_mysql, mbstring, curl
+      - name: Składnia PHP
+        run: for f in server/*.php server/lib/*.php server/testy/*.php; do php -l "$f"; done
+      - name: Schemat bazy
+        run: mysql -h127.0.0.1 -uroot -proot --default-character-set=utf8mb4 silt_test < server/sql/001_schemat.sql
+      - name: Test API
+        run: |
+          sed -e "s/'localhost'/'127.0.0.1'/" -e "s/'serwer432573_lista');/'silt_test');/" \
+              -e "s/define('DB_USER', '[^']*')/define('DB_USER', 'root')/" -e "s/define('DB_PASS', '')/define('DB_PASS', 'root')/" \
+              -e "s/define('LISTA_HASLO', '')/define('LISTA_HASLO', 'test123')/" -e "s/define('CRON_KEY', '')/define('CRON_KEY', 'cron-test')/" \
+              server/config.example.php > /tmp/config-test.php
+          export SILT_CONFIG=/tmp/config-test.php
+          php -S 127.0.0.1:8765 -t server > /tmp/php.log 2>&1 &
+          sleep 1
+          php server/testy/test_api.php http://127.0.0.1:8765
+          ! grep -iE "warning|notice|fatal|deprecated" /tmp/php.log

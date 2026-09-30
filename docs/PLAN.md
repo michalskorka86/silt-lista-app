@@ -24,18 +24,18 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 - [x] Założyć konto GitHub + prywatne repozytorium (Ty) — Kod z historią; GitHub zleca build w Expo po każdej zmianie.
 - [x] Podać model tabletu Lenovo (Ty) — Lenovo Tab M10 (3. gen.) LTE.
 - [ ] Sprawdzić wersję Androida na tablecie (Ty) — Ustawienia → Informacje o tablecie.
-- [ ] Założyć nową bazę MySQL dla Listy na filedops.pl (Ty) — Osobna, trzecia baza. Statystyki i rezerwacje zostają bez zmian.
+- [x] Założyć nową bazę MySQL dla Listy na filedops.pl (Ty) — serwer432573_lista. — Osobna, trzecia baza. Statystyki i rezerwacje zostają bez zmian.
 - [ ] Przygotować firmowe konto Google na kopie PDF (Ty) — Jedno konto dla wszystkich tabletów, logowane raz w Opcjach.
 - [ ] Wymyślić PIN admina (Ty) — Otwiera podgląd dnia (i np. cennik) na tablecie.
 - [ ] Spisać ustalenia w skillu do budowy aplikacji (Claude) — Żeby każda sesja trzymała się tych samych zasad.
 
 ## 1. Serwer
-- [ ] Schemat bazy Listy (Claude) — Listy, instruktorzy, grupy, gracze, kulki/dym, wydatki, pensje, faktury, cennik, kosz, kolejka zmian.
-- [ ] API synchronizacji (wysyłanie zmian z tabletu) (Claude) — Pojedyncze zmiany wysyłane przy zasięgu, bez dublowania.
-- [ ] Pobieranie wszystkich danych (przywracanie na nowym tablecie) (Claude) — Nowy tablet po zalogowaniu pobiera dane z serwera.
-- [ ] Cennik, pakiety i własny sprzęt w bazie + pobieranie przez tablet (Claude) — Przenieść ATR, SPRZET, WOREK z index.php. Zmiana ceny bez aktualizacji aplikacji.
+- [x] Schemat bazy Listy (Claude) — server/sql/001_schemat.sql (do wgrania). — Listy, instruktorzy, grupy, gracze, kulki/dym, wydatki, pensje, faktury, cennik, kosz, kolejka zmian.
+- [x] API synchronizacji (wysyłanie zmian z tabletu) (Claude) — server/api.php?akcja=wyslij. — Pojedyncze zmiany wysyłane przy zasięgu, bez dublowania.
+- [x] Pobieranie wszystkich danych (przywracanie na nowym tablecie) (Claude) — akcja=pobierz&od_rev=0. — Nowy tablet po zalogowaniu pobiera dane z serwera.
+- [x] Cennik, pakiety i własny sprzęt w bazie + pobieranie przez tablet (Claude) — akcja=cennik; strona tabletu w etapie 2. — Przenieść ATR, SPRZET, WOREK z index.php. Zmiana ceny bez aktualizacji aplikacji.
 - [ ] Przepiąć wysyłkę do Statystyk i SMS faktur (cron 6:00) na nową bazę (Claude) — api.php Statystyk i SMSAPI bez zmian, zmienia się tylko źródło danych.
-- [ ] Minimalna wymagana wersja aplikacji (blokada starej wersji) (Claude) — Stara wersja prosi o aktualizację zamiast wysyłać złe dane.
+- [x] Minimalna wymagana wersja aplikacji (blokada starej wersji) (Claude) — ustawienia.min_wersja_app. — Stara wersja prosi o aktualizację zamiast wysyłać złe dane.
 - [ ] Przenieść istniejące listy z folderu data/ do bazy (Claude) — Żeby archiwum z v19 było widoczne w nowej aplikacji.
 
 ## 2. Aplikacja — podstawa
@@ -89,7 +89,9 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 - [ ] Tryb kiosku + profile Admin / Instruktor (Razem) — Instruktor widzi tylko aplikację i Wi-Fi.
 - [ ] Kilka tabletów na jednej liście jednocześnie (Claude)
 
-## Stan (30.09.2026)
+## Stan (30.09.2026, wieczór)
 - Repozytorium: github.com/michalskorka86/silt-lista-app (szkielet: ekran startowy z v19, motyw, SQLite, workflow EAS).
 - Expo: projekt michal198926s-team/silt-lista, pierwszy APK (preview) zbudowany i zainstalowany na Samsungu S20 FE — działa, wygląd OK.
-- Następny krok: etap 1 — nowa baza MySQL dla Listy (Michał zakłada) + schemat i API.
+- Etap 1 (serwer): schemat bazy + API (logowanie tabletu, wysyłanie zmian, pobieranie, cennik, zgłoszenia błędów, blokada wersji) w `server/`, testy przechodzą. Instrukcja wgrania: `server/README.md` (folder filedops.pl/lista-api/).
+- Ustalenia etapu 1: jedna lista na dzień z zakładkami instruktorów (jak v19); kwoty grup liczy tablet, serwer ich nie przelicza; kosz 7 dni na tablecie, 30 dni na serwerze; znaczniki czasu w bazie w UTC.
+- Następny krok: Michał wgrywa schemat i pliki na serwer; potem przepięcie Statystyk i SMS faktur (cron 6:00) na nową bazę oraz przeniesienie list z data/.

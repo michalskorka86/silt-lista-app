@@ -19,6 +19,14 @@ Czytaj też `AGENTS.md` (zasady Expo) i `docs/PLAN.md` (ustalenia i zakres).
 - Nazwy w kodzie domenowym po polsku (lista, grupa, gracz, kulki, dym, wydatki, pensje) — zgodnie z v19 i API.
 - Przed commitem: `npx tsc --noEmit` i `npx expo lint`.
 
+## Serwer (`server/`)
+- PHP 7.4+ bez frameworka, PDO MySQL/MariaDB; wgrywany ręcznie na filedops.pl/lista-api/ (instrukcja: `server/README.md`).
+- Schemat: `server/sql/NNN_*.sql` — nowe zmiany jako kolejny plik, starych nie przerabiamy po wgraniu.
+- Kolumny, które tablet może zapisać: `server/lib/tabele.php` — przy zmianie tabeli na tablecie zmień też tam.
+- Synchronizacja: zmiana = cały wiersz + czas zmiany z tabletu (nowszy wygrywa), id zmiany z kolejki chroni przed dublowaniem, kasowanie = `usunieto` (kosz). Kwoty grup (`w_…`) liczy tablet.
+- Czas w bazie: UTC. Dzień listy (`data`): czas polski.
+- Przed commitem zmian serwera: test `server/testy/test_api.php` (opis w README); GitHub robi to samo w „Sprawdź kod”.
+
 ## Bezpieczeństwo
 - Żadnych haseł, tokenów (SMSAPI, Anthropic, klucz tabletu) w repozytorium. Konfiguracja serwera zostaje w `config.php` na serwerze.
 - Nie commituj danych klientów, dumpów bazy ani plików `.env`.
