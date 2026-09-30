@@ -1,0 +1,9 @@
+#!/bin/sh
+# Tworzy config testowy z config.example.php: $1 = plik wynikowy, $2 = host bazy, $3 = użytkownik, $4 = hasło, $5 = adres serwera testowego
+sed -e "s/'localhost'/'$2'/" -e "s/'serwer432573_lista');/'silt_test');/" \
+    -e "s/define('DB_USER', '[^']*')/define('DB_USER', '$3')/" -e "s/define('DB_PASS', '')/define('DB_PASS', '$4')/" \
+    -e "s/define('LISTA_HASLO', '')/define('LISTA_HASLO', 'test123')/" -e "s/define('CRON_KEY', '')/define('CRON_KEY', 'cron-test')/" \
+    -e "s#define('STAT_API_URL', '[^']*')#define('STAT_API_URL', '$5/testy/mock/statystyka.php')#" \
+    -e "s/define('SMSAPI_TOKEN',      '')/define('SMSAPI_TOKEN', 'test-token')/" \
+    "$(dirname "$0")/../config.example.php" > "$1"
+echo "define('SMSAPI_URL', '$5/testy/mock/sms.php');" >> "$1"

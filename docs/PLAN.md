@@ -34,9 +34,9 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 - [x] API synchronizacji (wysyłanie zmian z tabletu) (Claude) — server/api.php?akcja=wyslij. — Pojedyncze zmiany wysyłane przy zasięgu, bez dublowania.
 - [x] Pobieranie wszystkich danych (przywracanie na nowym tablecie) (Claude) — akcja=pobierz&od_rev=0. — Nowy tablet po zalogowaniu pobiera dane z serwera.
 - [x] Cennik, pakiety i własny sprzęt w bazie + pobieranie przez tablet (Claude) — akcja=cennik; strona tabletu w etapie 2. — Przenieść ATR, SPRZET, WOREK z index.php. Zmiana ceny bez aktualizacji aplikacji.
-- [ ] Przepiąć wysyłkę do Statystyk i SMS faktur (cron 6:00) na nową bazę (Claude) — api.php Statystyk i SMSAPI bez zmian, zmienia się tylko źródło danych.
+- [x] Przepiąć wysyłkę do Statystyk i SMS faktur (cron 6:00) na nową bazę (Claude) — api.php Statystyk i SMSAPI bez zmian, zmienia się tylko źródło danych. — lib/statystyki.php, cron.php o 6:00; ponowna wysyłka po poprawkach.
 - [x] Minimalna wymagana wersja aplikacji (blokada starej wersji) (Claude) — ustawienia.min_wersja_app. — Stara wersja prosi o aktualizację zamiast wysyłać złe dane.
-- [ ] Przenieść istniejące listy z folderu data/ do bazy (Claude) — Żeby archiwum z v19 było widoczne w nowej aplikacji.
+- [x] Przenieść istniejące listy z folderu data/ do bazy (Claude) — Żeby archiwum z v19 było widoczne w nowej aplikacji. — niepotrzebne: w v19 nie wprowadzono danych.
 
 ## 2. Aplikacja — podstawa
 - [x] Projekt Expo / React Native: nazwa, ikona, podpis (Claude)
@@ -89,9 +89,10 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 - [ ] Tryb kiosku + profile Admin / Instruktor (Razem) — Instruktor widzi tylko aplikację i Wi-Fi.
 - [ ] Kilka tabletów na jednej liście jednocześnie (Claude)
 
-## Stan (30.09.2026, wieczór)
+## Stan (30.09.2026, noc)
 - Repozytorium: github.com/michalskorka86/silt-lista-app (szkielet: ekran startowy z v19, motyw, SQLite, workflow EAS).
 - Expo: projekt michal198926s-team/silt-lista, pierwszy APK (preview) zbudowany i zainstalowany na Samsungu S20 FE — działa, wygląd OK.
-- Etap 1 (serwer): schemat bazy + API (logowanie tabletu, wysyłanie zmian, pobieranie, cennik, zgłoszenia błędów, blokada wersji) w `server/`, testy przechodzą. Instrukcja wgrania: `server/README.md` (folder filedops.pl/lista-api/).
-- Ustalenia etapu 1: jedna lista na dzień z zakładkami instruktorów (jak v19); kwoty grup liczy tablet, serwer ich nie przelicza; kosz 7 dni na tablecie, 30 dni na serwerze; znaczniki czasu w bazie w UTC.
-- Następny krok: Michał wgrywa schemat i pliki na serwer; potem przepięcie Statystyk i SMS faktur (cron 6:00) na nową bazę oraz przeniesienie list z data/.
+- Etap 1 (serwer) ZAKOŃCZONY: baza serwer432573_lista + API na filedops.pl/lista-api/ (wgrane, działa). Logowanie tabletu, wysyłanie zmian, pobieranie, cennik, pracownicy, statystyki na żądanie, zgłoszenia błędów, blokada wersji. Cron o 6:00: Statystyki + SMS faktur + kosz. Testy w GitHub „Sprawdź kod”.
+- Ustalenia etapu 1: jedna lista na dzień z zakładkami instruktorów (jak v19); kwoty grup liczy tablet, serwer ich nie przelicza; kosz 7 dni na tablecie, 30 dni na serwerze; znaczniki czasu w bazie w UTC; v19 nie ma danych do przeniesienia.
+- Do zrobienia przez Michała: import sql/002_statystyki.sql, nowe pliki lib/, dopisanie SMSAPI_TOKEN do config.php, cron na 6:00.
+- Następny krok: etap 2 — aplikacja: tabele list w SQLite + kolejka i synchronizacja z API.

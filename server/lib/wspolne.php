@@ -14,6 +14,14 @@ if (!is_file($__cfg)) {
 }
 require_once $__cfg;
 
+// Ustawienia dodane po pierwszej wersji config.php — wartości domyślne, gdy ich tam nie ma.
+if (!defined('STAT_API_URL'))      define('STAT_API_URL', 'https://filedops.pl/statystyka/api.php');
+if (!defined('SMSAPI_TOKEN'))      define('SMSAPI_TOKEN', '');
+if (!defined('SMSAPI_URL'))        define('SMSAPI_URL', 'https://api.smsapi.pl/sms.do');
+if (!defined('SMS_FAKTURY_NUMER')) define('SMS_FAKTURY_NUMER', '48534500503');
+if (!defined('SMS_NADAWCA'))       define('SMS_NADAWCA', '');
+if (!defined('DNI_WSTECZ'))        define('DNI_WSTECZ', 14);
+
 date_default_timezone_set('Europe/Warsaw');   // dzień listy liczymy po polsku; znaczniki czasu w bazie są w UTC
 
 const LIMIT_ZMIAN_W_PACZCE = 200;   // ile zmian tablet może wysłać naraz
@@ -122,4 +130,21 @@ function ustawienie(string $klucz, string $domyslna = ''): string
 function biezacy_rev(): int
 {
     return (int)baza()->query("SELECT wartosc FROM licznik WHERE nazwa = 'rev'")->fetchColumn();
+}
+
+/**
+ * Nowy numer zmiany (rev). Wywoływać WEWNĄTRZ transakcji: blokada licznika trwa do commit,
+ * więc numery są zatwierdzane po kolei i pobieranie „od rev N” niczego nie pomija.
+ */
+function nowy_rev(): int
+{
+    $pdo = baza();
+    $pdo->exec("UPDATE licznik SET wartosc = LAST_INSERT_ID(wartosc + 1) WHERE nazwa = 'rev'");
+    return (int)$pdo->lastInsertId();
+}
+
+/** Dzisiejsza data w Polsce (dzień listy). */
+function dzis(): string
+{
+    return date('Y-m-d');
 }

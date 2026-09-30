@@ -23,3 +23,14 @@ define('CRON_KEY', '');                           // ←
 // ── Kosz ────────────────────────────────────────────────────
 // Po ilu dniach serwer kasuje na dobre rzeczy usunięte na tablecie (na tablecie kosz: 7 dni).
 define('KOSZ_DNI', 30);
+
+// ── Statystyki (aplikacja na filedops.pl) ───────────────────
+define('STAT_API_URL', 'https://filedops.pl/statystyka/api.php');
+
+// ── SMSAPI.pl — SMS z danymi do faktur (codziennie o 6:00) ──
+define('SMSAPI_TOKEN',      '');                  // ← token OAuth z panelu smsapi.pl (puste = SMS-y nie idą)
+define('SMS_FAKTURY_NUMER', '48534500503');       // numer, na który idą dane do faktur
+define('SMS_NADAWCA',       '');                  // opcjonalnie: zarejestrowana nazwa nadawcy w SMSAPI
+
+// Ile dni wstecz cron sprawdza niewysłane statystyki i SMS-y.
+define('DNI_WSTECZ', 14);

@@ -3,9 +3,10 @@
 // SILT Lista — test API na lokalnej bazie (NIE uruchamiać na serwerze produkcyjnym).
 //
 //   1. Pusta baza testowa + schemat:  mysql -uroot silt_test < server/sql/001_schemat.sql
-//   2. config testowy (LISTA_HASLO = 'test123', CRON_KEY = 'cron-test'), np. /tmp/config-test.php
-//   3. Serwer:  SILT_CONFIG=/tmp/config-test.php php -S 127.0.0.1:8765 -t server
-//   4. Test:    SILT_CONFIG=/tmp/config-test.php php server/testy/test_api.php http://127.0.0.1:8765
+//                                     mysql -uroot silt_test < server/sql/002_statystyki.sql
+//   2. config testowy: server/testy/config-test.sh (baza silt_test, atrapy Statystyk i SMSAPI)
+//   3. Serwer:  SILT_CONFIG=… SILT_MOCK_DIR=… php -S 127.0.0.1:8765 -t server
+//   4. Test:    SILT_CONFIG=… SILT_MOCK_DIR=… php server/testy/test_api.php http://127.0.0.1:8765
 // ============================================================
 
 declare(strict_types=1);
@@ -48,9 +49,9 @@ $T0 = '2026-09-30T10:00:00.000Z';
 $T1 = '2026-09-30T10:05:00.000Z';
 $T2 = '2026-09-30T10:10:00.000Z';
 
-$lista    = ['id' => 'z1', 'tabela' => 'listy', 'rekord' => ['data' => '2026-09-30'], 'zmieniono' => $T0];
-$instr    = ['id' => 'z2', 'tabela' => 'instruktorzy', 'rekord' => ['id' => 't1', 'data' => '2026-09-30', 'imie' => 'Monika', 'kolejnosc' => 0], 'zmieniono' => $T0];
-$grupaRek = ['id' => 'g1', 'data' => '2026-09-30', 'instruktor_id' => 't1', 'godzina' => '10:30', 'utworzono' => $T0,
+$lista    = ['id' => 'z1', 'tabela' => 'listy', 'rekord' => ['data' => '2025-06-01'], 'zmieniono' => $T0];
+$instr    = ['id' => 'z2', 'tabela' => 'instruktorzy', 'rekord' => ['id' => 't1', 'data' => '2025-06-01', 'imie' => 'Monika', 'kolejnosc' => 0], 'zmieniono' => $T0];
+$grupaRek = ['id' => 'g1', 'data' => '2025-06-01', 'instruktor_id' => 't1', 'godzina' => '10:30', 'utworzono' => $T0,
              'organizator' => 'Óla Źdźbło', 'atrakcja' => 'klasyk', 'pakiet_nazwa' => 'Pakiet SILT', 'pakiet_typ' => 'os',
              'pakiet_kulki' => 500, 'pakiet_cena' => 130, 'kdod_ilosc' => 100, 'kdod_cena' => 15,
              'zadatek' => 100, 'platnosc' => 'Karta', 'w_gracze' => 10, 'w_kulki' => 1700, 'w_kulki_dok' => 500, 'w_dym' => 2, 'w_kwota' => 1395];
@@ -60,8 +61,8 @@ $gracz    = ['id' => 'z4', 'tabela' => 'gracze', 'rekord' => ['id' => 'p1', 'gru
 $pozycja  = ['id' => 'z5', 'tabela' => 'pozycje', 'rekord' => ['id' => 'i1', 'gracz_id' => 'p1', 'rodzaj' => 'dym', 'ilosc' => 2, 'kwota' => 20], 'zmieniono' => $T0];
 $faktura  = ['id' => 'z6', 'tabela' => 'faktury', 'rekord' => ['grupa_id' => 'g1', 'nip' => '1234567890', 'tel' => '500600700',
              'email' => 'a@b.pl', 'kwota' => 1395, 'platnosc' => 'Przelew'], 'zmieniono' => $T0];
-$wydatek  = ['id' => 'z7', 'tabela' => 'wydatki', 'rekord' => ['id' => 'w1', 'data' => '2026-09-30', 'opis' => 'Paliwo', 'kwota' => '150,00'], 'zmieniono' => $T0];
-$pensja   = ['id' => 'z8', 'tabela' => 'pensje', 'rekord' => ['id' => 'pn1', 'data' => '2026-09-30', 'imie' => 'Monika',
+$wydatek  = ['id' => 'z7', 'tabela' => 'wydatki', 'rekord' => ['id' => 'w1', 'data' => '2025-06-01', 'opis' => 'Paliwo', 'kwota' => '150,00'], 'zmieniono' => $T0];
+$pensja   = ['id' => 'z8', 'tabela' => 'pensje', 'rekord' => ['id' => 'pn1', 'data' => '2025-06-01', 'imie' => 'Monika',
              'godziny' => 7.5, 'stawka' => 30, 'kwota' => 230, 'premia_stawka' => 5], 'zmieniono' => $T0];
 $dodatek  = ['id' => 'z9', 'tabela' => 'dodatki', 'rekord' => ['id' => 'd1', 'grupa_id' => 'g1', 'nazwa' => 'Ognisko', 'kwota' => 200], 'zmieniono' => $T0];
 
@@ -157,6 +158,92 @@ $out = shell_exec('php ' . escapeshellarg(__DIR__ . '/../cron.php') . ' 2>&1');
 sprawdz('cron.php skasował grupę razem z graczami, fakturą i dodatkami: ' . trim((string)$out),
     (int)$pdo->query('SELECT COUNT(*) FROM grupy')->fetchColumn() === 0 && (int)$pdo->query('SELECT COUNT(*) FROM gracze')->fetchColumn() === 0
     && (int)$pdo->query('SELECT COUNT(*) FROM faktury')->fetchColumn() === 0 && (int)$pdo->query('SELECT COUNT(*) FROM listy')->fetchColumn() === 1);
+
+
+echo "Statystyki i SMS faktur (cron 6:00)\n";
+$MOCK = getenv('SILT_MOCK_DIR') ?: sys_get_temp_dir();
+@unlink("$MOCK/stat.json"); @unlink("$MOCK/sms.json"); @unlink("$MOCK/sms.fail");
+$stat = function () use ($MOCK) { return is_file("$MOCK/stat.json") ? json_decode(file_get_contents("$MOCK/stat.json"), true) : []; };
+$smsy = function () use ($MOCK) { return is_file("$MOCK/sms.json") ? json_decode(file_get_contents("$MOCK/sms.json"), true) : []; };
+$cron = function () { return trim((string)shell_exec('php ' . escapeshellarg(__DIR__ . '/../cron.php') . ' 2>&1')); };
+$W = date('Y-m-d', strtotime('-1 day'));
+$z = 100;
+$zm = function (string $tabela, array $rekord, string $czas = '2026-09-29T10:00:00.000Z', $usunieto = null) use (&$z) {
+    return ['id' => 's' . (++$z), 'tabela' => $tabela, 'rekord' => $rekord, 'zmieniono' => $czas, 'usunieto' => $usunieto];
+};
+$g2 = ['id' => 'g2', 'data' => $W, 'instruktor_id' => 't2', 'godzina' => '11:00', 'utworzono' => '2026-09-29T09:00:00.000Z',
+       'organizator' => 'Firma X', 'atrakcja' => 'klasyk', 'pakiet_nazwa' => 'Pakiet SILT', 'pakiet_kulki' => 500, 'pakiet_cena' => 130,
+       'platnosc' => 'Karta', 'w_gracze' => 10, 'w_kulki' => 1700, 'w_kulki_dok' => 500, 'w_dym' => 2, 'w_kwota' => 1395];
+$g3 = ['id' => 'g3', 'data' => $W, 'instruktor_id' => 't2', 'utworzono' => '2026-09-29T09:30:00.000Z', 'organizator' => 'Urodziny Zosi',
+       'atrakcja' => 'gotcha', 'pakiet_nazwa' => 'Pakiet urodzinowy do 10 osób', 'pakiet_typ' => 'grupa', 'pakiet_cena' => 850,
+       'w_gracze' => 8, 'w_kwota' => 850];
+$r = api('zaloguj', ['haslo' => 'test123', 'tablet_id' => 'tablet-test-3']);
+$token = $r['token'] ?? '';
+$r = api('wyslij', ['zmiany' => [
+    $zm('listy', ['data' => $W]),
+    $zm('instruktorzy', ['id' => 't2', 'data' => $W, 'imie' => 'Janek']),
+    $zm('grupy', $g2), $zm('grupy', $g3),
+    $zm('faktury', ['grupa_id' => 'g2', 'nip' => '1234567890', 'tel' => '500600700', 'email' => 'biuro@firmax.pl', 'kwota' => 1395, 'platnosc' => 'Przelew']),
+    $zm('wydatki', ['id' => 'w2', 'data' => $W, 'opis' => 'Paliwo', 'kwota' => 150, 'uwagi' => 'Orlen']),
+    $zm('pensje', ['id' => 'pn2', 'data' => $W, 'imie' => 'Janek', 'prac_id' => 'pr1', 'godziny' => 7.5, 'stawka' => 30, 'kwota' => 230, 'premia_stawka' => 3]),
+]]);
+sprawdz('lista z wczoraj wysłana z tabletu', wyniki($r) === array_fill(0, 7, 'zapisano'), $r);
+
+$out = $cron();
+$s = $stat();
+$grupyS = array_values($s['grupy'] ?? []);
+usort($grupyS, function ($a, $b) { return $a['przychod'] <=> $b['przychod']; });
+sprawdz('cron: 2 grupy w Statystykach (GOTHA 850, KLASYK 1395)', count($grupyS) === 2 && $grupyS[0]['atrakcja'] === 'GOTHA'
+    && $grupyS[1]['atrakcja'] === 'KLASYK' && $grupyS[1]['przychod'] == 1395 && $grupyS[1]['gracze'] === 10 && $grupyS[1]['kulki'] === 1700, [$out, $s]);
+sprawdz('notatka grupy jak w v19', ($grupyS[1]['notatka'] ?? '') === 'Lista: org. Firma X, instr. Janek, Pakiet SILT, dokupione 500 kulek, dym 2, FAKTURA, Karta', $grupyS[1] ?? null);
+$koszt = array_values($s['koszty'] ?? [])[0] ?? [];
+sprawdz('koszt: „Paliwo — Orlen” 150 zł, kategoria Inne', ($koszt['opis'] ?? '') === 'Paliwo — Orlen' && $koszt['kwota'] == 150 && $koszt['kategoria'] === 'Inne', $koszt);
+$pen = array_values($s['pensje'] ?? [])[0] ?? [];
+sprawdz('pensja 230 zł, premia 7,5 h × 5 zł (ze Statystyk, nie z tabletu) = 37,5', ($pen['kwota'] ?? 0) == 230 && ($pen['premia'] ?? 0) == 37.5 && $pen['pracownikId'] === 'pr1', $pen);
+$sms = $smsy();
+sprawdz('SMS z fakturą na 48534500503', count($sms) === 1 && $sms[0]['to'] === '48534500503' && strpos($sms[0]['message'], 'NIP: 1234567890') !== false
+    && strpos($sms[0]['message'], date('d.m.Y', strtotime($W)) . ' KLASYK') !== false && strpos($sms[0]['message'], 'Kwota: 1 395 zl') !== false, $sms);
+
+$r = api('pobierz', null, ['od_rev' => 0]);
+$lw = array_values(array_filter($r['dane']['listy'] ?? [], function ($l) use ($W) { return $l['data'] === $W; }))[0] ?? [];
+$fw = $r['dane']['faktury'][0] ?? [];
+sprawdz('tablet widzi „wysłane do statystyk” i „SMS wysłany”', !empty($lw['s_stat_wyslano']) && ($lw['s_stat_przez'] ?? '') === 'auto'
+    && !empty($fw['s_sms_wyslano']) && !array_key_exists('s_stat_rev', $lw), [$lw, $fw]);
+
+$ile = count($stat()['grupy'] ?? []);
+$out = $cron();
+sprawdz('drugi cron: nic nie wysyła ponownie → ' . $out, strpos($out, 'brak zaległości') !== false && count($smsy()) === 1 && count($stat()['grupy'] ?? []) === $ile, $out);
+
+$g2b = $g2; $g2b['w_kwota'] = 1500;
+api('wyslij', ['zmiany' => [$zm('grupy', $g2b, '2026-09-29T15:00:00.000Z')]]);
+$out = $cron();
+$pr = array_map(function ($g) { return $g['przychod']; }, array_values($stat()['grupy'] ?? []));
+sort($pr);
+sprawdz('poprawka po wysyłce → cron wysyła dzień ponownie, bez dublowania (850, 1500)', $pr == [850, 1500], [$out, $pr]);
+sprawdz('SMS nie idzie drugi raz', count($smsy()) === 1, $smsy());
+
+api('wyslij', ['zmiany' => [$zm('grupy', $g3, '2026-09-29T16:00:00.000Z', '2026-09-29T16:00:00.000Z')]]);
+$r = api('statystyki', ['data' => $W]);
+sprawdz('grupa usunięta + przycisk „wyślij” na tablecie → w Statystykach zostaje 1 grupa', ($r['ok'] ?? false) === true && count($stat()['grupy'] ?? []) === 1, $r);
+$r = api('statystyki', ['data' => $W]);
+sprawdz('ponowne „wyślij” bez zmian → „już wysłane”', strpos($r['msg'] ?? '', 'już wysłane') !== false, $r);
+$r = api('statystyki', ['data' => '2024-01-01']);
+sprawdz('„wyślij” dla dnia, którego nie ma → czytelny błąd', $r['_http'] === 404 && ($r['kod'] ?? '') === 'brak_listy', $r);
+
+$g4 = $g3; $g4['id'] = 'g4'; $g4['organizator'] = 'Szkoła';
+touch("$MOCK/sms.fail");
+api('wyslij', ['zmiany' => [$zm('grupy', $g4, '2026-09-29T17:00:00.000Z'),
+    $zm('faktury', ['grupa_id' => 'g4', 'nip' => '9876543210', 'tel' => '600', 'email' => 's@s.pl', 'kwota' => 850, 'platnosc' => 'Przelew'], '2026-09-29T17:00:00.000Z')]]);
+$out = $cron();
+$blad = $pdo->query("SELECT s_sms_blad FROM faktury WHERE grupa_id='g4'")->fetchColumn();
+sprawdz('SMS nie przeszedł → błąd zapisany, SMS czeka', count($smsy()) === 1 && strpos((string)$blad, 'brak środków') !== false, [$out, $blad]);
+unlink("$MOCK/sms.fail");
+$out = $cron();
+sprawdz('następny cron → SMS wysłany', count($smsy()) === 2 && strpos($smsy()[1]['message'], 'Szkoła') !== false
+    && $pdo->query("SELECT s_sms_blad FROM faktury WHERE grupa_id='g4'")->fetchColumn() === null, [$out, $smsy()]);
+
+$r = api('pracownicy');
+sprawdz('pracownicy ze Statystyk (tylko aktywni)', count($r['pracownicy'] ?? []) === 1 && $r['pracownicy'][0]['imie'] === 'Janek' && $r['pracownicy'][0]['premia'] == 5, $r);
 
 echo "Wylogowanie i blokada haseł\n";
 $r = api('wyloguj', []);

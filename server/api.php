@@ -8,6 +8,8 @@
 //   GET  cennik                                        → atrakcje, pakiety, sprzęt, dodatki, dym, worek
 //   POST wyslij    {zmiany:[…]}                         → wynik każdej zmiany
 //   GET  pobierz   &od_rev=N                           → wiersze zmienione po N
+//   POST statystyki {data, wymus?}                     → wyślij dzień do Statystyk teraz
+//   GET  pracownicy                                    → pracownicy ze Statystyk (ekran pensji)
 //   POST blad      {czas, ekran, komunikat, stos}       → zgłoszenie awarii
 //   POST wyloguj
 //
@@ -21,12 +23,13 @@ require_once __DIR__ . '/lib/wspolne.php';
 require_once __DIR__ . '/lib/tabele.php';
 require_once __DIR__ . '/lib/logowanie.php';
 require_once __DIR__ . '/lib/synchronizacja.php';
+require_once __DIR__ . '/lib/statystyki.php';
 
 $akcja = (string)($_GET['akcja'] ?? '');
 $metoda = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
 try {
-    $wymagaPost = ['zaloguj', 'wyslij', 'blad', 'wyloguj'];
+    $wymagaPost = ['zaloguj', 'wyslij', 'statystyki', 'blad', 'wyloguj'];
     if (in_array($akcja, $wymagaPost, true) && $metoda !== 'POST') {
         throw new BladApi('metoda', 'Ta akcja wymaga POST', 405);
     }
@@ -63,6 +66,17 @@ try {
             wymagaj_tabletu();
             wymagaj_aktualnej_wersji();
             akcja_pobierz();
+            break;
+
+        case 'statystyki':
+            wymagaj_tabletu();
+            wymagaj_aktualnej_wersji();
+            akcja_statystyki(tresc_zadania());
+            break;
+
+        case 'pracownicy':
+            wymagaj_tabletu();
+            akcja_pracownicy();
             break;
 
         case 'wyloguj':

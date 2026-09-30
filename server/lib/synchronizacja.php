@@ -71,8 +71,7 @@ function przyjmij_zmiane(string $tabletId, array $z): array
         // Blokada licznika = zapisy idą po kolei, więc rev rośnie w kolejności zatwierdzania
         // (pobieranie „od rev N” nigdy nie pominie wiersza), a dwie jednoczesne powtórki
         // tej samej zmiany nie przejdą obie.
-        $pdo->exec("UPDATE licznik SET wartosc = LAST_INSERT_ID(wartosc + 1) WHERE nazwa = 'rev'");
-        $rev = (int)$pdo->lastInsertId();
+        $rev = nowy_rev();
 
         $st = $pdo->prepare('SELECT wynik FROM zmiany WHERE tablet_id = ? AND zmiana_id = ?');
         $st->execute([$tabletId, $zid]);

@@ -143,6 +143,9 @@ function przygotuj_rekord(string $tabela, array $rekord): array
             if ($o['wymagana']) throw new BladApi('odrzucono', "Brak pola $kol");
             if ($o['null']) { $wynik[$kol] = null; continue; }
             $v = $tekstowa ? '' : 0;
+            // kolumna z zamkniętą listą wartości bez pustej → pierwsza z listy (np. pakiet_typ = 'os')
+            $lista = WARTOSCI[$tabela . '.' . $kol] ?? null;
+            if ($lista !== null && !in_array('', $lista, true)) $v = $lista[0];
         }
 
         switch ($o['typ']) {
@@ -215,6 +218,6 @@ function rekord_dla_tabletu(string $tabela, array $w): array
             $w[$kol] = czas_do_iso($v);
         }
     }
-    unset($w['s_stat_wpisy']);   // wewnętrzne id wpisów w Statystykach — tabletowi niepotrzebne
+    unset($w['s_stat_wpisy'], $w['s_stat_rev']);   // wewnętrzne dane wysyłki — tabletowi niepotrzebne
     return $w;
 }

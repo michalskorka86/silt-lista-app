@@ -1,18 +1,19 @@
 <?php
 // ============================================================
 // SILT Lista — zadania codzienne serwera
-// Cron (panel hostingu → Zadania cron), raz dziennie, np. 0 4 * * *:
-//   php /pełna/ścieżka/do/lista-api/cron.php
-// albo wywołanie adresu: https://filedops.pl/lista-api/cron.php?key=CRON_KEY
+// Cron (panel LH.pl → Serwery → Zadania cron), codziennie o 6:00 (0 6 * * *), typ cURL:
+//   https://filedops.pl/lista-api/cron.php?key=CRON_KEY
 //
-// Teraz: sprzątanie (kosz po KOSZ_DNI dniach, stare wpisy techniczne).
-// W kolejnym kroku planu dojdzie tu wysyłka do Statystyk i SMS faktur (o 6:00, jak w v19).
+// 1) statystyki dni do wczoraj (niewysłane albo poprawione po wysyłce) → Statystyki,
+// 2) SMS z danymi do faktur (każda faktura raz; nieudany — ponowienie następnego dnia),
+// 3) sprzątanie: kosz po KOSZ_DNI dniach, stare wpisy techniczne.
 // ============================================================
 
 declare(strict_types=1);
 
 require_once __DIR__ . '/lib/wspolne.php';
 require_once __DIR__ . '/lib/tabele.php';
+require_once __DIR__ . '/lib/statystyki.php';
 
 if (PHP_SAPI !== 'cli') {
     header('Content-Type: text/plain; charset=utf-8');
@@ -42,8 +43,8 @@ function sprzatanie(): array
 }
 
 try {
-    $log = sprzatanie();
-    echo date('Y-m-d H:i:s') . ' — ' . ($log ? implode('; ', $log) : 'nic do sprzątania') . "\n";
+    $log = array_merge(codzienna_wysylka(), sprzatanie());
+    echo date('Y-m-d H:i:s') . ' — ' . ($log ? implode("\n", $log) : 'brak zaległości') . "\n";
 } catch (Throwable $e) {
     http_response_code(500);
     echo date('Y-m-d H:i:s') . ' — BŁĄD: ' . $e->getMessage() . "\n";
