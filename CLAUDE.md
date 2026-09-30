@@ -1,0 +1,28 @@
+# SILT Lista — aplikacja na tablet (zasady projektu)
+
+Czytaj też `AGENTS.md` (zasady Expo) i `docs/PLAN.md` (ustalenia i zakres).
+
+## Kontekst
+- Następca PWA „SILT Lista” v19 (PHP, filedops.pl/lista). Backend PHP zostaje; aplikacja rozmawia z API.
+- Tablet: Lenovo Tab M10 (3. gen.) LTE — średni procesor: listy lekkie, ciężkie rzeczy (PDF) w tle / w nocy.
+- Słaby zasięg na poligonie: wszystko najpierw zapisuje się w SQLite na tablecie, na serwer idzie przez tabelę `kolejka`.
+- Użytkownicy to instruktorzy, nie informatycy: duże przyciski, zawsze „Anuluj”, komunikaty po polsku, bez żargonu.
+
+## Wygląd
+- Wygląd zostaje jak w v19: kolory i wymiary TYLKO z `src/constants/theme.ts`, czcionka Inter, motyw ciemny domyślnie.
+- Wzór ekranów: `index.php` z paczki v19 (w projekcie claude.ai „Apka do statystyk”). Zmiany wyglądu tylko po uzgodnieniu z Michałem.
+
+## Kod
+- Expo SDK 57, TypeScript strict, expo-router (ekrany w `src/app/`, reszta poza nim).
+- Pakiety dodawaj przez `npx expo install` (bez dostępu do api.expo.dev: `EXPO_OFFLINE=1 npx expo install …`).
+- Baza: `src/db/migrations.ts` — migracje przez `PRAGMA user_version`; starych migracji nie zmieniamy, dopisujemy nowe.
+- Nazwy w kodzie domenowym po polsku (lista, grupa, gracz, kulki, dym, wydatki, pensje) — zgodnie z v19 i API.
+- Przed commitem: `npx tsc --noEmit` i `npx expo lint`.
+
+## Bezpieczeństwo
+- Żadnych haseł, tokenów (SMSAPI, Anthropic, klucz tabletu) w repozytorium. Konfiguracja serwera zostaje w `config.php` na serwerze.
+- Nie commituj danych klientów, dumpów bazy ani plików `.env`.
+
+## Android
+- Pakiet: `pl.silt.lista` (po pierwszym wydaniu w Google Play nie do zmiany).
+- Katalogi `android/` i `ios/` są generowane — nie edytować ręcznie, konfiguracja w `app.json`.

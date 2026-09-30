@@ -1,0 +1,17 @@
+# Szybkie sprawdzenie przy każdej zmianie (darmowe, na GitHubie): typy TypeScript i lint.
+name: Sprawdź kod
+on:
+  push:
+  pull_request:
+jobs:
+  sprawdz:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npx expo lint

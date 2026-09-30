@@ -1,0 +1,43 @@
+{
+  "expo": {
+    "name": "SILT Lista",
+    "slug": "silt-lista",
+    "version": "0.1.0",
+    "orientation": "default",
+    "icon": "./assets/images/icon.png",
+    "scheme": "siltlista",
+    "userInterfaceStyle": "automatic",
+    "backgroundColor": "#0f0f11",
+    "android": {
+      "package": "pl.silt.lista",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "backgroundColor": "#F97316",
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#0f0f11",
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 200
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}

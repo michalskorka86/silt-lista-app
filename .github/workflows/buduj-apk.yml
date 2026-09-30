@@ -1,0 +1,30 @@
+# Budowanie aplikacji w chmurze Expo (EAS). Uruchamiane RĘCZNIE:
+# GitHub → Actions → „Buduj aplikację” → Run workflow → wybierz profil.
+#   preview    = plik .apk do zainstalowania na tablecie (testy)
+#   production = paczka .aab do Google Play (test wewnętrzny)
+# Wymaga sekretu EXPO_TOKEN (GitHub → Settings → Secrets and variables → Actions).
+name: Buduj aplikację
+on:
+  workflow_dispatch:
+    inputs:
+      profil:
+        description: 'Profil budowania'
+        type: choice
+        options: [preview, production]
+        default: preview
+jobs:
+  buduj:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      - run: npm ci
+      - name: Zbuduj w EAS
+        run: eas build --platform android --profile ${{ inputs.profil }} --non-interactive --no-wait
