@@ -48,10 +48,13 @@ jobs:
           sh server/testy/config-test.sh /tmp/config-test.php 127.0.0.1 root root http://127.0.0.1:8765
           php -S 127.0.0.1:8765 -t server > /tmp/php.log 2>&1 &
           sleep 1
-          php server/testy/test_api.php http://127.0.0.1:8765
+          php server/testy/test_api.php http://127.0.0.1:8765 > /tmp/test-serwer.txt 2>&1 || { cat /tmp/test-serwer.txt; grep -E "✘|Fatal|Error" /tmp/test-serwer.txt | head -20 | sed 's/^/::error::/'; exit 1; }
+          cat /tmp/test-serwer.txt
           # aplikacja (obliczenia + synchronizacja) na świeżej bazie, z tym samym serwerem
           mysql -h127.0.0.1 -uroot -proot -e "DROP DATABASE silt_test; CREATE DATABASE silt_test CHARACTER SET utf8mb4"
           for f in server/sql/0*.sql; do mysql -h127.0.0.1 -uroot -proot --default-character-set=utf8mb4 silt_test < "$f"; done
           rm -f /tmp/stat.json /tmp/sms.json
-          SILT_API=http://127.0.0.1:8765/api.php node --test --experimental-strip-types --no-warnings --import ./testy/rejestruj.mjs 'testy/*.test.ts'
-          ! grep -iE "warning|notice|fatal|deprecated" /tmp/php.log
+          node --version
+          SILT_API=http://127.0.0.1:8765/api.php node --test --experimental-strip-types --no-warnings --import ./testy/rejestruj.mjs 'testy/*.test.ts' > /tmp/test-app.txt 2>&1 || { cat /tmp/test-app.txt; grep -E "not ok|rror|message|expected|actual" /tmp/test-app.txt | head -30 | sed 's/^/::error::/'; exit 1; }
+          cat /tmp/test-app.txt
+          if grep -iE "warning|notice|fatal|deprecated" /tmp/php.log; then grep -iE "warning|notice|fatal|deprecated" /tmp/php.log | head -10 | sed 's/^/::error::/'; exit 1; fi
