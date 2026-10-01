@@ -7,6 +7,7 @@ import { API_URL, SYNC_CO_MS_NIEWYSLANE, SYNC_CO_MS_SPOKOJNIE, SYNC_PO_ZMIANIE_M
 import { liczNiewyslane, nasluchujZmian } from '@/db/zapis';
 import { utworzKlienta } from '@/sync/klient';
 import {
+  sprawdzHaslo as sprawdzHasloTabletu,
   synchronizuj,
   tokenTabletu,
   wyloguj as wylogujTablet,
@@ -23,6 +24,8 @@ type Kontekst = {
   synchronizujTeraz: () => Promise<StanSynchronizacji | null>;
   zaloguj: (haslo: string) => Promise<void>;
   wyloguj: () => Promise<void>;
+  /** Hasło aplikacji przed usunięciem listy: ok / zle / offline (brak zapamiętanego hasła i zasięgu) / blokada */
+  sprawdzHaslo: (haslo: string) => Promise<'ok' | 'zle' | 'offline' | 'blokada'>;
 };
 
 const Ctx = createContext<Kontekst>({
@@ -33,6 +36,7 @@ const Ctx = createContext<Kontekst>({
   synchronizujTeraz: async () => null,
   zaloguj: async () => {},
   wyloguj: async () => {},
+  sprawdzHaslo: async () => 'zle',
 });
 
 export const WERSJA_APLIKACJI = Constants.expoConfig?.version ?? '0.0.0';
@@ -125,8 +129,12 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     setStan(null);
   }, [db, klient]);
 
+  const sprawdzHaslo = useCallback((haslo: string) => sprawdzHasloTabletu(db, klient, haslo, MODEL, WERSJA_APLIKACJI), [db, klient]);
+
   return (
-    <Ctx.Provider value={{ zalogowany, stan, niewyslane, trwa, synchronizujTeraz, zaloguj, wyloguj }}>{children}</Ctx.Provider>
+    <Ctx.Provider value={{ zalogowany, stan, niewyslane, trwa, synchronizujTeraz, zaloguj, wyloguj, sprawdzHaslo }}>
+      {children}
+    </Ctx.Provider>
   );
 }
 

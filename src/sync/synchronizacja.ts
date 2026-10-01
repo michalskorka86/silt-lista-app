@@ -13,6 +13,7 @@ import { getUstawienie, setUstawienie } from '../db/ustawienia';
 import { doSqlite, kolumnyTabeli, KOLEJNOSC_TABEL, TABELE, type Tabela } from '../db/tabele';
 import { liczNiewyslane, nowyId, powiadom, teraz, transakcja, type Baza } from '../db/zapis';
 import { wczytajCennik, zapiszCennik, type Cennik } from '../logika/cennik';
+import { sha256 } from '../logika/sha256';
 import { BladPolaczenia, BladSerwera, type Klient } from './klient';
 
 export type StanSynchronizacji = {
@@ -40,12 +41,40 @@ export async function idTabletu(db: Baza): Promise<string> {
 
 export const tokenTabletu = (db: Baza) => getUstawienie(db, 'token');
 
+/** Skrót hasła zapamiętany na tablecie (samo hasło nie jest zapisywane). */
+const skrotHasla = (haslo: string, tabletId: string) => sha256(`silt-lista|${tabletId}|${haslo}`);
+
 /** Hasło → token tabletu. Rzuca BladSerwera('zle_haslo' | 'blokada') albo BladPolaczenia. */
 export async function zaloguj(db: Baza, klient: Klient, haslo: string, model: string, wersja: string): Promise<void> {
+  const tabletId = await idTabletu(db);
   const r = await klient<{ token: string }>('zaloguj', {
-    body: { haslo, tablet_id: await idTabletu(db), model, wersja },
+    body: { haslo, tablet_id: tabletId, model, wersja },
   });
   await setUstawienie(db, 'token', r.token);
+  await setUstawienie(db, 'haslo_skrot', skrotHasla(haslo, tabletId));
+}
+
+/**
+ * Sprawdza hasło aplikacji (to samo co przy logowaniu tabletu) — np. przed usunięciem listy.
+ * Działa bez zasięgu, jeśli tablet logował się w tej wersji aplikacji (zna skrót hasła).
+ * Tablet bez zapamiętanego skrótu sprawdza hasło na serwerze (i od razu go zapamiętuje).
+ */
+export async function sprawdzHaslo(
+  db: Baza,
+  klient: Klient,
+  haslo: string,
+  model: string,
+  wersja: string,
+): Promise<'ok' | 'zle' | 'offline' | 'blokada'> {
+  const skrot = await getUstawienie(db, 'haslo_skrot');
+  if (skrot) return skrot === skrotHasla(haslo, await idTabletu(db)) ? 'ok' : 'zle';
+  try {
+    await zaloguj(db, klient, haslo, model, wersja);
+    return 'ok';
+  } catch (e) {
+    if (e instanceof BladSerwera) return e.kod === 'blokada' ? 'blokada' : 'zle';
+    return 'offline';
+  }
 }
 
 export async function wyloguj(db: Baza, klient: Klient): Promise<void> {
@@ -55,6 +84,7 @@ export async function wyloguj(db: Baza, klient: Klient): Promise<void> {
     /* bez zasięgu też wylogowujemy tablet lokalnie */
   }
   await setUstawienie(db, 'token', null);
+  await setUstawienie(db, 'haslo_skrot', null);
 }
 
 // ── Wysyłka kolejki ───────────────────────────────────────────
@@ -235,6 +265,7 @@ async function synchronizujRaz(db: Baza, klient: Klient): Promise<StanSynchroniz
     if (e instanceof BladSerwera) {
       if (e.kod === 'zaloguj') {
         await setUstawienie(db, 'token', null);
+        await setUstawienie(db, 'haslo_skrot', null);
         return stan(db, 'zaloguj', e.message);
       }
       if (e.kod === 'aktualizacja') return stan(db, 'aktualizacja', e.message);

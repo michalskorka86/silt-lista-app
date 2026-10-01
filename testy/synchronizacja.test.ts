@@ -14,7 +14,8 @@ import { BazaNode } from './baza-node';
 import { przeliczGrupe, usun, wczytaj, wczytajGdzie, zapisz, zapiszWiele, type Baza } from '../src/db/zapis';
 import { wczytajCennik } from '../src/logika/cennik';
 import { BladSerwera, utworzKlienta } from '../src/sync/klient';
-import { synchronizuj, tokenTabletu, zaloguj } from '../src/sync/synchronizacja';
+import { sprawdzHaslo, synchronizuj, tokenTabletu, zaloguj } from '../src/sync/synchronizacja';
+import { setUstawienie } from '../src/db/ustawienia';
 
 const API = process.env.SILT_API;
 const HASLO = 'test123';
@@ -47,6 +48,18 @@ test('synchronizacja z serwerem', { skip: !API && 'brak SILT_API (serwer testowy
     await assert.rejects(zaloguj(db, klient, 'zle', 'test', '1.0.0'), (e) => e instanceof BladSerwera && e.kod === 'zle_haslo');
     await zaloguj(db, klient, HASLO, 'Lenovo test', '1.0.0');
     assert.ok(await tokenTabletu(db));
+  });
+
+  await t.test('hasło przed usunięciem listy: działa bez zasięgu, złe odrzuca', async () => {
+    const offline = utworzKlienta({ url: 'http://127.0.0.1:1/api.php', wersja: '1.0.0', token: () => tokenTabletu(db), timeoutMs: 2000 });
+    assert.equal(await sprawdzHaslo(db, offline, HASLO, 'x', '1.0.0'), 'ok');
+    assert.equal(await sprawdzHaslo(db, offline, 'zle', 'x', '1.0.0'), 'zle');
+    // tablet zalogowany starszą wersją (bez zapamiętanego skrótu): offline → prośba o zasięg, online → serwer sprawdza
+    await setUstawienie(db, 'haslo_skrot', null);
+    assert.equal(await sprawdzHaslo(db, offline, HASLO, 'x', '1.0.0'), 'offline');
+    assert.equal(await sprawdzHaslo(db, klient, 'zle', 'x', '1.0.0'), 'zle');
+    assert.equal(await sprawdzHaslo(db, klient, HASLO, 'x', '1.0.0'), 'ok');
+    assert.equal(await sprawdzHaslo(db, offline, HASLO, 'x', '1.0.0'), 'ok');
   });
 
   await t.test('pierwsza synchronizacja pobiera cennik', async () => {

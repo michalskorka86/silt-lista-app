@@ -28,14 +28,12 @@ import { useKomunikaty } from '../ui/Komunikaty';
 import { Okno, Przycisk, Przyciski } from '../ui/Okno';
 import { Podpowiedz, Pole, Rzad } from '../ui/Pole';
 import { IKONY_PLATNOSCI } from './KartaGrupy';
-import { SzybkieImiona } from './SzybkieImiona';
 
 // ── Instruktor (zakładka) ─────────────────────────────────────
 
 export function OknoInstruktor(props: {
   widoczne: boolean;
   data: string;
-  imiona: string[];
   onZamknij: () => void;
   onDodano: (id: string) => void;
 }) {
@@ -46,7 +44,7 @@ export function OknoInstruktor(props: {
   );
 }
 
-function TrescInstruktor({ data, imiona, onZamknij, onDodano }: { data: string; imiona: string[]; onZamknij: () => void; onDodano: (id: string) => void }) {
+function TrescInstruktor({ data, onZamknij, onDodano }: { data: string; onZamknij: () => void; onDodano: (id: string) => void }) {
   const db = useSQLiteContext();
   const { toast } = useKomunikaty();
   const [imie, setImie] = useState('');
@@ -59,7 +57,6 @@ function TrescInstruktor({ data, imiona, onZamknij, onDodano }: { data: string; 
   return (
     <>
       <Pole etykieta="Imię instruktora" value={imie} onChangeText={setImie} placeholder="np. Monika" maxLength={40} autoFocus onSubmitEditing={zapisz} autoCapitalize="words" />
-      <SzybkieImiona imiona={imiona} onWybierz={setImie} />
       <Przyciski>
         <Przycisk tekst="Anuluj" rodzaj="anuluj" onPress={onZamknij} />
         <Przycisk tekst="Dodaj ✓" onPress={zapisz} />

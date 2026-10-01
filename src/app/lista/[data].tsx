@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { DolneMenu } from '@/components/lista/DolneMenu';
@@ -17,18 +17,16 @@ import { atrakcja as znajdzAtrakcje } from '@/logika/cennik';
 import { dataKrotko, dataPL, plGrup } from '@/logika/format';
 import { usunInstruktora, usunListe, usunPozycje, type GraczPelny, type GrupaPelna } from '@/logika/lista';
 import { useMotyw } from '@/theme/motyw';
-import { wczytajPracownikow, type Pracownik } from '@/sync/synchronizacja';
 
 /** Lista dnia (#screen-lista z v19): zakładki instruktorów, pasek listy, „＋ Dodaj grupę”, karty grup, dolne menu. */
 export default function ListaDnia() {
   const { data, t } = useLocalSearchParams<{ data: string; t?: string }>();
   const { c } = useMotyw();
   const db = useSQLiteContext();
-  const { toast, potwierdz } = useKomunikaty();
+  const { toast, potwierdz, potwierdzHaslem } = useKomunikaty();
   const dzien = useDzien(data);
   const cennik = useCennik();
   const [aktywnaWybrana, setAktywna] = useState<string | null>(t ?? null);
-  const [pracownicy, setPracownicy] = useState<Pracownik[]>([]);
 
   // okna
   const [oknoInstr, setOknoInstr] = useState(false);
@@ -40,9 +38,6 @@ export default function ListaDnia() {
   const [podstawa, setPodstawa] = useState<GrupaPelna | null>(null);
   const [kdod, setKdod] = useState<GrupaPelna | null>(null);
 
-  useEffect(() => {
-    wczytajPracownikow(db).then(setPracownicy);
-  }, [db]);
 
   // Brak instruktorów na liście → od razu pytamy o imię (jak v19); „Anuluj” zamyka do następnego wejścia.
   const [pominietoInstr, setPominietoInstr] = useState(false);
@@ -75,9 +70,9 @@ export default function ListaDnia() {
   const usunZakladke = (id: string) => {
     const i = dzien.instruktorzy.find((x) => x.id === id);
     const n = liczby[id] ?? 0;
-    potwierdz({
+    potwierdzHaslem({
       tytul: '🗑 Usuń listę instruktora',
-      tekst: `Usunąć listę instruktora ${i?.imie ?? ''}${n ? ` razem z ${plGrup(n)}` : ''}? Listy pozostałych instruktorów zostają.`,
+      tekst: `Usunąć listę instruktora ${i?.imie ?? ''}${n ? ` razem z ${plGrup(n)}` : ''}? Listy pozostałych instruktorów zostają. Podaj hasło aplikacji, żeby potwierdzić.`,
       ok: 'Usuń listę',
       onOk: async () => {
         await usunInstruktora(db, id);
@@ -87,12 +82,12 @@ export default function ListaDnia() {
   };
 
   const usunDzien = () =>
-    potwierdz({
+    potwierdzHaslem({
       tytul: '🗑 Usuń listę dnia',
       tekst:
         `Usunąć całą listę z ${dataPL(data)} — wszystkich instruktorów (${plGrup(dzien.grupy.length)}), wydatki i pensje — z tabletu i z serwera?` +
         (dzien.lista?.s_stat_wyslano ? ' Statystyki z tego dnia są już wysłane — w bazie statystyk zostaną.' : '') +
-        ' Przez 7 dni można ją przywrócić z kosza.',
+        ' Przez 7 dni można ją przywrócić z kosza. Podaj hasło aplikacji, żeby potwierdzić.',
       ok: 'Usuń listę',
       onOk: async () => {
         await usunListe(db, data);
@@ -144,8 +139,8 @@ export default function ListaDnia() {
             ) : null}
             {dzien.instruktorzy.length > 1 ? ` · razem ${plGrup(dzien.grupy.length)}` : ''}
           </Text>
-          {instr ? <Przycisk tekst={`🗑 Usuń listę: ${instr.imie}`} rodzaj="usun" onPress={() => usunZakladke(instr.id)} style={styles.barBtn} /> : null}
-          <Przycisk tekst="🗑 Usuń całą listę dnia" rodzaj="usun" onPress={usunDzien} style={styles.barBtn} />
+          {instr ? <Przycisk tekst={`🗑 Usuń listę: ${instr.imie}`} rodzaj="usun" onPress={() => usunZakladke(instr.id)} rozciagnij={false} style={styles.barBtn} /> : null}
+          <Przycisk tekst="🗑 Usuń całą listę dnia" rodzaj="usun" onPress={usunDzien} rozciagnij={false} style={styles.barBtn} />
         </View>
 
         <Pressable onPress={dodajGrupe} style={({ pressed }) => [styles.addGroup, { borderColor: pressed ? c.accent : c.border2 }]}>
@@ -165,7 +160,6 @@ export default function ListaDnia() {
       <OknoInstruktor
         widoczne={oknoInstr || pytajOInstr}
         data={data}
-        imiona={pracownicy.map((p) => p.imie)}
         onZamknij={() => {
           setOknoInstr(false);
           setPominietoInstr(true);
@@ -194,7 +188,7 @@ const styles = StyleSheet.create({
   bar: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8, paddingVertical: 10, paddingHorizontal: 12, borderWidth: 1, borderRadius: Size.r2 },
   barInfo: { flex: 1, minWidth: 180, fontFamily: Fonts.regular, fontSize: 13 },
   barB: { fontFamily: Fonts.bold, fontSize: 15 },
-  barBtn: { flexGrow: 0, flexShrink: 0, flexBasis: 'auto', paddingVertical: 9, paddingHorizontal: 14, minHeight: 40 },
+  barBtn: { paddingVertical: 9, paddingHorizontal: 14, minHeight: 40 },
   addGroup: { alignItems: 'center', justifyContent: 'center', padding: 16, borderWidth: 2, borderStyle: 'dashed', borderRadius: Size.r2 },
   addGroupTxt: { fontFamily: Fonts.bold, fontSize: 15 },
   pusto: { textAlign: 'center', paddingVertical: 40, paddingHorizontal: 16, fontFamily: Fonts.regular, fontSize: 14 },

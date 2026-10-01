@@ -69,6 +69,7 @@ export function Przycisk({
   onPress,
   rodzaj = 'dalej',
   wylaczony,
+  rozciagnij = true,
   style,
   tekstStyle,
 }: {
@@ -76,6 +77,8 @@ export function Przycisk({
   onPress: () => void;
   rodzaj?: RodzajPrzycisku;
   wylaczony?: boolean;
+  /** true (domyślnie) = wypełnia miejsce w rzędzie przycisków; false = szerokość według napisu */
+  rozciagnij?: boolean;
   style?: StyleProp<ViewStyle>;
   tekstStyle?: StyleProp<TextStyle>;
 }) {
@@ -90,6 +93,7 @@ export function Przycisk({
       disabled={wylaczony}
       style={({ pressed }) => [
         styles.btn,
+        rozciagnij && styles.rozciagnij,
         { backgroundColor: tlo, borderColor: ramka, opacity: wylaczony ? 0.4 : pressed ? 0.75 : 1 },
         style,
       ]}>
@@ -123,8 +127,8 @@ const styles = StyleSheet.create({
   tytul: { fontFamily: Fonts.extrabold, fontSize: 18, marginBottom: 14 },
   podtytul: { fontFamily: Fonts.regular, fontSize: 13, marginTop: -8, marginBottom: 14, lineHeight: 18 },
   przyciski: { flexDirection: 'row', gap: 8, marginTop: 16 },
+  rozciagnij: { flex: 1 },
   btn: {
-    flex: 1,
     minHeight: 48,
     paddingVertical: 13,
     paddingHorizontal: 10,
