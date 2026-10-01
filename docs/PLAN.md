@@ -60,8 +60,8 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 ## 3. Nowe funkcje v1
 - [x] Ustalić wygląd raportu PDF (co jest na wydruku) (Razem) — jak v19 (A4 poziomo, grupy od najstarszej) + strona: pensje (tylko podstawa, bez premii), wydatki, podsumowanie dnia.
 - [x] PDF dnia generowany na tablecie (bez internetu) (Claude) — Menu → Raport PDF i Archiwum → Drukuj / PDF: podgląd, 🖨️ Drukuj, 📤 Zapisz / wyślij (menu Androida: Dysk, mail, WhatsApp, Pliki).
-- [ ] Foldery miesięczne na tablecie (Claude) — Wybór miejsca przy 1. uruchomieniu, np. Dokumenty/SILT Lista/2026-09 Wrzesień/2026-09-30 Lista.pdf. Pliki przetrwają odinstalowanie.
-- [ ] Automatyczne tworzenie PDF ok. 3:00 w nocy (Claude) — Plus dorabianie brakujących PDF-ów przy każdym uruchomieniu.
+- [x] Foldery miesięczne na tablecie (Claude) — folder wybierany przy 1. uruchomieniu lub w Opcjach (📁). — Wybór miejsca przy 1. uruchomieniu, np. Dokumenty/SILT Lista/2026-09 Wrzesień/2026-09-30 Lista.pdf. Pliki przetrwają odinstalowanie.
+- [x] Automatyczne tworzenie PDF ok. 3:00 w nocy (Claude) — Plus dorabianie brakujących PDF-ów przy każdym uruchomieniu. — Zadanie w tle co ok. godzinę (Android wybiera chwilę); wczorajsza lista po 3:00; zmieniona stara lista → nowy PDF; ostatnie 45 dni; Opcje → 🔄 robi od razu.
 - [ ] Wbudowana wysyłka PDF na Google Drive (konto firmowe) (Claude) — Ta sama struktura folderów. Bez zasięgu czeka w kolejce. Kopie NIE idą na serwer.
 - [ ] Kosz: skasowana grupa do przywrócenia przez 7 dni (Claude)
 - [ ] Przywracanie danych na nowym tablecie (Claude)
@@ -99,4 +99,5 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 - Wydatki/pensje, podsumowanie dnia, wysyłka statystyk z tabletu, Menu (Cennik, Opcje) — gotowe (01.10).
 - Archiwum list (z hasłem) i podgląd rezerwacji (offline) — gotowe (01.10). Na serwer: nowy lib/rezerwacje.php, api.php, wpis REZ_PODGLAD_URL w config.php.
 - Raport PDF ręczny — gotowy (01.10). Wymaga nowej wersji APK (nowe moduły: drukowanie, udostępnianie, podgląd).
-- Następny krok: automatyczny PDF ok. 3:00 + kopia na Google Drive (osobny krok, po teście ręcznego raportu).
+- Automatyczne PDF-y + foldery miesięcy — gotowe (01.10), do sprawdzenia na tablecie (nowy APK).
+- Następny krok: kopia PDF na Google Drive (potrzebne firmowe konto Google).

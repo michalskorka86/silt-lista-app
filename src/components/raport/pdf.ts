@@ -15,7 +15,7 @@ export async function utworzPdf(html: string, nazwa: string): Promise<string> {
   const { uri } = await Print.printToFileAsync({ html, ...A4_POZIOMO });
   const cel = new File(Paths.cache, nazwa);
   if (cel.exists) cel.delete();
-  new File(uri).move(cel);
+  await new File(uri).move(cel);
   return cel.uri;
 }
 

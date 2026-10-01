@@ -14,6 +14,8 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 
 import { Logowanie } from '@/components/Logowanie';
+import { AutomatPdf } from '@/components/raport/AutomatPdf';
+import '@/components/raport/zadanieTla'; // zadanie w tle (PDF w nocy) — definiowane przy starcie
 import { KomunikatyProvider } from '@/components/ui/Komunikaty';
 import { DB_NAME, migrateDbIfNeeded } from '@/db/migrations';
 import { SyncProvider, useSync } from '@/sync/SyncProvider';
@@ -32,6 +34,7 @@ function Nawigacja() {
       ) : (
         <Stack screenOptions={{ headerShown: false, animation: 'fade', contentStyle: { backgroundColor: c.bg } }} />
       )}
+      {zalogowany ? <AutomatPdf /> : null}
     </>
   );
 }

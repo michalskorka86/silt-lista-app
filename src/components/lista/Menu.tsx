@@ -1,13 +1,16 @@
 import { router } from 'expo-router';
-import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useSQLiteContext } from 'expo-sqlite';
+import { useEffect, useState } from 'react';
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Fonts } from '@/constants/theme';
+import { getUstawienie } from '@/db/ustawienia';
 import { useCennik } from '@/hooks/useDane';
-import { zl } from '@/logika/format';
+import { dataPL, zl } from '@/logika/format';
 import { useSync, WERSJA_APLIKACJI } from '@/sync/SyncProvider';
 import { useMotyw } from '@/theme/motyw';
 
+import { folderPdf, KLUCZ_OSTATNI, wybierzFolder, zrobBrakujacePdf } from '../raport/automat';
 import { useKomunikaty } from '../ui/Komunikaty';
 import { Okno, Przycisk, Przyciski } from '../ui/Okno';
 
@@ -109,6 +112,49 @@ function OknoCennik({ onZamknij }: { onZamknij: () => void }) {
 function OknoOpcje({ onZamknij }: { onZamknij: () => void }) {
   const { toast, potwierdz } = useKomunikaty();
   const { stan, niewyslane, trwa, synchronizujTeraz, wyloguj } = useSync();
+  const db = useSQLiteContext();
+  const [pdf, setPdf] = useState<{ folder: string | null; ostatni: string } | null>(null);
+  const [pdfTrwa, setPdfTrwa] = useState(false);
+  const [odswiez, setOdswiez] = useState(0);
+
+  useEffect(() => {
+    let aktywny = true;
+    (async () => {
+      const f = await folderPdf(db);
+      const o = JSON.parse((await getUstawienie(db, KLUCZ_OSTATNI)) ?? 'null') as { data: string; t: string } | null;
+      if (aktywny)
+        setPdf({
+          folder: f?.nazwa ?? null,
+          ostatni: o ? `ostatni: lista ${dataPL(o.data)} (${new Date(o.t).toLocaleString('pl-PL', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' })})` : 'jeszcze żadnego',
+        });
+    })();
+    return () => {
+      aktywny = false;
+    };
+  }, [db, odswiez]);
+
+  const zmienFolder = async () => {
+    const nazwa = await wybierzFolder(db);
+    if (!nazwa) return;
+    toast(`📁 PDF-y będą zapisywane w: ${nazwa}`);
+    setOdswiez((n) => n + 1);
+    zrobTeraz();
+  };
+
+  const zrobTeraz = async () => {
+    if (pdfTrwa) return;
+    setPdfTrwa(true);
+    const w = await zrobBrakujacePdf(db);
+    setPdfTrwa(false);
+    setOdswiez((n) => n + 1);
+    toast(
+      w.bledy.length
+        ? `❌ Nie udało się zrobić PDF: ${w.bledy[0]}`
+        : w.zrobione.length
+          ? `✅ Zrobiono PDF: ${w.zrobione.length}`
+          : '✅ Wszystkie PDF-y są aktualne',
+    );
+  };
 
   const sync = async () => {
     const s = await synchronizujTeraz();
@@ -148,6 +194,22 @@ function OknoOpcje({ onZamknij }: { onZamknij: () => void }) {
           })
         }
       />
+      {Platform.OS !== 'web' ? (
+        <>
+          <Opcja
+            l="Folder na raporty PDF"
+            sub={pdf?.folder ? `${pdf.folder} — PDF z każdej listy, w folderach miesięcy` : 'Nie wybrano — PDF-y są tylko w pamięci aplikacji'}
+            btn="📁"
+            onPress={zmienFolder}
+          />
+          <Opcja
+            l="Automatyczne PDF-y (w nocy, ok. 3:00)"
+            sub={pdfTrwa ? 'Tworzę PDF-y…' : (pdf?.ostatni ?? '')}
+            btn="🔄"
+            onPress={zrobTeraz}
+          />
+        </>
+      ) : null}
       <Opcja l="Wersja aplikacji" sub={`SILT Lista ${WERSJA_APLIKACJI}`} />
       <Przyciski>
         <Przycisk tekst="Zamknij" rodzaj="anuluj" onPress={onZamknij} />
