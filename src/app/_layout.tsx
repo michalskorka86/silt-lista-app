@@ -13,6 +13,7 @@ import { SQLiteProvider } from 'expo-sqlite';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 
+import { Aktualizacje } from '@/components/Aktualizacje';
 import { Logowanie } from '@/components/Logowanie';
 import { AutomatPdf } from '@/components/raport/AutomatPdf';
 import '@/components/raport/zadanieTla'; // zadanie w tle (PDF w nocy) — definiowane przy starcie
@@ -35,6 +36,7 @@ function Nawigacja() {
         <Stack screenOptions={{ headerShown: false, animation: 'fade', contentStyle: { backgroundColor: c.bg } }} />
       )}
       {zalogowany ? <AutomatPdf /> : null}
+      <Aktualizacje />
     </>
   );
 }

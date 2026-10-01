@@ -67,7 +67,7 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 - [ ] Przywracanie danych na nowym tablecie (Claude)
 - [ ] Zgłaszanie błędów (raport, gdy aplikacja się wysypie) (Claude)
 - [ ] Blokada starej wersji w aplikacji (Claude)
-- [ ] Aktualizacje „w powietrzu” (bez nowej instalacji) (Claude)
+- [x] Aktualizacje „w powietrzu” (bez nowej instalacji) (Claude) — EAS Update: GitHub → Actions → „Wyślij aktualizację”. Tablet pobiera przy starcie i po powrocie po 10 min przerwy; Opcje → ⬇️ od razu. Nowy APK tylko przy nowych modułach systemowych.
 - [~] PIN admina + podgląd dnia (przychód, gracze, kulki, dym) (Claude) — PIN gotowy (01.10): klawiatura 4 cyfr do Archiwum i usuwania list; bez PIN-u na serwerze — hasło aplikacji. Podgląd dnia do zrobienia.
 
 ## 4. Panel www
@@ -101,4 +101,5 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 - Raport PDF ręczny — gotowy (01.10). Wymaga nowej wersji APK (nowe moduły: drukowanie, udostępnianie, podgląd).
 - Automatyczne PDF-y + foldery miesięcy — gotowe (01.10), do sprawdzenia na tablecie (nowy APK).
 - PIN admina zamiast hasła (Archiwum, usuwanie list) — gotowy (01.10). Kopia PDF na Google Drive — na sam koniec.
-- Następny krok: aktualizacje „w powietrzu”, potem kosz i zgłaszanie błędów.
+- Aktualizacje „w powietrzu” — gotowe (01.10); działają od następnego APK.
+- Następny krok: kosz i zgłaszanie błędów.

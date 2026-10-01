@@ -1,0 +1,39 @@
+# Aktualizacja „w powietrzu” (EAS Update) — bez budowania i instalowania APK. Uruchamiana RĘCZNIE:
+# GitHub → Actions → „Wyślij aktualizację” → Run workflow → kanał + krótki opis.
+#   preview    = tablety z APK z „Buduj aplikację” (preview)
+#   production = aplikacja z Google Play
+# Tablety pobierają ją same (przy starcie / po powrocie do aplikacji).
+# Dochodzi tylko do APK z tymi samymi modułami systemowymi — gdy doszedł nowy moduł, trzeba zbudować nowy APK.
+# Wymaga sekretu EXPO_TOKEN (ten sam co do budowania).
+name: Wyślij aktualizację
+on:
+  workflow_dispatch:
+    inputs:
+      kanal:
+        description: 'Kanał'
+        type: choice
+        options: [preview, production]
+        default: preview
+      opis:
+        description: 'Co się zmieniło (krótko)'
+        type: string
+        default: 'Poprawki'
+jobs:
+  aktualizuj:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      - run: npm ci
+      - name: Wyślij do EAS Update
+        env:
+          KANAL: ${{ inputs.kanal }}
+          OPIS: ${{ inputs.opis }}
+        run: eas update --platform android --channel "$KANAL" --environment "$KANAL" --message "$OPIS" --non-interactive

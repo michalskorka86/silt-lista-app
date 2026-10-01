@@ -10,6 +10,7 @@ import { dataPL, zl } from '@/logika/format';
 import { useSync, WERSJA_APLIKACJI } from '@/sync/SyncProvider';
 import { useMotyw } from '@/theme/motyw';
 
+import { opisWersji, pobierzIPrzeladuj } from '../Aktualizacje';
 import { folderPdf, KLUCZ_OSTATNI, wybierzFolder, zrobBrakujacePdf } from '../raport/automat';
 import { useKomunikaty } from '../ui/Komunikaty';
 import { Okno, Przycisk, Przyciski } from '../ui/Okno';
@@ -141,6 +142,20 @@ function OknoOpcje({ onZamknij }: { onZamknij: () => void }) {
     zrobTeraz();
   };
 
+  const [aktTrwa, setAktTrwa] = useState(false);
+  const sprawdzAktualizacje = async () => {
+    if (aktTrwa) return;
+    setAktTrwa(true);
+    try {
+      const w = await pobierzIPrzeladuj(); // gdy jest nowa wersja — aplikacja od razu się przeładuje
+      toast(w === 'brak' ? '✅ Masz najnowszą wersję' : w === 'niedostepne' ? 'Aktualizacje działają tylko w zainstalowanej aplikacji' : '⬇️ Instaluję…');
+    } catch {
+      toast('📴 Nie udało się sprawdzić aktualizacji — brak internetu?');
+    } finally {
+      setAktTrwa(false);
+    }
+  };
+
   const zrobTeraz = async () => {
     if (pdfTrwa) return;
     setPdfTrwa(true);
@@ -210,7 +225,12 @@ function OknoOpcje({ onZamknij }: { onZamknij: () => void }) {
           />
         </>
       ) : null}
-      <Opcja l="Wersja aplikacji" sub={`SILT Lista ${WERSJA_APLIKACJI}`} />
+      <Opcja
+        l="Wersja aplikacji"
+        sub={aktTrwa ? 'Sprawdzam aktualizację…' : `SILT Lista ${opisWersji(WERSJA_APLIKACJI)}`}
+        btn={Platform.OS !== 'web' ? '⬇️' : undefined}
+        onPress={sprawdzAktualizacje}
+      />
       <Przyciski>
         <Przycisk tekst="Zamknij" rodzaj="anuluj" onPress={onZamknij} />
       </Przyciski>
