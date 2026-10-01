@@ -120,7 +120,8 @@ export type Grupa = {
   w_kwota: number;
 };
 
-export type SprzetGracza = { nazwa: string; kwota: number };
+/** Własny sprzęt gracza: nazwa i cena z cennika (cenę można zmienić przy graczu); i = pozycja w cenniku, ikona do wyświetlenia. */
+export type SprzetGracza = { nazwa: string; kwota: number; ikona?: string; i?: number };
 
 export type Gracz = {
   id: string;

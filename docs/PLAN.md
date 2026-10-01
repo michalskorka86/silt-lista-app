@@ -47,9 +47,9 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 - [x] Lista dnia: zakładki instruktorów, dodawanie grup (Claude)
 - [x] Karta grupy i gracze (Claude)
 - [x] Kulki i dym (Claude)
-- [ ] Inny pakiet / własny sprzęt (Claude)
+- [x] Inny pakiet / własny sprzęt (Claude)
 - [x] Pieniądze: kwota, zadatek, płatność (Claude)
-- [ ] Faktura i dodatki (Claude)
+- [x] Faktura i dodatki (Claude)
 - [ ] Koniec dnia: godziny, pensje, wydatki (Claude)
 - [ ] Archiwum list (z hasłem) (Claude)
 - [ ] Podgląd rezerwacji (SILT / Arsenał, działa offline) (Claude)
@@ -95,4 +95,5 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 - Etap 2 — fundament danych gotowy: tabele list w SQLite (migracja 2), zapis z kolejką, obliczenia grupy (port calc() z v19, zgodny na 5000 losowych grupach), synchronizacja (wysyłka, pobieranie, cennik, pracownicy), logowanie tabletu, „⏳ Niewysłane” w górnym pasku. Testy z prawdziwym serwerem PHP w GitHub.
 - Ustalenia: jedna lista na dzień z zakładkami instruktorów (jak v19); kwoty grup liczy tablet; kosz 7 dni na tablecie, 30 dni na serwerze; czas w bazie UTC; v19 nie ma danych do przeniesienia; wersje testowe aplikacji 0.x (min_wersja_app 0.1.0 do wydania 1.0).
 - Ekrany (01.10): Utwórz listę (kalendarz, imię instruktora), lista dnia (zakładki, pasek, karty grup), gracze, kulki z pakietu/dokupione, dym, inne, osób/kulki bez imion/kwota/zadatek (numpad), płatność, podstawa i cena kulek dodatkowych. Sprawdzone w przeglądarce z lokalnym serwerem — dane dochodzą na serwer.
-- Następny krok: pakiet gracza i własny sprzęt (worki), dodatki, faktura, ekran Wydatki/pensje, menu (Cennik/Raport/Rezerwacje/Opcje), Archiwum.
+- Pakiet gracza, własny sprzęt + worki, dodatki, faktura — gotowe (01.10).
+- Następny krok: ekran Wydatki i pensje (+ wysyłka do Statystyk z tabletu), menu (Cennik/Raport/Rezerwacje/Opcje), Archiwum.

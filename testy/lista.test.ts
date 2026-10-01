@@ -7,12 +7,18 @@ import { migrateDbIfNeeded } from '../src/db/migrations';
 import { liczNiewyslane } from '../src/db/zapis';
 import type { Atrakcja } from '../src/logika/cennik';
 import {
+  dodajDodatek,
   dodajDym,
   dodajGracza,
   dodajGrupe,
   dodajInne,
   dodajKulki,
+  dodajWorek,
   datyList,
+  usunDodatek,
+  usunFakture,
+  zapiszFakture,
+  zmienGracza,
   usunGracza,
   usunInstruktora,
   usunListe,
@@ -128,4 +134,37 @@ test('Najnowsza grupa na górze; usunięcie instruktora zabiera jego grupy; usun
   assert.equal(dz.grupy.length, 0);
   assert.deepEqual(await datyList(db), []);
   assert.ok((await liczNiewyslane(db)) > 0, 'usunięcia czekają w kolejce na serwer');
+});
+
+test('Własny sprzęt bez podstawy, worki, inny pakiet gracza, dodatki i faktura', async () => {
+  const t = (await utworzListe(db, D, 'Monika'))!;
+  const gid = await dodajGrupe(db, D, t, '', KLASYK, KLASYK.pakiety[0]);
+  const a = await dodajGracza(db, gid, 'Ania');
+  const b = await dodajGracza(db, gid, 'Bartek');
+  // Ania: własny sprzęt (40) + 2 worki po 40 zł → bez podstawy 130
+  await zmienGracza(db, a, { sprzet: [{ nazwa: 'Własny', kwota: 40, i: 0 }] });
+  await dodajWorek(db, a, { szt: 500, cena: 40 });
+  await dodajWorek(db, a, { szt: 500, cena: 40 });
+  // Bartek: inny pakiet (MAXI 180)
+  await zmienGracza(db, b, { pakiet_nazwa: 'Pakiet MAXI', pakiet_kulki: 1000, pakiet_cena: 180 });
+  let g = (await wczytajDzien(db, D)).grupy[0];
+  assert.equal(g.w_kwota, 40 + 80 + 180);
+  assert.equal(g.w_kulki, 1000);
+  assert.equal(g.gracze[0].worki_ilosc, 2);
+
+  await dodajDodatek(db, gid, 'Ognisko', 200);
+  await dodajDodatek(db, gid, 'Dyplomy', 0);
+  g = (await wczytajDzien(db, D)).grupy[0];
+  assert.equal(g.dodatki.length, 2);
+  assert.equal(g.w_kwota, 300 + 200);
+  await usunDodatek(db, g.dodatki[0].id);
+  assert.equal((await wczytajDzien(db, D)).grupy[0].w_kwota, 300);
+
+  await zapiszFakture(db, { grupa_id: gid, nip: ' 1234567890 ', tel: '500', email: 'a@b.pl', kwota: 300, platnosc: 'Przelew' });
+  g = (await wczytajDzien(db, D)).grupy[0];
+  assert.equal(g.faktura?.nip, '1234567890');
+  await usunFakture(db, gid);
+  assert.equal((await wczytajDzien(db, D)).grupy[0].faktura, null);
+  await zapiszFakture(db, { grupa_id: gid, nip: '1', tel: '2', email: 'c@d.pl', kwota: 1, platnosc: 'Karta' });
+  assert.equal((await wczytajDzien(db, D)).grupy[0].faktura?.platnosc, 'Karta', 'faktura przywrócona po „Bez faktury”');
 });

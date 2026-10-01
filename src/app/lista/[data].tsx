@@ -5,7 +5,17 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { DolneMenu } from '@/components/lista/DolneMenu';
 import { KartaGrupy, type AkcjeKarty } from '@/components/lista/KartaGrupy';
-import { OknoGracz, OknoInstruktor, OknoKdod, OknoNowaGrupa, OknoPlatnosc, OknoPodstawa, OknoPozycja } from '@/components/lista/Okna';
+import {
+  OknoDodatek,
+  OknoFaktura,
+  OknoGracz,
+  OknoInstruktor,
+  OknoKdod,
+  OknoNowaGrupa,
+  OknoPlatnosc,
+  OknoPodstawa,
+  OknoPozycja,
+} from '@/components/lista/Okna';
 import { Zakladki } from '@/components/lista/Zakladki';
 import { TopBar } from '@/components/TopBar';
 import { useKomunikaty } from '@/components/ui/Komunikaty';
@@ -15,7 +25,7 @@ import type { Wiersz } from '@/db/tabele';
 import { useCennik, useDzien } from '@/hooks/useDane';
 import { atrakcja as znajdzAtrakcje } from '@/logika/cennik';
 import { dataKrotko, dataPL, plGrup } from '@/logika/format';
-import { usunInstruktora, usunListe, usunPozycje, type GraczPelny, type GrupaPelna } from '@/logika/lista';
+import { usunDodatek, usunInstruktora, usunListe, usunPozycje, type GraczPelny, type GrupaPelna } from '@/logika/lista';
 import { useMotyw } from '@/theme/motyw';
 
 /** Lista dnia (#screen-lista z v19): zakładki instruktorów, pasek listy, „＋ Dodaj grupę”, karty grup, dolne menu. */
@@ -37,6 +47,8 @@ export default function ListaDnia() {
   const [platnosc, setPlatnosc] = useState<GrupaPelna | null>(null);
   const [podstawa, setPodstawa] = useState<GrupaPelna | null>(null);
   const [kdod, setKdod] = useState<GrupaPelna | null>(null);
+  const [dodatek, setDodatek] = useState<GrupaPelna | null>(null);
+  const [faktura, setFaktura] = useState<GrupaPelna | null>(null);
 
 
   // Brak instruktorów na liście → od razu pytamy o imię (jak v19); „Anuluj” zamyka do następnego wejścia.
@@ -56,6 +68,10 @@ export default function ListaDnia() {
   const pytajOInstr = !!dzien.lista && !dzien.instruktorzy.length && !pominietoInstr;
   const grupy = dzien.grupy.filter((g) => !aktywna || g.instruktor_id === aktywna);
   const atr = (g: GrupaPelna | null) => (g ? znajdzAtrakcje(cennik, g.atrakcja) : undefined);
+  const katalog = [...(cennik?.dodatki.glowne ?? []), ...(cennik?.dodatki.wiecej ?? [])];
+  const ikonaDodatku = (nazwa: string) => katalog.find((d) => d.nazwa === nazwa)?.ikona ?? '⭐';
+  /** grupa z najświeższymi danymi (okno otwarte przed zapisem widzi aktualną kwotę / fakturę) */
+  const aktualna = (g: GrupaPelna | null) => (g ? (dzien.grupy.find((x) => x.id === g.id) ?? g) : null);
 
   const dodajGrupe = () => {
     if (!aktywna) {
@@ -110,8 +126,10 @@ export default function ListaDnia() {
     onPlatnosc: () => setPlatnosc(g),
     onPodstawa: () => setPodstawa(g),
     onKdod: () => setKdod(g),
-    onFaktura: wBudowie('Faktura'),
-    onDodatek: wBudowie('Dodatki'),
+    onFaktura: () => setFaktura(g),
+    onDodatek: () => setDodatek(g),
+    onUsunDodatek: (d) =>
+      potwierdz({ tytul: 'Usuń dodatek', tekst: `Usunąć „${d.nazwa}”?`, ok: 'Usuń', onOk: () => usunDodatek(db, d.id) }),
     onZdjecie: wBudowie('Gracze ze zdjęcia kartki'),
   });
 
@@ -148,7 +166,9 @@ export default function ListaDnia() {
         </Pressable>
 
         {grupy.length ? (
-          grupy.map((g, i) => <KartaGrupy key={g.id} grupa={g} numer={grupy.length - i} atrakcja={atr(g)} akcje={akcje(g)} />)
+          grupy.map((g, i) => (
+            <KartaGrupy key={g.id} grupa={g} numer={grupy.length - i} atrakcja={atr(g)} akcje={akcje(g)} ikonaDodatku={ikonaDodatku} />
+          ))
         ) : (
           <Text style={[styles.pusto, { color: c.text2 }]}>
             {dzien.instruktorzy.length ? 'Brak grup — kliknij „＋ Dodaj grupę”.' : 'Dodaj instruktora (＋ 👷 u góry), a potem grupę.'}
@@ -173,11 +193,16 @@ export default function ListaDnia() {
         }}
       />
       <OknoNowaGrupa widoczne={oknoGrupa} data={data} instruktorId={aktywna} cennik={cennik} onZamknij={() => setOknoGrupa(false)} />
-      <OknoGracz stan={gracz} onZamknij={() => setGracz(null)} />
-      <OknoPozycja stan={pozycja} atrakcja={atr(pozycja?.grupa ?? null)} dymCena={cennik?.dym_cena ?? 10} onZamknij={() => setPozycja(null)} />
+      <OknoGracz stan={gracz} atrakcja={atr(gracz?.grupa ?? null)} cennik={cennik} onZamknij={() => setGracz(null)} />
+      <OknoPozycja stan={pozycja} atrakcja={atr(pozycja?.grupa ?? null)} dymCena={cennik?.dym_cena ?? 10}
+        worek={cennik?.worek ?? { szt: 500, cena: 40 }}
+        onZamknij={() => setPozycja(null)}
+      />
       <OknoPlatnosc grupa={platnosc} onZamknij={() => setPlatnosc(null)} />
       <OknoPodstawa grupa={podstawa} atrakcja={atr(podstawa)} onZamknij={() => setPodstawa(null)} />
       <OknoKdod grupa={kdod} atrakcja={atr(kdod)} onZamknij={() => setKdod(null)} />
+      <OknoDodatek grupa={dodatek} cennik={cennik} onZamknij={() => setDodatek(null)} />
+      <OknoFaktura grupa={aktualna(faktura)} onZamknij={() => setFaktura(null)} />
     </View>
   );
 }

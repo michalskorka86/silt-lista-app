@@ -52,7 +52,7 @@ export function WierszGracza({
           <Chip styl="pk" tekst={`📦 ${gracz.pakiet_nazwa ?? ''} ${zl(gracz.pakiet_cena)}`} onPress={onEdytuj} />
         ) : null}
         {(gracz.sprzet ?? []).map((x, i) => (
-          <Chip key={`s${i}`} styl="sp" tekst={`🎒 ${x.nazwa} ${zl(x.kwota)}`} onPress={onEdytuj} />
+          <Chip key={`s${i}`} styl="sp" tekst={`${x.ikona ?? '🎒'} ${x.nazwa} ${zl(x.kwota)}`} onPress={onEdytuj} />
         ))}
         {gracz.worki_ilosc ? (
           <Chip

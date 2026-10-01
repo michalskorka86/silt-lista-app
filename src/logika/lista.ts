@@ -4,7 +4,7 @@
  * Bez importów React Native (testy w Node: testy/lista.test.ts).
  */
 
-import type { Gracz, Grupa, Platnosc, Pozycja, Wiersz } from '../db/tabele';
+import type { Faktura, Gracz, Grupa, Platnosc, Pozycja, Wiersz } from '../db/tabele';
 import { nowyId, przeliczGrupe, teraz, usun, wczytaj, wczytajGdzie, zapisz, zapiszWiele, type Baza } from '../db/zapis';
 import type { Atrakcja, Pakiet } from './cennik';
 import { terazHM } from './format';
@@ -279,3 +279,46 @@ export async function usunPozycje(db: Baza, pozycjaId: string): Promise<void> {
 export const kulkiZPakietu = (p: GraczPelny) =>
   p.pozycje.filter((i) => i.rodzaj === 'kulki' && !i.dokupione).reduce((s, i) => s + i.ilosc, 0);
 
+/** „＋ worek” przy graczu z własnym sprzętem (jak addWorek w v19): kolejny worek w cenie z cennika lub ustalonej przy graczu. */
+export async function dodajWorek(db: Baza, graczId: string, worek: { szt: number; cena: number }): Promise<void> {
+  const p = await wczytaj(db, 'gracze', graczId);
+  if (!p) return;
+  if (p.worki_ilosc) await zmienGracza(db, graczId, { worki_ilosc: p.worki_ilosc + 1 });
+  else await zmienGracza(db, graczId, { worki_ilosc: 1, worki_szt: worek.szt, worki_cena: worek.cena });
+}
+
+// ── Dodatki grupy ─────────────────────────────────────────────
+
+export async function dodajDodatek(db: Baza, grupaId: string, nazwa: string, kwota: number): Promise<void> {
+  await zapisz(db, 'dodatki', {
+    id: nowyId('d'),
+    grupa_id: grupaId,
+    nazwa: nazwa.trim(),
+    kwota,
+    kolejnosc: await nastepnaKolejnosc(db, 'dodatki', 'grupa_id', grupaId),
+  });
+  await przeliczGrupe(db, grupaId);
+}
+
+export async function usunDodatek(db: Baza, dodatekId: string): Promise<void> {
+  const d = await wczytaj(db, 'dodatki', dodatekId);
+  if (!d) return;
+  await usun(db, 'dodatki', dodatekId);
+  await przeliczGrupe(db, d.grupa_id);
+}
+
+// ── Faktura ───────────────────────────────────────────────────
+
+/** Dane do faktury grupy — SMS z nimi idzie z serwera o 6:00 następnego dnia. */
+export async function zapiszFakture(db: Baza, f: Faktura): Promise<void> {
+  await zapisz(db, 'faktury', {
+    grupa_id: f.grupa_id,
+    nip: f.nip.trim(),
+    tel: f.tel.trim(),
+    email: f.email.trim(),
+    kwota: f.kwota,
+    platnosc: f.platnosc,
+  });
+}
+
+export const usunFakture = (db: Baza, grupaId: string) => usun(db, 'faktury', grupaId);

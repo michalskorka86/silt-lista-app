@@ -29,11 +29,25 @@ export type AkcjeKarty = {
   onKdod: () => void;
   onFaktura: () => void;
   onDodatek: () => void;
+  onUsunDodatek: (d: Wiersz<'dodatki'>) => void;
   onZdjecie: () => void;
 };
 
 /** Karta grupy (.group-card z v19): nagłówek, gracze, dodatki i ceny, Osób/Kulki/Kwota, Zadatek/Do zapłaty/Płatność/Faktura. */
-export function KartaGrupy({ grupa: g, numer, atrakcja, akcje }: { grupa: GrupaPelna; numer: number; atrakcja?: Atrakcja; akcje: AkcjeKarty }) {
+export function KartaGrupy({
+  grupa: g,
+  numer,
+  atrakcja,
+  akcje,
+  ikonaDodatku,
+}: {
+  grupa: GrupaPelna;
+  numer: number;
+  atrakcja?: Atrakcja;
+  akcje: AkcjeKarty;
+  /** ikona dodatku z katalogu (⭐ dla wpisanych ręcznie) */
+  ikonaDodatku: (nazwa: string) => string;
+}) {
   const { c } = useMotyw();
   const db = useSQLiteContext();
   const { potwierdz, numpad } = useKomunikaty();
@@ -146,11 +160,14 @@ export function KartaGrupy({ grupa: g, numer, atrakcja, akcje }: { grupa: GrupaP
       {/* dodatki i ceny */}
       <View style={styles.dod}>
         {g.dodatki.map((d) => (
-          <View key={d.id} style={[styles.dodChip, { borderColor: 'rgba(34,197,94,0.5)', backgroundColor: 'rgba(34,197,94,0.1)' }]}>
+          <Pressable
+            key={d.id}
+            onPress={() => akcje.onUsunDodatek(d)}
+            style={[styles.dodChip, { borderColor: 'rgba(34,197,94,0.5)', backgroundColor: 'rgba(34,197,94,0.1)' }]}>
             <Text style={[styles.dodTxt, { color: c.green }]}>
-              {d.nazwa} {d.kwota ? zl(d.kwota) : 'gratis'}
+              {ikonaDodatku(d.nazwa)} {d.nazwa} {d.kwota ? zl(d.kwota) : 'gratis'}
             </Text>
-          </View>
+          </Pressable>
         ))}
         <Pressable onPress={akcje.onDodatek} style={[styles.dodAdd, { borderColor: c.border2 }]}>
           <Text style={[styles.dodAddTxt, { color: c.text2 }]}>＋ Dodaj dodatek</Text>
