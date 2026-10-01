@@ -3,8 +3,8 @@
 Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika).
 
 ## Ustalenia
-- **Rodzaj aplikacji:** Pełna aplikacja na Androida (React Native + Expo), instalowana z Google Play.
-- **Dystrybucja:** Google Play, konto osobiste (na firmowym koncie Google), tylko test wewnętrzny dla Waszych tabletów. Bez D-U-N-S.
+- **Rodzaj aplikacji:** Pełna aplikacja na Androida (React Native + Expo), instalowana z pliku APK.
+- **Dystrybucja:** BEZ Google Play (decyzja Michała 01.10): APK z GitHuba instalowany z pliku, poprawki przez aktualizacje „w powietrzu”; nowy APK tylko przy nowych modułach systemowych.
 - **Budowanie:** Expo (EAS Build / Update / Submit) + kod w prywatnym repozytorium GitHub.
 - **Tablet:** Lenovo Tab M10 (3. gen.) LTE — aplikacja ma być lekka, PDF generowany w nocy.
 - **Wygląd:** Zostaje jak w v19. Ekrany odtwarzane ze zrzutów; poprawki tylko po uzgodnieniu.
@@ -19,7 +19,7 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 - **Bez zmian z v19:** Cron 6:00, SMS z danymi do faktur na 48534500503, wysyłka do Statystyk, podgląd rezerwacji.
 
 ## 0. Przygotowanie
-- [ ] Założyć konto Google Play Console (osobiste, na firmowym koncie Google) (Ty) — Jednorazowo 25 USD + potwierdzenie tożsamości. Bez D-U-N-S. Dystrybucja tylko przez test wewnętrzny.
+- [—] Konto Google Play Console — NIE robimy (bez Google Play, decyzja 01.10).
 - [x] Założyć darmowe konto Expo (expo.dev) (Ty) — Budowanie APK, aktualizacje w powietrzu, wysyłka do Google Play.
 - [x] Założyć konto GitHub + prywatne repozytorium (Ty) — Kod z historią; GitHub zleca build w Expo po każdej zmianie.
 - [x] Podać model tabletu Lenovo (Ty) — Lenovo Tab M10 (3. gen.) LTE.
@@ -78,7 +78,7 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 - [ ] Test bez zasięgu, restart, rozładowanie baterii (Ty)
 - [ ] Test wysyłki do Statystyk (nie dubluje) i SMS faktur (Razem)
 - [ ] Test PDF w nocy i wysyłki na Google Drive (Ty)
-- [ ] Wydanie w teście wewnętrznym + dodanie kont Google tabletów (Razem)
+- [ ] Wdrożenie: APK na wszystkie tablety + logowanie (Razem) — bez Google Play.
 - [ ] Aktualizacja instrukcji PDF dla instruktorów (Claude)
 - [ ] Wyłączenie starego PWA po okresie przejściowym (Ty)
 
