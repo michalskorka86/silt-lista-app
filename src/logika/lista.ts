@@ -8,7 +8,7 @@ import type { Faktura, Gracz, Grupa, Platnosc, Pozycja, Wiersz } from '../db/tab
 import { nowyId, przeliczGrupe, teraz, usun, wczytaj, wczytajGdzie, zapisz, zapiszWiele, type Baza } from '../db/zapis';
 import type { Atrakcja, Pakiet } from './cennik';
 import { terazHM } from './format';
-import { policzGrupe, type WynikGrupy } from './obliczenia';
+import { policzGrupe, round10, type WynikGrupy } from './obliczenia';
 
 // ── Odczyt dnia ───────────────────────────────────────────────
 
@@ -25,7 +25,13 @@ export type Dzien = {
   instruktorzy: Wiersz<'instruktorzy'>[];
   /** najnowsza na górze (jak v19) */
   grupy: GrupaPelna[];
+  wydatki: Wiersz<'wydatki'>[];
+  pensje: Wiersz<'pensje'>[];
+  podsumowanie: Podsumowanie;
 };
+
+/** Podsumowanie dnia (karta „📊 Podsumowanie dnia” w v19). */
+export type Podsumowanie = { brutto: number; zadatki: number; wydatki: number; pensje: number; netto: number; graczy: number; kulki: number };
 
 const wLiscie = (ids: string[]) => ids.map(() => '?').join(',');
 
@@ -45,13 +51,11 @@ export async function wczytajDzien(db: Baza, data: string): Promise<Dzien> {
     ? await wczytajGdzie(db, 'dodatki', `grupa_id IN (${wLiscie(gIds)})`, gIds, { kolejnosc: 'kolejnosc, zmieniono' })
     : [];
   const faktury = gIds.length ? await wczytajGdzie(db, 'faktury', `grupa_id IN (${wLiscie(gIds)})`, gIds) : [];
+  const wydatki = await wczytajGdzie(db, 'wydatki', 'data = ?', [data], { kolejnosc: 'kolejnosc, zmieniono' });
+  const pensje = await wczytajGdzie(db, 'pensje', 'data = ?', [data], { kolejnosc: 'kolejnosc, zmieniono' });
 
-  return {
-    data,
-    lista: lista && !lista.usunieto ? lista : null,
-    instruktorzy,
-    grupy: grupy.map((g) => {
-      const gg: GraczPelny[] = gracze
+  const pelne: GrupaPelna[] = grupy.map((g) => {
+    const gg: GraczPelny[] = gracze
         .filter((p) => p.grupa_id === g.id)
         .map((p) => ({ ...p, pozycje: pozycje.filter((i) => i.gracz_id === p.id) }));
       const dd = dodatki.filter((d) => d.grupa_id === g.id);
@@ -62,8 +66,21 @@ export async function wczytajDzien(db: Baza, data: string): Promise<Dzien> {
         faktura: faktury.find((f) => f.grupa_id === g.id) ?? null,
         wynik: policzGrupe(g, gg, dd),
       };
-    }),
+    });
+
+  const suma = (a: number[]) => Math.round(a.reduce((x, y) => x + y, 0) * 100) / 100;
+  const podsumowanie: Podsumowanie = {
+    brutto: suma(pelne.map((g) => g.wynik.kwota)),
+    zadatki: suma(pelne.map((g) => g.wynik.zad)),
+    wydatki: suma(wydatki.map((w) => w.kwota)),
+    pensje: suma(pensje.map((p) => p.kwota)),
+    netto: 0,
+    graczy: pelne.reduce((x, g) => x + g.wynik.gracze, 0),
+    kulki: pelne.reduce((x, g) => x + g.wynik.kulki, 0),
   };
+  podsumowanie.netto = Math.round((podsumowanie.brutto - podsumowanie.wydatki - podsumowanie.pensje) * 100) / 100;
+
+  return { data, lista: lista && !lista.usunieto ? lista : null, instruktorzy, grupy: pelne, wydatki, pensje, podsumowanie };
 }
 
 /** Daty, dla których na tablecie jest lista (archiwum, kropki w kalendarzu). */
@@ -322,3 +339,53 @@ export async function zapiszFakture(db: Baza, f: Faktura): Promise<void> {
 }
 
 export const usunFakture = (db: Baza, grupaId: string) => usun(db, 'faktury', grupaId);
+
+// ── Wydatki i pensje dnia ─────────────────────────────────────
+
+export async function zapiszWydatek(
+  db: Baza,
+  data: string,
+  w: { id?: string; opis: string; kwota: number; uwagi: string },
+): Promise<void> {
+  const istn = w.id ? await wczytaj(db, 'wydatki', w.id) : null;
+  await zapisz(db, 'wydatki', {
+    id: istn?.id ?? nowyId('w'),
+    data,
+    opis: w.opis.trim(),
+    kwota: w.kwota,
+    uwagi: w.uwagi.trim(),
+    kolejnosc: istn?.kolejnosc ?? (await nastepnaKolejnosc(db, 'wydatki', 'data', data)),
+  });
+}
+
+export const usunWydatek = (db: Baza, id: string) => usun(db, 'wydatki', id);
+
+/** Nowa pensja: kwota = godziny × stawka zaokrąglona do 10 zł (jak v19). premia_stawka idzie tylko do Statystyk. */
+export async function dodajPensje(
+  db: Baza,
+  data: string,
+  p: { imie: string; prac_id: string; godziny: number; stawka: number; premia_stawka: number },
+): Promise<void> {
+  await zapisz(db, 'pensje', {
+    id: nowyId('pn'),
+    data,
+    imie: p.imie.trim(),
+    prac_id: p.prac_id,
+    godziny: p.godziny,
+    stawka: p.stawka,
+    kwota: round10(p.godziny * p.stawka),
+    premia_stawka: p.premia_stawka,
+    kolejnosc: await nastepnaKolejnosc(db, 'pensje', 'data', data),
+  });
+}
+
+export async function zmienPensje(db: Baza, id: string, zmiany: { godziny?: number; kwota?: number }): Promise<void> {
+  const p = await wczytaj(db, 'pensje', id);
+  if (!p) return;
+  const godziny = zmiany.godziny ?? p.godziny;
+  // zmiana godzin przelicza kwotę od nowa; ręczna kwota zostaje taka, jak wpisana
+  const kwota = zmiany.kwota ?? (zmiany.godziny !== undefined ? round10(godziny * p.stawka) : p.kwota);
+  await zapisz(db, 'pensje', { ...p, godziny, kwota });
+}
+
+export const usunPensje = (db: Baza, id: string) => usun(db, 'pensje', id);

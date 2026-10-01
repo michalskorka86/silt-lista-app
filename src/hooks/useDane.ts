@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { nasluchujZmian } from '@/db/zapis';
 import { wczytajCennik, type Cennik } from '@/logika/cennik';
 import { datyList, wczytajDzien, type Dzien } from '@/logika/lista';
+import { wczytajPracownikow, type Pracownik } from '@/sync/synchronizacja';
 
 /** Odświeża dane po każdej zmianie na tablecie albo z serwera (zbiera kilka zmian w jedno odświeżenie). */
 function useOdswiezanie(wczytaj: () => Promise<void>) {
@@ -46,4 +47,13 @@ export function useDatyList() {
   const wczytaj = useCallback(async () => setDaty(new Set(await datyList(db))), [db]);
   useOdswiezanie(wczytaj);
   return daty;
+}
+
+/** Pracownicy ze Statystyk zapisani na tablecie (ekran pensji). */
+export function usePracownicy() {
+  const db = useSQLiteContext();
+  const [lista, setLista] = useState<Pracownik[]>([]);
+  const wczytaj = useCallback(async () => setLista(await wczytajPracownikow(db)), [db]);
+  useOdswiezanie(wczytaj);
+  return lista;
 }

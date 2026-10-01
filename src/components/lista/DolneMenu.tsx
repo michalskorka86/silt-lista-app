@@ -1,24 +1,25 @@
 import { router, usePathname } from 'expo-router';
+import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Fonts, Size } from '@/constants/theme';
 import { useMotyw } from '@/theme/motyw';
 
-import { useKomunikaty } from '../ui/Komunikaty';
+import { OknoMenu } from './Menu';
 
 /** Dolne menu listy (.nav-menu z v19): Dom / Lista / Wydatki / Menu. */
 export function DolneMenu({ data }: { data: string }) {
   const { c } = useMotyw();
-  const { toast } = useKomunikaty();
+  const [menu, setMenu] = useState(false);
   const insets = useSafeAreaInsets();
   const sciezka = usePathname();
 
   const poz = [
     { ico: '🏠', nazwa: 'Dom', akt: false, onPress: () => router.dismissTo('/') },
     { ico: '📋', nazwa: 'Lista', akt: sciezka.startsWith('/lista'), onPress: () => router.replace({ pathname: '/lista/[data]', params: { data } }) },
-    { ico: '📝', nazwa: 'Wydatki', akt: sciezka.startsWith('/wydatki'), onPress: () => toast('🔧 Wydatki i pensje — w następnym kroku') },
-    { ico: '☰', nazwa: 'Menu', akt: false, onPress: () => toast('🔧 Menu (Cennik, Raport, Rezerwacje, Opcje) — wkrótce') },
+    { ico: '📝', nazwa: 'Wydatki', akt: sciezka.startsWith('/wydatki'), onPress: () => router.replace({ pathname: '/wydatki/[data]', params: { data } }) },
+    { ico: '☰', nazwa: 'Menu', akt: menu, onPress: () => setMenu(true) },
   ];
 
   return (
@@ -33,6 +34,7 @@ export function DolneMenu({ data }: { data: string }) {
           <Text style={[styles.txt, { color: p.akt ? c.accent : c.text2 }]}>{p.nazwa}</Text>
         </Pressable>
       ))}
+      <OknoMenu widoczne={menu} onZamknij={() => setMenu(false)} />
     </View>
   );
 }

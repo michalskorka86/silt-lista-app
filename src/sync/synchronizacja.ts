@@ -204,6 +204,7 @@ async function odswiezPracownikow(db: Baza, klient: Klient): Promise<void> {
     const r = await klient<{ pracownicy: Pracownik[] }>('pracownicy');
     await setUstawienie(db, 'pracownicy', JSON.stringify(r.pracownicy));
     await setUstawienie(db, 'pracownicy_kiedy', teraz());
+    powiadom('serwer');
   } catch (e) {
     if (e instanceof BladPolaczenia) throw e;
     /* Statystyki nie odpowiadają — zostaje ostatnia lista; pensję można wpisać ręcznie */
@@ -273,4 +274,26 @@ async function synchronizujRaz(db: Baza, klient: Klient): Promise<StanSynchroniz
     }
     return stan(db, 'blad', e instanceof Error ? e.message : String(e));
   }
+}
+
+/**
+ * „📤 Wyślij statystyki do bazy” (jak v19): najpierw wysyła zmiany z tabletu, potem prosi serwer
+ * o wysłanie dnia do Statystyk, na koniec pobiera stan („wysłane o …”).
+ * Zwraca komunikat dla instruktora; rzuca Error z czytelnym opisem, gdy się nie da.
+ */
+export async function wyslijStatystyki(db: Baza, klient: Klient, data: string, wymus: boolean): Promise<string> {
+  const s1 = await synchronizuj(db, klient);
+  if (s1.stan === 'offline') throw new Error('Brak internetu — statystyki wyślą się same o 6:00 albo spróbuj przy zasięgu.');
+  if (s1.stan !== 'ok') throw new Error(s1.komunikat ?? 'Nie udało się połączyć z serwerem.');
+  if (s1.niewyslane > 0) throw new Error('Nie wszystkie zmiany dotarły na serwer — spróbuj za chwilę.');
+  let msg: string;
+  try {
+    const r = await klient<{ msg: string }>('statystyki', { body: { data, wymus } });
+    msg = r.msg;
+  } catch (e) {
+    if (e instanceof BladPolaczenia) throw new Error('Brak internetu — statystyki wyślą się same o 6:00.');
+    throw new Error(e instanceof Error ? e.message : String(e));
+  }
+  await synchronizuj(db, klient);
+  return msg;
 }

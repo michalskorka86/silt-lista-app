@@ -10,6 +10,7 @@ import {
   sprawdzHaslo as sprawdzHasloTabletu,
   synchronizuj,
   tokenTabletu,
+  wyslijStatystyki as wyslijStatystykiDnia,
   wyloguj as wylogujTablet,
   zaloguj as zalogujTablet,
   type StanSynchronizacji,
@@ -26,6 +27,8 @@ type Kontekst = {
   wyloguj: () => Promise<void>;
   /** Hasło aplikacji przed usunięciem listy: ok / zle / offline (brak zapamiętanego hasła i zasięgu) / blokada */
   sprawdzHaslo: (haslo: string) => Promise<'ok' | 'zle' | 'offline' | 'blokada'>;
+  /** „📤 Wyślij statystyki do bazy” — zwraca komunikat, rzuca Error z opisem */
+  wyslijStatystyki: (data: string, wymus: boolean) => Promise<string>;
 };
 
 const Ctx = createContext<Kontekst>({
@@ -37,6 +40,7 @@ const Ctx = createContext<Kontekst>({
   zaloguj: async () => {},
   wyloguj: async () => {},
   sprawdzHaslo: async () => 'zle',
+  wyslijStatystyki: async () => '',
 });
 
 export const WERSJA_APLIKACJI = Constants.expoConfig?.version ?? '0.0.0';
@@ -129,10 +133,23 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     setStan(null);
   }, [db, klient]);
 
+  const wyslijStatystyki = useCallback(
+    async (data: string, wymus: boolean) => {
+      setTrwa(true);
+      try {
+        return await wyslijStatystykiDnia(db, klient, data, wymus);
+      } finally {
+        setTrwa(false);
+        setNiewyslane(await liczNiewyslane(db));
+      }
+    },
+    [db, klient],
+  );
+
   const sprawdzHaslo = useCallback((haslo: string) => sprawdzHasloTabletu(db, klient, haslo, MODEL, WERSJA_APLIKACJI), [db, klient]);
 
   return (
-    <Ctx.Provider value={{ zalogowany, stan, niewyslane, trwa, synchronizujTeraz, zaloguj, wyloguj, sprawdzHaslo }}>
+    <Ctx.Provider value={{ zalogowany, stan, niewyslane, trwa, synchronizujTeraz, zaloguj, wyloguj, sprawdzHaslo, wyslijStatystyki }}>
       {children}
     </Ctx.Provider>
   );

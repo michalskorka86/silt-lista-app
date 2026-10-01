@@ -16,6 +16,11 @@ import {
   dodajWorek,
   datyList,
   usunDodatek,
+  dodajPensje,
+  usunPensje,
+  usunWydatek,
+  zapiszWydatek,
+  zmienPensje,
   usunFakture,
   zapiszFakture,
   zmienGracza,
@@ -167,4 +172,33 @@ test('Własny sprzęt bez podstawy, worki, inny pakiet gracza, dodatki i faktura
   assert.equal((await wczytajDzien(db, D)).grupy[0].faktura, null);
   await zapiszFakture(db, { grupa_id: gid, nip: '1', tel: '2', email: 'c@d.pl', kwota: 1, platnosc: 'Karta' });
   assert.equal((await wczytajDzien(db, D)).grupy[0].faktura?.platnosc, 'Karta', 'faktura przywrócona po „Bez faktury”');
+});
+
+test('Wydatki, pensje (zaokrąglenie do 10 zł) i podsumowanie dnia', async () => {
+  const t = (await utworzListe(db, D, 'Monika'))!;
+  const gid = await dodajGrupe(db, D, t, '', KLASYK, KLASYK.pakiety[0]);
+  await zmienGrupe(db, gid, { gracze_reczne: 10, zadatek: 100 });
+  await zapiszWydatek(db, D, { opis: 'Paliwo', kwota: 150, uwagi: 'Orlen' });
+  await zapiszWydatek(db, D, { opis: 'Woda', kwota: 20.5, uwagi: '' });
+  await dodajPensje(db, D, { imie: 'Janek', prac_id: 'pr1', godziny: 7.5, stawka: 30, premia_stawka: 5 });
+  let dz = await wczytajDzien(db, D);
+  assert.equal(dz.pensje[0].kwota, 230); // 225 → 230
+  assert.deepEqual(
+    { b: dz.podsumowanie.brutto, z: dz.podsumowanie.zadatki, w: dz.podsumowanie.wydatki, p: dz.podsumowanie.pensje, n: dz.podsumowanie.netto },
+    { b: 1300, z: 100, w: 170.5, p: 230, n: 1300 - 170.5 - 230 },
+  );
+  // edycja wydatku (to samo id), godzin (przelicza) i kwoty (ręcznie)
+  await zapiszWydatek(db, D, { id: dz.wydatki[0].id, opis: 'Paliwo', kwota: 160, uwagi: '' });
+  await zmienPensje(db, dz.pensje[0].id, { godziny: 8 });
+  dz = await wczytajDzien(db, D);
+  assert.equal(dz.wydatki.length, 2);
+  assert.equal(dz.wydatki[0].kwota, 160);
+  assert.equal(dz.pensje[0].kwota, 240);
+  await zmienPensje(db, dz.pensje[0].id, { kwota: 250 });
+  assert.equal((await wczytajDzien(db, D)).pensje[0].kwota, 250);
+  await usunWydatek(db, dz.wydatki[1].id);
+  await usunPensje(db, dz.pensje[0].id);
+  dz = await wczytajDzien(db, D);
+  assert.equal(dz.podsumowanie.wydatki, 160);
+  assert.equal(dz.podsumowanie.pensje, 0);
 });

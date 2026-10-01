@@ -50,10 +50,10 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 - [x] Inny pakiet / własny sprzęt (Claude)
 - [x] Pieniądze: kwota, zadatek, płatność (Claude)
 - [x] Faktura i dodatki (Claude)
-- [ ] Koniec dnia: godziny, pensje, wydatki (Claude)
+- [x] Koniec dnia: godziny, pensje, wydatki (Claude) — ekran Wydatki: wydatki, pensje (pracownicy ze Statystyk, zaokrąglenie do 10 zł), podsumowanie, „📤 Wyślij statystyki”.
 - [ ] Archiwum list (z hasłem) (Claude)
 - [ ] Podgląd rezerwacji (SILT / Arsenał, działa offline) (Claude)
-- [ ] Kafelek menu: Cennik / Raport / Rezerwacje / Opcje (Claude) — Popup na środku ekranu.
+- [~] Kafelek menu: Cennik / Raport / Rezerwacje / Opcje (Claude) — Popup na środku ekranu. — Menu: Cennik i Opcje gotowe; Rezerwacje i Raport PDF w budowie.
 - [ ] Zdjęcie kartki z graczami → odczyt (OCR / Claude) (Claude)
 - [x] Praca bez zasięgu + wysyłka w tle, znacznik „⏳ Niewysłane” (Claude) — src/sync/.
 
@@ -96,4 +96,5 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 - Ustalenia: jedna lista na dzień z zakładkami instruktorów (jak v19); kwoty grup liczy tablet; kosz 7 dni na tablecie, 30 dni na serwerze; czas w bazie UTC; v19 nie ma danych do przeniesienia; wersje testowe aplikacji 0.x (min_wersja_app 0.1.0 do wydania 1.0).
 - Ekrany (01.10): Utwórz listę (kalendarz, imię instruktora), lista dnia (zakładki, pasek, karty grup), gracze, kulki z pakietu/dokupione, dym, inne, osób/kulki bez imion/kwota/zadatek (numpad), płatność, podstawa i cena kulek dodatkowych. Sprawdzone w przeglądarce z lokalnym serwerem — dane dochodzą na serwer.
 - Pakiet gracza, własny sprzęt + worki, dodatki, faktura — gotowe (01.10).
-- Następny krok: ekran Wydatki i pensje (+ wysyłka do Statystyk z tabletu), menu (Cennik/Raport/Rezerwacje/Opcje), Archiwum.
+- Wydatki/pensje, podsumowanie dnia, wysyłka statystyk z tabletu, Menu (Cennik, Opcje) — gotowe (01.10).
+- Następny krok: Archiwum list (z hasłem), podgląd rezerwacji (offline), potem Raport PDF.

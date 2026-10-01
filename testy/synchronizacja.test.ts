@@ -14,7 +14,8 @@ import { BazaNode } from './baza-node';
 import { przeliczGrupe, usun, wczytaj, wczytajGdzie, zapisz, zapiszWiele, type Baza } from '../src/db/zapis';
 import { wczytajCennik } from '../src/logika/cennik';
 import { BladSerwera, utworzKlienta } from '../src/sync/klient';
-import { sprawdzHaslo, synchronizuj, tokenTabletu, zaloguj } from '../src/sync/synchronizacja';
+import { sprawdzHaslo, synchronizuj, tokenTabletu, wyslijStatystyki, zaloguj } from '../src/sync/synchronizacja';
+import { dodajPensje, zapiszWydatek } from '../src/logika/lista';
 import { setUstawienie } from '../src/db/ustawienia';
 
 const API = process.env.SILT_API;
@@ -134,6 +135,18 @@ test('synchronizacja z serwerem', { skip: !API && 'brak SILT_API (serwer testowy
     const f = await wczytaj(db, 'faktury', G);
     assert.ok(l?.s_stat_wyslano, 'lista: wysłane do statystyk');
     assert.ok(f?.s_sms_wyslano, 'faktura: SMS wysłany');
+  });
+
+  await t.test('„📤 Wyślij statystyki” z tabletu: wydatki i pensje dochodzą, ponowne wysłanie bez dubli', async () => {
+    await zapiszWydatek(db, wczoraj, { opis: 'Paliwo', kwota: 150, uwagi: '' });
+    await dodajPensje(db, wczoraj, { imie: 'Janek', prac_id: 'pr1', godziny: 7.5, stawka: 30, premia_stawka: 5 });
+    const msg = await wyslijStatystyki(db, klient, wczoraj, true);
+    assert.match(msg, /Wysłano do Statystyk/);
+    const msg2 = await wyslijStatystyki(db, klient, wczoraj, false);
+    assert.match(msg2, /już wysłane/);
+    const l = await wczytaj(db, 'listy', wczoraj);
+    assert.ok(l?.s_stat_wyslano);
+    assert.equal(l?.s_stat_przez, 'tablet');
   });
 
   await t.test('kosz: usunięty gracz znika z kwoty, na serwerze ma datę usunięcia', async () => {
