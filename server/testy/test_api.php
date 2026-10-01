@@ -78,6 +78,7 @@ $token = $r['token'] ?? '';
 echo "Start i cennik\n";
 $r = api('start');
 sprawdz('start: min_wersja 0.1.0, bez aktualizacji', ($r['min_wersja'] ?? '') === '0.1.0' && ($r['aktualizacja'] ?? true) === false, $r);
+sprawdz('start: skrót PIN-u admina (bez samego PIN-u)', ($r['pin_skrot'] ?? '') === hash('sha256', 'silt-lista-pin|tablet-test-1|1234') && strpos(json_encode($r), '1234') === false, $r);
 $r = api('cennik');
 $klasyk = $r['atrakcje'][0] ?? [];
 sprawdz('cennik: 7 atrakcji, Klasyk ma 3 pakiety, SILT 130 zł', count($r['atrakcje'] ?? []) === 7 && count($klasyk['pakiety'] ?? []) === 3 && ($klasyk['pakiety'][1]['cena'] ?? 0) == 130, $r);

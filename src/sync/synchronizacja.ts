@@ -78,6 +78,16 @@ export async function sprawdzHaslo(
   }
 }
 
+/** PIN admina ustawiony na serwerze (config.php)? Tablet zna tylko jego skrót — sprawdza bez zasięgu. */
+export async function jestPinAdmina(db: Baza): Promise<boolean> {
+  return !!(await getUstawienie(db, 'pin_skrot'));
+}
+
+export async function sprawdzPin(db: Baza, pin: string): Promise<boolean> {
+  const skrot = await getUstawienie(db, 'pin_skrot');
+  return !!skrot && skrot === sha256(`silt-lista-pin|${await idTabletu(db)}|${pin}`);
+}
+
 export async function wyloguj(db: Baza, klient: Klient): Promise<void> {
   try {
     await klient('wyloguj', { body: {} });
@@ -86,6 +96,7 @@ export async function wyloguj(db: Baza, klient: Klient): Promise<void> {
   }
   await setUstawienie(db, 'token', null);
   await setUstawienie(db, 'haslo_skrot', null);
+  await setUstawienie(db, 'pin_skrot', null);
 }
 
 // ── Wysyłka kolejki ───────────────────────────────────────────
@@ -250,7 +261,8 @@ async function stan(db: Baza, s: StanSynchronizacji['stan'], komunikat?: string)
 async function synchronizujRaz(db: Baza, klient: Klient): Promise<StanSynchronizacji> {
   if (!(await tokenTabletu(db))) return stan(db, 'zaloguj');
   try {
-    const s = await klient<{ aktualizacja: boolean; min_wersja: string; cennik_wersja: number }>('start');
+    const s = await klient<{ aktualizacja: boolean; min_wersja: string; cennik_wersja: number; pin_skrot?: string | null }>('start');
+    if (s.pin_skrot !== undefined) await setUstawienie(db, 'pin_skrot', s.pin_skrot);
     if (s.aktualizacja) {
       return stan(db, 'aktualizacja', `Zaktualizuj aplikację (wymagana wersja ${s.min_wersja}). Dane czekają bezpiecznie na tablecie.`);
     }

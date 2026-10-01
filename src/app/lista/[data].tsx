@@ -88,7 +88,7 @@ export default function ListaDnia() {
     const n = liczby[id] ?? 0;
     potwierdzHaslem({
       tytul: '🗑 Usuń listę instruktora',
-      tekst: `Usunąć listę instruktora ${i?.imie ?? ''}${n ? ` razem z ${plGrup(n)}` : ''}? Listy pozostałych instruktorów zostają. Podaj hasło aplikacji, żeby potwierdzić.`,
+      tekst: `Usunąć listę instruktora ${i?.imie ?? ''}${n ? ` razem z ${plGrup(n)}` : ''}? Listy pozostałych instruktorów zostają.`,
       ok: 'Usuń listę',
       onOk: async () => {
         await usunInstruktora(db, id);
@@ -103,7 +103,7 @@ export default function ListaDnia() {
       tekst:
         `Usunąć całą listę z ${dataPL(data)} — wszystkich instruktorów (${plGrup(dzien.grupy.length)}), wydatki i pensje — z tabletu i z serwera?` +
         (dzien.lista?.s_stat_wyslano ? ' Statystyki z tego dnia są już wysłane — w bazie statystyk zostaną.' : '') +
-        ' Przez 7 dni można ją przywrócić z kosza. Podaj hasło aplikacji, żeby potwierdzić.',
+        ' Przez 7 dni można ją przywrócić z kosza.',
       ok: 'Usuń listę',
       onOk: async () => {
         await usunListe(db, data);

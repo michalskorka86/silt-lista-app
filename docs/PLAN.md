@@ -26,7 +26,7 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 - [ ] Sprawdzić wersję Androida na tablecie (Ty) — Ustawienia → Informacje o tablecie.
 - [x] Założyć nową bazę MySQL dla Listy na filedops.pl (Ty) — serwer432573_lista. — Osobna, trzecia baza. Statystyki i rezerwacje zostają bez zmian.
 - [ ] Przygotować firmowe konto Google na kopie PDF (Ty) — Jedno konto dla wszystkich tabletów, logowane raz w Opcjach.
-- [ ] Wymyślić PIN admina (Ty) — Otwiera podgląd dnia (i np. cennik) na tablecie.
+- [ ] Wymyślić PIN admina (Ty) — 4 cyfry, wpisać w lista-api/config.php (PIN_ADMINA). Otwiera Archiwum, potwierdza usuwanie list (później: podgląd dnia).
 - [ ] Spisać ustalenia w skillu do budowy aplikacji (Claude) — Żeby każda sesja trzymała się tych samych zasad.
 
 ## 1. Serwer
@@ -68,7 +68,7 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 - [ ] Zgłaszanie błędów (raport, gdy aplikacja się wysypie) (Claude)
 - [ ] Blokada starej wersji w aplikacji (Claude)
 - [ ] Aktualizacje „w powietrzu” (bez nowej instalacji) (Claude)
-- [ ] PIN admina + podgląd dnia (przychód, gracze, kulki, dym) (Claude)
+- [~] PIN admina + podgląd dnia (przychód, gracze, kulki, dym) (Claude) — PIN gotowy (01.10): klawiatura 4 cyfr do Archiwum i usuwania list; bez PIN-u na serwerze — hasło aplikacji. Podgląd dnia do zrobienia.
 
 ## 4. Panel www
 - [ ] Panel w przeglądarce do przeglądania list (Claude) — Logowanie tak jak w Statystykach.
@@ -100,4 +100,5 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 - Archiwum list (z hasłem) i podgląd rezerwacji (offline) — gotowe (01.10). Na serwer: nowy lib/rezerwacje.php, api.php, wpis REZ_PODGLAD_URL w config.php.
 - Raport PDF ręczny — gotowy (01.10). Wymaga nowej wersji APK (nowe moduły: drukowanie, udostępnianie, podgląd).
 - Automatyczne PDF-y + foldery miesięcy — gotowe (01.10), do sprawdzenia na tablecie (nowy APK).
-- Następny krok: kopia PDF na Google Drive (potrzebne firmowe konto Google).
+- PIN admina zamiast hasła (Archiwum, usuwanie list) — gotowy (01.10). Kopia PDF na Google Drive — na sam koniec.
+- Następny krok: aktualizacje „w powietrzu”, potem kosz i zgłaszanie błędów.

@@ -7,7 +7,7 @@ import { usunListe, wczytajDzien } from '@/logika/lista';
 import { useKomunikaty } from '../ui/Komunikaty';
 
 /**
- * Archiwum otwiera się po wpisaniu hasła aplikacji (jak hasło archiwum w v19).
+ * Archiwum otwiera się po PIN-ie admina (albo haśle aplikacji, gdy PIN-u nie ustawiono) — jak hasło archiwum w v19.
  * Raz wpisane hasło wystarcza na 10 minut — potem trzeba je podać znowu
  * (tablet zostawiony na poligonie nie pokazuje starych list każdemu).
  */
@@ -32,8 +32,8 @@ export function useArchiwum() {
         return;
       }
       potwierdzHaslem({
-        tytul: '🔒 Hasło do archiwum',
-        tekst: 'Podaj hasło aplikacji, żeby otworzyć archiwum list.',
+        tytul: '📁 Archiwum',
+        tekst: 'Archiwum list z poprzednich dni.',
         ok: 'Otwórz',
         rodzajOk: 'dalej',
         onOk: () => {
@@ -54,7 +54,7 @@ export function useArchiwum() {
         tekst:
           `Usunąć całą listę z ${dataPL(data)} — wszystkich instruktorów (${plGrup(d.grupy.length)}), wydatki i pensje — z tabletu i z serwera?` +
           (d.lista?.s_stat_wyslano ? ' Statystyki z tego dnia są już wysłane — w bazie statystyk zostaną.' : '') +
-          ' Przez 7 dni można ją przywrócić z kosza. Podaj hasło aplikacji, żeby potwierdzić.',
+          ' Przez 7 dni można ją przywrócić z kosza.',
         ok: 'Usuń listę',
         onOk: async () => {
           await usunListe(db, data);

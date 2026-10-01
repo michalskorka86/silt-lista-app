@@ -37,7 +37,8 @@ Czytaj też `AGENTS.md` (zasady Expo) i `docs/PLAN.md` (ustalenia i zakres).
 - Przed commitem zmian serwera: test `server/testy/test_api.php` (opis w README); GitHub robi to samo w „Sprawdź kod”.
 
 ## Bezpieczeństwo
-- Żadnych haseł, tokenów (SMSAPI, Anthropic, klucz tabletu) w repozytorium. Konfiguracja serwera zostaje w `config.php` na serwerze.
+- Żadnych haseł, PIN-ów, tokenów (SMSAPI, Anthropic, klucz tabletu) w repozytorium. Konfiguracja serwera zostaje w `config.php` na serwerze.
+- PIN admina (`PIN_ADMINA` w config.php) — tablet dostaje tylko skrót (sha256 z id tabletu), sprawdza go bez zasięgu. Bez PIN-u: hasło aplikacji.
 - Nie commituj danych klientów, dumpów bazy ani plików `.env`.
 
 ## Android

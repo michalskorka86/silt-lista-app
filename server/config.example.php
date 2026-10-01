@@ -38,3 +38,7 @@ define('DNI_WSTECZ', 14);
 // ── Rezerwacje — podgląd dla instruktorów (Menu → Rezerwacje) ──
 // Ten sam adres co w lista/config.php z v19: podglad.php w systemie rezerwacji + ?token=PODGLAD_TOKEN
 define('REZ_PODGLAD_URL', '');                    // ← np. https://…/rezerwacjaapp/podglad.php?token=…
+
+// PIN admina (4 cyfry) — otwiera Archiwum i potwierdza usuwanie list na tabletach.
+// Puste = zamiast PIN-u tablet pyta o hasło aplikacji. Zmiana dochodzi do tabletów przy synchronizacji.
+define('PIN_ADMINA', '');

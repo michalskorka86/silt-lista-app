@@ -14,7 +14,7 @@ import { BazaNode } from './baza-node';
 import { przeliczGrupe, usun, wczytaj, wczytajGdzie, zapisz, zapiszWiele, type Baza } from '../src/db/zapis';
 import { wczytajCennik } from '../src/logika/cennik';
 import { BladSerwera, utworzKlienta } from '../src/sync/klient';
-import { sprawdzHaslo, synchronizuj, tokenTabletu, wyslijStatystyki, zaloguj } from '../src/sync/synchronizacja';
+import { jestPinAdmina, sprawdzHaslo, sprawdzPin, synchronizuj, tokenTabletu, wyslijStatystyki, zaloguj } from '../src/sync/synchronizacja';
 import { dodajPensje, zapiszWydatek } from '../src/logika/lista';
 import { setUstawienie } from '../src/db/ustawienia';
 
@@ -69,6 +69,15 @@ test('synchronizacja z serwerem', { skip: !API && 'brak SILT_API (serwer testowy
     const c = await wczytajCennik(db);
     assert.equal(c?.atrakcje.length, 7);
     assert.equal(c?.atrakcje.find((a) => a.klucz === 'klasyk')?.pakiety[1].cena, 130);
+  });
+
+  await t.test('PIN admina z serwera: tablet zna tylko skrót, sprawdza bez zasięgu', async () => {
+    assert.equal(await jestPinAdmina(db), true);
+    assert.equal(await sprawdzPin(db, '1234'), true);
+    assert.equal(await sprawdzPin(db, '0000'), false);
+    // inny tablet ma inny skrót tego samego PIN-u
+    const t2 = await nowyTablet();
+    assert.equal(await jestPinAdmina(t2.db), false);
   });
 
   const G = 'g-test-1';

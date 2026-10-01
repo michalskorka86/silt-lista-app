@@ -178,6 +178,8 @@ function akcja_start(array $tablet): void
         'rev' => biezacy_rev(),
         'czas_serwera' => gmdate('Y-m-d\TH:i:s\Z'),
         'tablet' => ['id' => $tablet['id'], 'nazwa' => $tablet['nazwa']],
+        // PIN admina (archiwum, usuwanie list) — tablet dostaje tylko skrót, więc działa bez zasięgu
+        'pin_skrot' => PIN_ADMINA === '' ? null : hash('sha256', 'silt-lista-pin|' . $tablet['id'] . '|' . PIN_ADMINA),
     ]);
 }
 

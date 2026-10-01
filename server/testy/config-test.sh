@@ -7,5 +7,6 @@ sed -e "s/'localhost'/'$2'/" -e "s/'serwer432573_lista');/'silt_test');/" \
     -e "s#define('STAT_API_URL', '[^']*')#define('STAT_API_URL', '$5/testy/mock/statystyka.php')#" \
     -e "s/define('SMSAPI_TOKEN',      '')/define('SMSAPI_TOKEN', 'test-token')/" \
     -e "s#define('REZ_PODGLAD_URL', '')#define('REZ_PODGLAD_URL', '$5/testy/mock/podglad.php?token=test')#" \
+    -e "s/define('PIN_ADMINA', '')/define('PIN_ADMINA', '1234')/" \
     "$(dirname "$0")/../config.example.php" > "$1"
 echo "define('SMSAPI_URL', '$5/testy/mock/sms.php');" >> "$1"
