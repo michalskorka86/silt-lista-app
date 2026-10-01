@@ -111,16 +111,21 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     });
   }, [db, synchronizujTeraz]);
 
-  // Co minutę / co 5 minut, tylko gdy zalogowany.
+  // Ekran włączony: co minutę (niewysłane) / co 5 minut. Ekran wyłączony: tylko gdy coś czeka na wysyłkę,
+  // co 5 minut — oszczędza baterię (modem LTE nie budzi się co chwilę na pustym tablecie).
+  const [naEkranie, setNaEkranie] = useState(AppState.currentState === 'active');
   useEffect(() => {
     if (!zalogowany) return;
-    const t = setInterval(() => synchronizujTeraz(), niewyslane > 0 ? SYNC_CO_MS_NIEWYSLANE : SYNC_CO_MS_SPOKOJNIE);
+    if (!naEkranie && niewyslane === 0) return;
+    const co = naEkranie && niewyslane > 0 ? SYNC_CO_MS_NIEWYSLANE : SYNC_CO_MS_SPOKOJNIE;
+    const t = setInterval(() => synchronizujTeraz(), co);
     return () => clearInterval(t);
-  }, [zalogowany, niewyslane, synchronizujTeraz]);
+  }, [zalogowany, niewyslane, naEkranie, synchronizujTeraz]);
 
   // Powrót do aplikacji (np. po wyłączeniu ekranu) → synchronizacja.
   useEffect(() => {
     const sub = AppState.addEventListener('change', (s) => {
+      setNaEkranie(s === 'active');
       if (s === 'active' && zalogowany) synchronizujTeraz();
     });
     return () => sub.remove();
