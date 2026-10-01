@@ -35,7 +35,7 @@ export default function Rezerwacje() {
 
   const [mies, setMies] = useState(() => ({ r: new Date().getFullYear(), m: new Date().getMonth() }));
   const [sel, setSel] = useState(dzis);
-  const [filtr, setFiltr] = useState<Filtr>('all');
+  const [filtr, setFiltr] = useState<Filtr>('silt');
   const [dane, setDane] = useState<MiesiacRezerwacji | null>(null);
   const [stan, setStan] = useState<'ok' | 'offline' | 'blad' | 'laduje'>('laduje');
   const [blad, setBlad] = useState('');
