@@ -25,7 +25,11 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - uses: android-actions/setup-android@v3
+      # Android SDK jest już na maszynie GitHuba (ANDROID_HOME) — tylko akceptujemy licencje
+      - name: Android SDK
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
       - uses: actions/setup-node@v6
         with:
           node-version: 22
