@@ -34,7 +34,7 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '7.4'
-          extensions: pdo_mysql, mbstring, curl
+          extensions: pdo_mysql, mbstring, curl, zip
       - name: Składnia PHP
         run: for f in server/*.php server/lib/*.php server/testy/*.php; do php -l "$f"; done
       - name: Schemat bazy
