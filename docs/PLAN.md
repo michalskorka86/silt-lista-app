@@ -71,7 +71,7 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 - [x] PIN admina (Claude) — 4 cyfry do Archiwum i usuwania list. Podgląd dnia dla admina — NIE robimy (wszystko jest w PDF dnia; decyzja Michała 01.10).
 
 ## 4. Panel www
-- [ ] Panel w przeglądarce do przeglądania list (Claude) — Logowanie tak jak w Statystykach.
+- [x] Panel w przeglądarce do przeglądania list (Claude) — lista-api/panel.php, hasło PANEL_HASLO; miesiąc → dni, dzień → raport jak PDF, druk całego miesiąca, ZIP miesiąca (HTML dni + CSV).
 
 ## 5. Testy i wdrożenie
 - [ ] Pierwszy APK — test na tablecie obok PWA v19 (Razem)
@@ -105,4 +105,5 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 - Kosz — gotowy (01.10), idzie aktualizacją „w powietrzu”.
 - Zgłaszanie błędów — gotowe (01.10). Na serwer: bledy.php.
 - Zdjęcie kartki → gracze — gotowe (01.10). Wymaga nowego APK (aparat) i ANTHROPIC_API_KEY w config.php.
-- Następny krok: panel www.
+- Panel www z ZIP-em miesiąca — gotowy (01.10). Na serwer: panel.php, lib/raport.php, lib/wspolne.php + PANEL_HASLO.
+- Następny krok: szybkie budowanie APK na GitHubie (bez kolejki Expo), instrukcja dla instruktorów, na koniec kopia PDF na Google Drive.

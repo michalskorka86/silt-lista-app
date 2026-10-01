@@ -175,6 +175,42 @@ $r = api('kartka', ['obraz' => base64_encode('x'), 'typ' => 'image/jpeg']);
 sprawdz('kartka bez logowania → 401', $r['_http'] === 401, $r);
 $token = $t;
 
+echo "Panel www\n";
+$panelUrl = preg_replace('#/api\.php$#', '/panel.php', $URL);
+$ciastka = tempnam(sys_get_temp_dir(), 'pnl');
+$www = function (string $q, ?array $post = null) use ($panelUrl, $ciastka): array {
+    $ch = curl_init($panelUrl . $q);
+    curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_COOKIEJAR => $ciastka, CURLOPT_COOKIEFILE => $ciastka, CURLOPT_HEADER => true]);
+    if ($post !== null) { curl_setopt($ch, CURLOPT_POST, true); curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($post)); }
+    $r = (string)curl_exec($ch);
+    $hs = (int)curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+    $out = ['naglowki' => substr($r, 0, $hs), 'tresc' => substr($r, $hs), 'http' => (int)curl_getinfo($ch, CURLINFO_HTTP_CODE)];
+    curl_close($ch);
+    return $out;
+};
+$r = $www('?m=2025-06');
+sprawdz('panel bez logowania → formularz hasła, bez danych', strpos($r['tresc'], 'name="haslo"') !== false && strpos($r['tresc'], '01.06.2025') === false, mb_substr($r['tresc'], 0, 200));
+$r = $www('', ['haslo' => 'zle']);
+sprawdz('panel: złe hasło → komunikat', strpos($r['tresc'], 'Nieprawidłowe hasło') !== false, mb_substr($r['tresc'], -300));
+$www('', ['haslo' => 'panel-test']);
+$r = $www('?m=2025-06');
+sprawdz('panel: miesiąc z dniem, instruktorem i utargiem', strpos($r['tresc'], '01.06.2025') !== false && strpos($r['tresc'], 'Monika') !== false && strpos($r['tresc'], 'ZIP miesiąca') !== false, mb_substr($r['tresc'], 0, 300));
+$r = $www('?d=2025-06-01');
+sprawdz('panel: raport dnia — pensja 230 zł, bez premii', strpos($r['tresc'], 'Pensje') !== false && strpos($r['tresc'], '230 zł') !== false
+    && stripos($r['tresc'], 'premi') === false && strpos($r['tresc'], '37,5') === false, mb_substr(strip_tags($r['tresc']), 0, 400));
+$r = $www('?zip=2025-06');
+$zipPlik = tempnam(sys_get_temp_dir(), 'zip');
+file_put_contents($zipPlik, $r['tresc']);
+$z = new ZipArchive();
+$nazwy = [];
+if ($z->open($zipPlik) === true) { for ($i = 0; $i < $z->numFiles; $i++) $nazwy[] = $z->getNameIndex($i); $csvZip = $z->getFromName('SILT Lista 2025-06 Czerwiec/Podsumowanie 2025-06.csv'); $z->close(); }
+sprawdz('panel: ZIP miesiąca — raport dnia, cały miesiąc, CSV', in_array('SILT Lista 2025-06 Czerwiec/2025-06-01 Lista.html', $nazwy, true)
+    && in_array('SILT Lista 2025-06 Czerwiec/Podsumowanie 2025-06.csv', $nazwy, true) && strpos((string)($csvZip ?? ''), '"2025-06-01"') !== false, $nazwy);
+$r = $www('?wyloguj=1');
+$r = $www('?m=2025-06');
+sprawdz('panel: po wylogowaniu znowu hasło', strpos($r['tresc'], 'name="haslo"') !== false, mb_substr($r['tresc'], 0, 100));
+@unlink($ciastka); @unlink($zipPlik);
+
 echo "Kosz — sprzątanie po 30 dniach\n";
 $pdo->exec("UPDATE grupy SET usunieto = UTC_TIMESTAMP() - INTERVAL 31 DAY WHERE id = 'g1'");
 $out = shell_exec('php ' . escapeshellarg(__DIR__ . '/../cron.php') . ' 2>&1');

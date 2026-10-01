@@ -47,3 +47,7 @@ define('PIN_ADMINA', '');
 // Klucz API Anthropic (console.anthropic.com → API Keys). Bez klucza przycisk na tablecie powie, że odczyt jest wyłączony.
 define('ANTHROPIC_API_KEY', '');                   // ← sk-ant-…
 define('OCR_MODEL', 'claude-sonnet-5-5');          // model czytający zdjęcie
+
+// ── Panel www (panel.php) — przeglądanie list z komputera, ZIP miesiąca ──
+// Osobne hasło (inne niż tabletów). Puste = panel wyłączony.
+define('PANEL_HASLO', '');
