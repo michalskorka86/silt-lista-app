@@ -87,6 +87,7 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 - [ ] Rozliczenie kasy na koniec dnia (gotówka / karta / przelew) (Claude)
 - [ ] Powiadomienie wieczorem o jutrzejszych rezerwacjach (Claude)
 - [x] Tryb kiosku: aplikacja jako ekran główny tabletu (startuje po włączeniu, Home wraca do listy); wyjście do ustawień Androida w Opcjach z PIN-em admina. Wi-Fi z paska powiadomień. (Wymaga nowego APK.)
+- [x] Liczby (kwoty, ilości) tylko klawiaturą aplikacji; systemowa przy NIP, telefonie, e-mailu i kartce. 🎤 Dyktowanie imion graczy przyciskiem (expo-speech-recognition, kilka imion naraz jak v19; offline wymaga polskiego pakietu mowy Google). Rezerwacje domyślnie SILT.
 - [ ] Kilka tabletów na jednej liście jednocześnie (Claude)
 
 ## Stan (01.10.2026)

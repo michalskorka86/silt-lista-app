@@ -13,6 +13,7 @@ import { useMotyw } from '@/theme/motyw';
 import { useKomunikaty } from '../ui/Komunikaty';
 import { Okno, Przycisk, Przyciski } from '../ui/Okno';
 import { Podpowiedz, Pole, Rzad } from '../ui/Pole';
+import { PoleLiczby } from '../ui/PoleLiczby';
 
 // ── Wydatek ───────────────────────────────────────────────────
 
@@ -43,7 +44,7 @@ function TrescWydatek({ data, stan, onZamknij }: { data: string; stan: StanWydat
   return (
     <>
       <Pole etykieta="Opis" value={opis} onChangeText={setOpis} placeholder="np. Paliwo, woda" maxLength={60} autoFocus={!w} />
-      <Pole etykieta="Kwota (zł)" value={kwota} onChangeText={setKwota} keyboardType="decimal-pad" selectTextOnFocus />
+      <PoleLiczby etykieta="Kwota (zł)" value={kwota} onChangeText={setKwota} tytul={opis.trim() ? `${opis.trim()} — kwota (zł)` : 'Wydatek — kwota (zł)'} />
       <Pole
         etykieta="Uwagi (drukują się w PDF)"
         value={uwagi}
@@ -144,8 +145,8 @@ function TrescPensja({ data, pracownicy, onZamknij }: { data: string; pracownicy
           : 'Brak listy pracowników ze statystyk (tablet pobierze ją przy zasięgu) — wpisz ręcznie.'}
       </Podpowiedz>
       <Rzad>
-        <Pole etykieta="Godziny" value={godz} onChangeText={setGodz} keyboardType="decimal-pad" />
-        <Pole etykieta="Stawka (zł/h)" value={stawka} onChangeText={setStawka} keyboardType="decimal-pad" selectTextOnFocus />
+        <PoleLiczby etykieta="Godziny" value={godz} onChangeText={setGodz} />
+        <PoleLiczby etykieta="Stawka (zł/h)" value={stawka} onChangeText={setStawka} />
       </Rzad>
       {g ? (
         <Podpowiedz>

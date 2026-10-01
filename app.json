@@ -40,10 +40,17 @@
         {
           "cameraPermission": "Aparat jest potrzebny do zrobienia zdjęcia kartki z graczami.",
           "photosPermission": "Dostęp do zdjęć jest potrzebny, żeby wybrać zdjęcie kartki z graczami.",
-          "microphonePermission": false
+          "microphonePermission": "Mikrofon jest potrzebny do dyktowania imion graczy."
         }
       ],
-      "./plugins/ekran-glowny.js"
+      "./plugins/ekran-glowny.js",
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Mikrofon jest potrzebny do dyktowania imion graczy.",
+          "speechRecognitionPermission": "Rozpoznawanie mowy zamienia powiedziane imiona na tekst."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

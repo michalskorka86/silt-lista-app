@@ -6,6 +6,7 @@ import { Fonts } from '@/constants/theme';
 import type { Platnosc, SprzetGracza, Wiersz } from '@/db/tabele';
 import type { Atrakcja, Cennik, Pakiet } from '@/logika/cennik';
 import { liczba, num, zl } from '@/logika/format';
+import { imionaZMowy } from '@/logika/glos';
 import {
   dodajDodatek,
   dodajDym,
@@ -31,7 +32,9 @@ import { useMotyw } from '@/theme/motyw';
 import { useKomunikaty } from '../ui/Komunikaty';
 import { Okno, Przycisk, Przyciski } from '../ui/Okno';
 import { Podpowiedz, Pole, Rzad } from '../ui/Pole';
+import { PoleLiczby } from '../ui/PoleLiczby';
 import { IKONY_PLATNOSCI } from './KartaGrupy';
+import { PrzyciskMikrofonu, useMikrofon } from './Mikrofon';
 
 // ── Instruktor (zakładka) ─────────────────────────────────────
 
@@ -277,21 +280,41 @@ function TrescGracz({ stan, atrakcja, cennik, onZamknij }: PropsGracza & { stan:
   ];
   const razemSprzet = sprzet.reduce((a, x) => a + x.kwota, 0) + (worki?.n ? worki.n * worki.cena : 0);
 
+  // 🎤 kilka imion naraz → od razu dodaje graczy (jak v19); jedno imię → wpisuje do pola
+  const mikrofon = useMikrofon(async (t) => {
+    const imiona = imionaZMowy(t);
+    if (!imiona.length) return;
+    if (imiona.length > 1 && nowy) {
+      for (const n of imiona) await dodajGracza(db, g.id, n);
+      onZamknij();
+      toast(`✅ Dodano graczy: ${imiona.join(', ')}`);
+    } else setImie(imiona[0]);
+  });
+
   return (
     <>
-      <Pole
-        ref={pole}
-        etykieta="Imię gracza"
-        value={imie}
-        onChangeText={setImie}
-        placeholder="np. Bartek"
-        maxLength={40}
-        autoFocus={nowy}
-        autoCapitalize="words"
-        blurOnSubmit={false}
-        onSubmitEditing={() => zapisz(nowy)}
-      />
-      <Podpowiedz>🎤 Możesz też kliknąć mikrofon na klawiaturze tabletu i powiedzieć imię.</Podpowiedz>
+      <View style={styles.imieRzad}>
+        <Pole
+          ref={pole}
+          etykieta="Imię gracza"
+          value={imie}
+          onChangeText={setImie}
+          placeholder="np. Bartek"
+          maxLength={40}
+          autoFocus={nowy}
+          autoCapitalize="words"
+          blurOnSubmit={false}
+          onSubmitEditing={() => zapisz(nowy)}
+        />
+        {mikrofon.jest ? <PrzyciskMikrofonu slucha={mikrofon.slucha} onPress={mikrofon.przelacz} /> : null}
+      </View>
+      <Podpowiedz>
+        {mikrofon.jest
+          ? nowy
+            ? '🎤 Stuknij mikrofon i powiedz imię — albo kilka naraz, np. „Bartek, Ola i Kamil”.'
+            : '🎤 Stuknij mikrofon i powiedz imię.'
+          : '🎤 Możesz też kliknąć mikrofon na klawiaturze tabletu i powiedzieć imię.'}
+      </Podpowiedz>
       <Pole etykieta="Uwagi" value={uwagi} onChangeText={setUwagi} placeholder="np. org., VIP" maxLength={60} />
 
       {naOsobe && !wlasny && pakietyOs.length > 1 ? (
@@ -569,18 +592,16 @@ function TrescPozycja({ stan, atrakcja, dymCena, worek, onZamknij }: PropsPozycj
       ) : widok === 'dym' ? (
         <>
           <Rzad>
-            <Pole
+            <PoleLiczby
               etykieta="Ilość świec dymnych"
               value={dymIlosc}
               onChangeText={(t) => {
                 setDymIlosc(t);
                 setDymKwota(String(Math.round(num(t)) * dymCena));
               }}
-              keyboardType="number-pad"
-              selectTextOnFocus
-              autoFocus
+              autoOtworz={!dymIlosc.trim()}
             />
-            <Pole etykieta="Kwota łącznie (zł)" value={dymKwota} onChangeText={setDymKwota} keyboardType="decimal-pad" selectTextOnFocus />
+            <PoleLiczby etykieta="Kwota łącznie (zł)" value={dymKwota} onChangeText={setDymKwota} />
           </Rzad>
           <Podpowiedz>Sugestia: {dymCena} zł / szt · 0 = gratis</Podpowiedz>
           <Przyciski>
@@ -602,7 +623,7 @@ function TrescPozycja({ stan, atrakcja, dymCena, worek, onZamknij }: PropsPozycj
       ) : (
         <>
           <Pole etykieta="Nazwa pozycji" value={inneNazwa} onChangeText={setInneNazwa} placeholder="np. Mundur, Butla" autoFocus />
-          <Pole etykieta="Kwota (zł) — 0 = gratis" value={inneKwota} onChangeText={setInneKwota} keyboardType="decimal-pad" />
+          <PoleLiczby etykieta="Kwota (zł) — 0 = gratis" value={inneKwota} onChangeText={setInneKwota} tytul={inneNazwa.trim() ? `${inneNazwa.trim()} — kwota (zł)` : undefined} />
           <Przyciski>
             <Przycisk tekst="← Wróć" rodzaj="anuluj" onPress={() => setWidok('wybor')} />
             <Przycisk tekst="Dodaj ✓" onPress={zapiszInne} wylaczony={!inneNazwa.trim()} />
@@ -719,15 +740,13 @@ function TrescPodstawa({ grupa, atrakcja, onZamknij }: PropsGrupy & { grupa: Gru
       <ListaPakietow pakiety={pakiety} wybrany={idx} onWybierz={wybierz} />
       <View style={styles.odstep} />
       <Rzad>
-        <Pole
+        <PoleLiczby
           etykieta={grupowy ? (p.limit ? `Cena za grupę do ${p.limit} os. (zł)` : 'Cena za grupę (zł)') : 'Cena za osobę (zł)'}
           value={cena}
           onChangeText={setCena}
-          keyboardType="decimal-pad"
-          selectTextOnFocus
         />
         {grupowy && p.limit ? (
-          <Pole etykieta="Dodatkowy gracz (zł)" value={extra} onChangeText={setExtra} keyboardType="decimal-pad" selectTextOnFocus />
+          <PoleLiczby etykieta="Dodatkowy gracz (zł)" value={extra} onChangeText={setExtra} />
         ) : null}
       </Rzad>
       <Podpowiedz>
@@ -767,8 +786,8 @@ function TrescKdod({ grupa, atrakcja, onZamknij }: PropsGrupy & { grupa: GrupaPe
   return (
     <>
       <Rzad>
-        <Pole etykieta="Ilość kulek" value={ilosc} onChangeText={setIlosc} keyboardType="number-pad" selectTextOnFocus />
-        <Pole etykieta="Cena (zł)" value={cena} onChangeText={setCena} keyboardType="decimal-pad" selectTextOnFocus />
+        <PoleLiczby etykieta="Ilość kulek" value={ilosc} onChangeText={setIlosc} tytul="Dokupione kulki — ilość" />
+        <PoleLiczby etykieta="Cena (zł)" value={cena} onChangeText={setCena} tytul="Dokupione kulki — cena (zł)" />
       </Rzad>
       {atrakcja?.kdod ? (
         <Podpowiedz>
@@ -813,13 +832,12 @@ function TrescDodatek({ grupa, cennik, onZamknij }: { grupa: GrupaPelna; cennik:
     return (
       <Okno widoczne onZamknij={onZamknij} tytul={`${wybrany.ikona} ${wybrany.nazwa}`} rozmiar="sm">
         {inne ? <Pole etykieta="Nazwa" value={opis} onChangeText={setOpis} placeholder="np. Transport, Namiot" autoFocus /> : null}
-        <Pole
+        <PoleLiczby
           etykieta="Kwota (zł) — 0 lub puste = gratis"
           value={kwota}
           onChangeText={setKwota}
-          keyboardType="decimal-pad"
-          autoFocus={!inne}
-          onSubmitEditing={dodaj}
+          tytul={`${wybrany.ikona} ${wybrany.nazwa} — kwota (zł)`}
+          autoOtworz={!inne && !kwota.trim()}
         />
         <Przyciski>
           <Przycisk tekst="← Wróć" rodzaj="anuluj" onPress={() => setWybrany(null)} />
@@ -904,7 +922,7 @@ function TrescFaktura({ grupa, onZamknij }: { grupa: GrupaPelna; onZamknij: () =
         <Pole etykieta="Telefon" value={tel} onChangeText={setTel} placeholder="+48 000 000 000" keyboardType="phone-pad" maxLength={20} />
         <Pole etykieta="E-mail" value={email} onChangeText={setEmail} placeholder="kontakt@firma.pl" keyboardType="email-address" autoCapitalize="none" autoCorrect={false} maxLength={120} />
       </Rzad>
-      <Pole etykieta="Kwota (zł)" value={kwota} onChangeText={setKwota} keyboardType="decimal-pad" selectTextOnFocus />
+      <PoleLiczby etykieta="Kwota (zł)" value={kwota} onChangeText={setKwota} tytul="Faktura — kwota (zł)" />
       <Text style={[styles.label, { color: c.text2 }]}>Forma płatności na fakturze</Text>
       <KafelkiPlatnosci wybrana={plat} onWybierz={setPlat} />
       {f?.s_sms_wyslano ? <Podpowiedz>📱 SMS z tymi danymi został już wysłany.</Podpowiedz> : null}
@@ -927,6 +945,7 @@ function TrescFaktura({ grupa, onZamknij }: { grupa: GrupaPelna; onZamknij: () =
 }
 
 const styles = StyleSheet.create({
+  imieRzad: { flexDirection: 'row', alignItems: 'flex-end', gap: 8 },
   flex: { flex: 1 },
   dtGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   dtWiecej: { marginTop: 10, paddingTop: 10, borderTopWidth: 1 },
