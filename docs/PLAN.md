@@ -25,7 +25,7 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 - [x] Podać model tabletu Lenovo (Ty) — Lenovo Tab M10 (3. gen.) LTE.
 - [ ] Sprawdzić wersję Androida na tablecie (Ty) — Ustawienia → Informacje o tablecie.
 - [x] Założyć nową bazę MySQL dla Listy na filedops.pl (Ty) — serwer432573_lista. — Osobna, trzecia baza. Statystyki i rezerwacje zostają bez zmian.
-- [ ] Sprawdzić w LH.pl, czy kopie zapasowe hostingu obejmują bazę serwer432573_lista i jak ją przywrócić (Ty)
+- [—] Kopie bazy: robi LH.pl (codziennie, ok. 14 dni, backup.lh.pl/mysql) — przy awarii przywraca hosting; dłuższa historia w miesięcznym mailu z ZIP-em.
 - [ ] Wymyślić PIN admina (Ty) — 4 cyfry, wpisać w lista-api/config.php (PIN_ADMINA). Otwiera Archiwum, potwierdza usuwanie list (później: podgląd dnia).
 - [ ] Spisać ustalenia w skillu do budowy aplikacji (Claude) — Żeby każda sesja trzymała się tych samych zasad.
 
