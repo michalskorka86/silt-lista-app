@@ -14,11 +14,12 @@ import { opisWersji, pobierzIPrzeladuj } from '../Aktualizacje';
 import { opisApk, pobierzApk, useNowaWersja } from '../NowaWersja';
 import { folderPdf, KLUCZ_OSTATNI, wybierzFolder, zrobBrakujacePdf } from '../raport/automat';
 import { zglosProblem } from '../bledy/zglos';
+import { OknoKiosk } from '../Kiosk';
 import { useKomunikaty } from '../ui/Komunikaty';
 import { Okno, Przycisk, Przyciski } from '../ui/Okno';
 import { Pole } from '../ui/Pole';
 
-type Widok = 'menu' | 'cennik' | 'opcje' | 'problem';
+type Widok = 'menu' | 'cennik' | 'opcje' | 'problem' | 'kiosk';
 
 /** ☰ Menu z dolnego paska (ov-menu z v19): Cennik / Raport PDF / Rezerwacje / Kosz / Opcje. */
 export function OknoMenu({ widoczne, data, onZamknij }: { widoczne: boolean; data: string; onZamknij: () => void }) {
@@ -29,8 +30,9 @@ function TrescMenu({ data, onZamknij }: { data: string; onZamknij: () => void })
   const [widok, setWidok] = useState<Widok>('menu');
 
   if (widok === 'cennik') return <OknoCennik onZamknij={onZamknij} />;
-  if (widok === 'opcje') return <OknoOpcje onZamknij={onZamknij} onProblem={() => setWidok('problem')} />;
+  if (widok === 'opcje') return <OknoOpcje onZamknij={onZamknij} onProblem={() => setWidok('problem')} onKiosk={() => setWidok('kiosk')} />;
   if (widok === 'problem') return <OknoProblem onZamknij={onZamknij} />;
+  if (widok === 'kiosk') return <OknoKiosk onZamknij={onZamknij} />;
 
   return (
     <Okno widoczne onZamknij={onZamknij} tytul="☰ Menu" rozmiar="sm">
@@ -122,8 +124,8 @@ function OknoCennik({ onZamknij }: { onZamknij: () => void }) {
 }
 
 /** ⚙️ Opcje (ov-opcje z v19): synchronizacja, stan wysyłki, wylogowanie tabletu. */
-function OknoOpcje({ onZamknij, onProblem }: { onZamknij: () => void; onProblem: () => void }) {
-  const { toast, potwierdz } = useKomunikaty();
+function OknoOpcje({ onZamknij, onProblem, onKiosk }: { onZamknij: () => void; onProblem: () => void; onKiosk: () => void }) {
+  const { toast, potwierdz, potwierdzHaslem } = useKomunikaty();
   const { stan, niewyslane, trwa, synchronizujTeraz, wyloguj } = useSync();
   const db = useSQLiteContext();
   const [pdf, setPdf] = useState<{ folder: string | null; ostatni: string } | null>(null);
@@ -237,6 +239,16 @@ function OknoOpcje({ onZamknij, onProblem }: { onZamknij: () => void; onProblem:
             onPress={zrobTeraz}
           />
         </>
+      ) : null}
+      {Platform.OS === 'android' ? (
+        <Opcja
+          l="Tryb kiosku / ustawienia tabletu"
+          sub="Lista jako ekran główny tabletu — zmiana tylko z PIN-em admina"
+          btn="🏠"
+          onPress={() =>
+            potwierdzHaslem({ tytul: '🏠 Tryb kiosku', tekst: 'Ustawienia tabletu tylko dla admina.', ok: 'Dalej', rodzajOk: 'dalej', onOk: onKiosk })
+          }
+        />
       ) : null}
       {nowyApk ? (
         <Opcja l="📥 Jest nowa wersja aplikacji" sub={`${opisApk(nowyApk)} — pobierz i zainstaluj (dane zostają)`} btn="📥" onPress={pobierzApk} />

@@ -86,7 +86,7 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 - [ ] Historia zmian (kto, kiedy, co zmienił) (Claude)
 - [ ] Rozliczenie kasy na koniec dnia (gotówka / karta / przelew) (Claude)
 - [ ] Powiadomienie wieczorem o jutrzejszych rezerwacjach (Claude)
-- [ ] Tryb kiosku + profile Admin / Instruktor (Razem) — Instruktor widzi tylko aplikację i Wi-Fi.
+- [x] Tryb kiosku: aplikacja jako ekran główny tabletu (startuje po włączeniu, Home wraca do listy); wyjście do ustawień Androida w Opcjach z PIN-em admina. Wi-Fi z paska powiadomień. (Wymaga nowego APK.)
 - [ ] Kilka tabletów na jednej liście jednocześnie (Claude)
 
 ## Stan (01.10.2026)
