@@ -1,0 +1,63 @@
+@font-face { font-family: Inter; src: url(../../node_modules/@expo-google-fonts/inter/400Regular/Inter_400Regular.ttf); font-weight: 400; }
+@font-face { font-family: Inter; src: url(../../node_modules/@expo-google-fonts/inter/600SemiBold/Inter_600SemiBold.ttf); font-weight: 600; }
+@font-face { font-family: Inter; src: url(../../node_modules/@expo-google-fonts/inter/700Bold/Inter_700Bold.ttf); font-weight: 700; }
+@font-face { font-family: Inter; src: url(../../node_modules/@expo-google-fonts/inter/800ExtraBold/Inter_800ExtraBold.ttf); font-weight: 800; }
+@font-face { font-family: Inter; src: url(../../node_modules/@expo-google-fonts/inter/900Black/Inter_900Black.ttf); font-weight: 900; }
+@page { size: A4; margin: 12mm 13mm 14mm; @bottom-right { content: "SILT Lista — instrukcja · " counter(page); font: 600 8pt Inter, sans-serif; color: #888; } }
+* { box-sizing: border-box; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body { margin: 0; font-family: Inter, 'Noto Color Emoji', sans-serif; font-size: 10.5pt; line-height: 1.45; color: #18181b; }
+section { break-before: page; }
+section:first-child { break-before: auto; }
+.okladka { text-align: center; padding-top: 18mm; }
+.okladka .logo { font-weight: 900; font-size: 64pt; letter-spacing: -4px; color: #f97316; line-height: 1; }
+.okladka h1 { font-size: 30pt; font-weight: 900; margin: 4mm 0 0; letter-spacing: -0.5px; }
+.okladka .podt { font-size: 15pt; color: #52525b; margin: 1mm 0 8mm; }
+.okladka .wstep { font-size: 11pt; color: #3f3f46; background: #fff7ed; border: 1.5px solid #fdba74; border-radius: 4mm; padding: 5mm 6mm; display: inline-block; text-align: left; }
+.spis { list-style: none; padding: 0; margin: 9mm auto 0; width: 120mm; text-align: left; columns: 2; column-gap: 8mm; }
+.spis li { padding: 1.3mm 0; font-weight: 700; font-size: 10.5pt; break-inside: avoid; }
+.spis li span { display: inline-block; width: 7mm; height: 7mm; line-height: 7mm; border-radius: 2mm; background: #f97316; color: #fff; text-align: center; font-weight: 800; font-size: 9pt; margin-right: 2.5mm; }
+.wersja { margin-top: 12mm; color: #a1a1aa; font-size: 8.5pt; }
+.naglowek { border-bottom: 3px solid #f97316; margin-bottom: 4mm; padding-bottom: 2mm; }
+.rnr { font-weight: 800; font-size: 9pt; color: #f97316; letter-spacing: 1px; }
+h2 { font-size: 20pt; font-weight: 900; margin: 0.5mm 0 0; letter-spacing: -0.3px; }
+h3 { font-size: 12pt; font-weight: 800; margin: 5mm 0 2mm; }
+h2.szef { border-bottom: 3px solid #18181b; padding-bottom: 2mm; margin-bottom: 4mm; }
+p { margin: 0 0 3mm; }
+.lead { font-size: 12pt; color: #52525b; }
+.pod { font-weight: 800; margin-bottom: 1.5mm; }
+.mala { font-size: 9.5pt; color: #52525b; }
+b.p { display: inline-block; background: #f4f4f5; border: 1px solid #d4d4d8; border-radius: 1.5mm; padding: 0 1.5mm; font-weight: 700; white-space: nowrap; }
+figure { margin: 0 auto 3mm; break-inside: avoid; }
+figcaption { text-align: center; font-size: 8.5pt; font-weight: 700; color: #71717a; margin-top: 1.2mm; }
+.ekran { position: relative; border-radius: 2.5mm; overflow: hidden; border: 1px solid #27272a; box-shadow: 0 1mm 3mm rgba(0,0,0,.15); }
+.ekran img { display: block; width: 100%; }
+.m { position: absolute; transform: translate(-85%, -50%); width: 7mm; height: 7mm; line-height: 6.4mm; border-radius: 50%; background: #ef4444; color: #fff; border: 0.5mm solid #fff; font-weight: 900; font-size: 10pt; text-align: center; box-shadow: 0 0.5mm 1.5mm rgba(0,0,0,.6); }
+.dwa { display: flex; gap: 4mm; align-items: flex-start; }
+.dwa > figure { flex: 1; margin: 0 0 3mm; }
+.dwa.tekst > div { flex: 1; }
+ol.kroki { list-style: none; padding: 0; margin: 0 0 3mm; }
+ol.kroki li { display: flex; gap: 2.5mm; align-items: flex-start; margin-bottom: 1.8mm; break-inside: avoid; }
+ol.kroki .nr { flex: 0 0 6mm; height: 6mm; line-height: 6mm; border-radius: 50%; background: #ef4444; color: #fff; font-weight: 900; font-size: 9pt; text-align: center; margin-top: 0.3mm; }
+.ramka { border: 1.5px solid #d4d4d8; background: #fafafa; border-radius: 3mm; padding: 3mm 4mm; margin: 0 0 3mm; break-inside: avoid; }
+.ramka .rt { font-weight: 800; margin-bottom: 0.8mm; }
+.ramka.pomaranczowa { border-color: #fdba74; background: #fff7ed; }
+.ramka.czerwona { border-color: #fca5a5; background: #fef2f2; }
+.tab { width: 100%; border-collapse: collapse; margin-bottom: 4mm; }
+.tab td, .tab th { border-bottom: 1px solid #e4e4e7; padding: 2.5mm 2mm; vertical-align: top; text-align: left; }
+.tab th { width: 32mm; font-weight: 800; }
+.tab .ik { width: 34mm; white-space: nowrap; }
+.kr { display: inline-block; width: 3.4mm; height: 3.4mm; border-radius: 50%; margin-right: 1.5mm; vertical-align: middle; }
+.kr.g { background: #22c55e; } .kr.r { background: #ef4444; } .kr.o { background: #f97316; }
+.pill { display: inline-block; border: 1.5px solid #eab308; background: #fef9c3; color: #854d0e; border-radius: 99px; padding: 0.3mm 2.5mm; font-weight: 800; font-size: 9pt; }
+.pill.cz { border-color: #ef4444; background: #fee2e2; color: #991b1b; }
+dl.faq dt { font-weight: 800; margin-top: 3mm; }
+dl.faq dd { margin: 0.8mm 0 0; padding-left: 4mm; border-left: 3px solid #f97316; }
+.sciaga { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; margin-bottom: 4mm; }
+.sciaga > div { border: 1.5px solid #d4d4d8; border-radius: 3mm; padding: 3mm 4mm; break-inside: avoid; }
+.sciaga h4 { margin: 0 0 1.5mm; font-size: 12pt; font-weight: 900; }
+.sciaga ul { margin: 0; padding-left: 0; list-style: none; }
+.sciaga li { padding-left: 6mm; position: relative; margin-bottom: 1.2mm; }
+.sciaga li::before { content: ''; position: absolute; left: 0; top: 0.8mm; width: 3.5mm; height: 3.5mm; border: 1.5px solid #71717a; border-radius: 0.8mm; }
+
+.dwa .m { width: 5.4mm; height: 5.4mm; line-height: 4.9mm; font-size: 8pt; border-width: 0.4mm; }

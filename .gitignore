@@ -44,3 +44,4 @@ example
 
 # Serwer PHP — konfiguracja z hasłami zostaje tylko na serwerze
 server/config.php
+docs/instrukcja/instrukcja.html

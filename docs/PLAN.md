@@ -79,7 +79,7 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 - [ ] Test wysyłki do Statystyk (nie dubluje) i SMS faktur (Razem)
 - [ ] Test PDF w nocy (tablet) i maila z kopią miesiąca (cron.php?…&mail=teraz) (Ty)
 - [ ] Wdrożenie: APK na wszystkie tablety + logowanie (Razem) — bez Google Play.
-- [ ] Aktualizacja instrukcji PDF dla instruktorów (Claude)
+- [x] Aktualizacja instrukcji PDF dla instruktorów (Claude) — docs/instrukcja/SILT_Lista_instrukcja.pdf (19 rozdziałów + dodatek dla szefa, zrzuty z aplikacji).
 - [ ] Wyłączenie starego PWA po okresie przejściowym (Ty)
 
 ## 6. Na później
@@ -108,4 +108,5 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 - Panel www z ZIP-em miesiąca — gotowy (01.10). Na serwer: panel.php, lib/raport.php, lib/wspolne.php + PANEL_HASLO.
 - Szybkie budowanie APK na GitHubie (Actions → „Buduj APK (szybko)”, wydanie w Releases), stały link filedops.pl/lista-api/apk.php i „📥 Jest nowa wersja aplikacji” na tablecie — gotowe (01.10), pierwsze uruchomienie do sprawdzenia.
 - Kopia miesiąca mailem — gotowa (01.10). Na serwer: cron.php, lib/mail_miesiac.php, lib/raport.php, lib/wspolne.php, panel.php + MIESIECZNY_MAIL.
-- Następny krok: instrukcja dla instruktorów.
+- Instrukcja PDF dla instruktorów — gotowa (01.10).
+- Następny krok: testy na tablecie (APK z „Buduj APK (szybko)”) i wdrożenie.
