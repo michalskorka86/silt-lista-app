@@ -152,6 +152,15 @@ $t = $token; $token = '';
 $r = api('blad', ['komunikat' => 'TypeError: x is undefined', 'ekran' => 'lista', 'stos' => "at a\nat b", 'czas' => $T0]);
 sprawdz('błąd bez logowania → przyjęty', ($r['ok'] ?? false) === true, $r);
 $token = $t;
+$r = api('blad', ['komunikat' => 'Zgłoszenie: kwota <się> nie zmienia', 'ekran' => '/lista/2025-06-01', 'czas' => $T0]);
+sprawdz('zgłoszenie z tabletu → przyjęte', ($r['ok'] ?? false) === true, $r);
+$bledyUrl = preg_replace('#/api\.php$#', '/bledy.php', $URL);
+$ctx = stream_context_create(['http' => ['ignore_errors' => true]]);
+$bez = (string)@file_get_contents($bledyUrl, false, $ctx);
+sprawdz('bledy.php bez klucza → brak dostępu', strpos($bez, 'Brak dostępu') !== false, $bez);
+$z = (string)@file_get_contents($bledyUrl . '?key=cron-test', false, $ctx);
+sprawdz('bledy.php z kluczem: oba zgłoszenia, tekst bezpieczny, tablet z nazwą/modelem',
+    strpos($z, 'TypeError: x is undefined') !== false && strpos($z, 'kwota &lt;się&gt; nie zmienia') !== false && strpos($z, 'Lenovo TB328XU') !== false, mb_substr($z, 0, 300));
 
 echo "Kosz — sprzątanie po 30 dniach\n";
 $pdo->exec("UPDATE grupy SET usunieto = UTC_TIMESTAMP() - INTERVAL 31 DAY WHERE id = 'g1'");

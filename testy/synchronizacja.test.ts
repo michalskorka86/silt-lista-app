@@ -14,6 +14,7 @@ import { BazaNode } from './baza-node';
 import { przeliczGrupe, usun, wczytaj, wczytajGdzie, zapisz, zapiszWiele, type Baza } from '../src/db/zapis';
 import { wczytajCennik } from '../src/logika/cennik';
 import { przywrocZKosza, wczytajKosz } from '../src/logika/kosz';
+import { ileBledowCzeka, zapiszBlad } from '../src/logika/bledy';
 import { BladSerwera, utworzKlienta } from '../src/sync/klient';
 import { jestPinAdmina, sprawdzHaslo, sprawdzPin, synchronizuj, tokenTabletu, wyslijStatystyki, zaloguj } from '../src/sync/synchronizacja';
 import { dodajPensje, zapiszWydatek } from '../src/logika/lista';
@@ -40,9 +41,9 @@ const wczoraj = (() => {
 test('synchronizacja z serwerem', { skip: !API && 'brak SILT_API (serwer testowy)' }, async (t) => {
   const { db, klient } = await nowyTablet();
 
-  await t.test('migracje: baza tabletu w wersji 2', async () => {
+  await t.test('migracje: baza tabletu w wersji 3', async () => {
     const v = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
-    assert.equal(v!.user_version, 2);
+    assert.equal(v!.user_version, 3);
   });
 
   await t.test('bez logowania → „zaloguj”, złe hasło → błąd, dobre → token', async () => {
@@ -70,6 +71,15 @@ test('synchronizacja z serwerem', { skip: !API && 'brak SILT_API (serwer testowy
     const c = await wczytajCennik(db);
     assert.equal(c?.atrakcje.length, 7);
     assert.equal(c?.atrakcje.find((a) => a.klucz === 'klasyk')?.pakiety[1].cena, 130);
+  });
+
+  await t.test('zgłoszenia błędów: zapis bez zasięgu, to samo raz, wysyłka przy synchronizacji', async () => {
+    await zapiszBlad(db, { ekran: '/lista/x', komunikat: 'TypeError: a is undefined', stos: 'at x' });
+    await zapiszBlad(db, { ekran: '/lista/x', komunikat: 'TypeError: a is undefined', stos: 'at x' });
+    await zapiszBlad(db, { ekran: '/kosz', komunikat: 'Zgłoszenie: nie działa przywracanie' });
+    assert.equal(await ileBledowCzeka(db), 2, 'powtórka w ciągu 10 min zapisana raz');
+    assert.equal((await synchronizuj(db, klient)).stan, 'ok');
+    assert.equal(await ileBledowCzeka(db), 0);
   });
 
   await t.test('PIN admina z serwera: tablet zna tylko skrót, sprawdza bez zasięgu', async () => {

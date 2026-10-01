@@ -7,6 +7,7 @@ import { getUstawienie, setUstawienie } from '@/db/ustawienia';
 import { oczyscKosz } from '@/logika/kosz';
 import { useMotyw } from '@/theme/motyw';
 
+import { zglos } from '../bledy/zglos';
 import { useKomunikaty } from '../ui/Komunikaty';
 import { Okno, Przycisk, Przyciski } from '../ui/Okno';
 import { folderPdf, wybierzFolder, zrobBrakujacePdf } from './automat';
@@ -29,9 +30,10 @@ export function AutomatPdf() {
     let aktywny = true;
     const uruchom = () => {
       oczyscKosz(db)
-        .catch(() => 0)
+        .catch((e) => zglos(e, { dopisek: 'Kosz' }))
         .then(() => zrobBrakujacePdf(db))
-        .catch(() => {});
+        .then((w) => w.bledy.forEach((b) => zglos(new Error(b), { dopisek: 'PDF' })))
+        .catch((e) => zglos(e, { dopisek: 'PDF' }));
     };
     (async () => {
       await zarejestrujZadaniePdf();

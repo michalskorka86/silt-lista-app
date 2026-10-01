@@ -65,10 +65,10 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 - [ ] Wbudowana wysyłka PDF na Google Drive (konto firmowe) (Claude) — Ta sama struktura folderów. Bez zasięgu czeka w kolejce. Kopie NIE idą na serwer.
 - [x] Kosz: skasowana grupa do przywrócenia przez 7 dni (Claude) — ☰ Menu → 🗑️ Kosz: grupy, gracze, listy instruktorów, całe dni, wydatki, pensje; „↩ Przywróć” (wraca też na serwerze); po 7 dniach tablet kasuje na dobre.
 - [ ] Przywracanie danych na nowym tablecie (Claude)
-- [ ] Zgłaszanie błędów (raport, gdy aplikacja się wysypie) (Claude)
+- [x] Zgłaszanie błędów (raport, gdy aplikacja się wysypie) (Claude) — awarie + „📨 Zgłoś problem” (Opcje) → tablet → serwer przy zasięgu; podgląd: lista-api/bledy.php?key=CRON_KEY. Wysypany ekran pokazuje „Coś poszło nie tak / Spróbuj ponownie”.
 - [ ] Blokada starej wersji w aplikacji (Claude)
 - [x] Aktualizacje „w powietrzu” (bez nowej instalacji) (Claude) — EAS Update: GitHub → Actions → „Wyślij aktualizację”. Tablet pobiera przy starcie i po powrocie po 10 min przerwy; Opcje → ⬇️ od razu. Nowy APK tylko przy nowych modułach systemowych.
-- [~] PIN admina + podgląd dnia (przychód, gracze, kulki, dym) (Claude) — PIN gotowy (01.10): klawiatura 4 cyfr do Archiwum i usuwania list; bez PIN-u na serwerze — hasło aplikacji. Podgląd dnia do zrobienia.
+- [x] PIN admina (Claude) — 4 cyfry do Archiwum i usuwania list. Podgląd dnia dla admina — NIE robimy (wszystko jest w PDF dnia; decyzja Michała 01.10).
 
 ## 4. Panel www
 - [ ] Panel w przeglądarce do przeglądania list (Claude) — Logowanie tak jak w Statystykach.
@@ -103,4 +103,5 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 - PIN admina zamiast hasła (Archiwum, usuwanie list) — gotowy (01.10). Kopia PDF na Google Drive — na sam koniec.
 - Aktualizacje „w powietrzu” — gotowe (01.10); działają od następnego APK.
 - Kosz — gotowy (01.10), idzie aktualizacją „w powietrzu”.
-- Następny krok: zgłaszanie błędów.
+- Zgłaszanie błędów — gotowe (01.10). Na serwer: bledy.php.
+- Następny krok: zdjęcie kartki → gracze (potrzebny klucz Anthropic w config.php) albo panel www.

@@ -12,10 +12,12 @@ import { useMotyw } from '@/theme/motyw';
 
 import { opisWersji, pobierzIPrzeladuj } from '../Aktualizacje';
 import { folderPdf, KLUCZ_OSTATNI, wybierzFolder, zrobBrakujacePdf } from '../raport/automat';
+import { zglosProblem } from '../bledy/zglos';
 import { useKomunikaty } from '../ui/Komunikaty';
 import { Okno, Przycisk, Przyciski } from '../ui/Okno';
+import { Pole } from '../ui/Pole';
 
-type Widok = 'menu' | 'cennik' | 'opcje';
+type Widok = 'menu' | 'cennik' | 'opcje' | 'problem';
 
 /** ☰ Menu z dolnego paska (ov-menu z v19): Cennik / Raport PDF / Rezerwacje / Kosz / Opcje. */
 export function OknoMenu({ widoczne, data, onZamknij }: { widoczne: boolean; data: string; onZamknij: () => void }) {
@@ -26,7 +28,8 @@ function TrescMenu({ data, onZamknij }: { data: string; onZamknij: () => void })
   const [widok, setWidok] = useState<Widok>('menu');
 
   if (widok === 'cennik') return <OknoCennik onZamknij={onZamknij} />;
-  if (widok === 'opcje') return <OknoOpcje onZamknij={onZamknij} />;
+  if (widok === 'opcje') return <OknoOpcje onZamknij={onZamknij} onProblem={() => setWidok('problem')} />;
+  if (widok === 'problem') return <OknoProblem onZamknij={onZamknij} />;
 
   return (
     <Okno widoczne onZamknij={onZamknij} tytul="☰ Menu" rozmiar="sm">
@@ -118,7 +121,7 @@ function OknoCennik({ onZamknij }: { onZamknij: () => void }) {
 }
 
 /** ⚙️ Opcje (ov-opcje z v19): synchronizacja, stan wysyłki, wylogowanie tabletu. */
-function OknoOpcje({ onZamknij }: { onZamknij: () => void }) {
+function OknoOpcje({ onZamknij, onProblem }: { onZamknij: () => void; onProblem: () => void }) {
   const { toast, potwierdz } = useKomunikaty();
   const { stan, niewyslane, trwa, synchronizujTeraz, wyloguj } = useSync();
   const db = useSQLiteContext();
@@ -233,6 +236,7 @@ function OknoOpcje({ onZamknij }: { onZamknij: () => void }) {
           />
         </>
       ) : null}
+      <Opcja l="Coś nie działa?" sub="Opisz problem — trafi do Michała razem z danymi tabletu" btn="📨" onPress={onProblem} />
       <Opcja
         l="Wersja aplikacji"
         sub={aktTrwa ? 'Sprawdzam aktualizację…' : `SILT Lista ${opisWersji(WERSJA_APLIKACJI)}`}
@@ -241,6 +245,35 @@ function OknoOpcje({ onZamknij }: { onZamknij: () => void }) {
       />
       <Przyciski>
         <Przycisk tekst="Zamknij" rodzaj="anuluj" onPress={onZamknij} />
+      </Przyciski>
+    </Okno>
+  );
+}
+
+/** 📨 Zgłoś problem — opis od instruktora (wyśle się przy zasięgu). */
+function OknoProblem({ onZamknij }: { onZamknij: () => void }) {
+  const { c } = useMotyw();
+  const { toast } = useKomunikaty();
+  const { synchronizujTeraz } = useSync();
+  const [tekst, setTekst] = useState('');
+
+  const wyslij = async () => {
+    if (!tekst.trim()) return;
+    await zglosProblem(tekst);
+    onZamknij();
+    const s = await synchronizujTeraz();
+    toast(s?.stan === 'ok' ? '📨 Wysłano — dzięki!' : '📨 Zapisano — wyśle się, gdy będzie internet');
+  };
+
+  return (
+    <Okno widoczne onZamknij={onZamknij} tytul="📨 Zgłoś problem" rozmiar="sm">
+      <Text style={[styles.oSub, { color: c.text2, marginBottom: 10 }]}>
+        Co się stało i gdzie? Np. „Przy dodawaniu gracza w Gotchy kwota się nie zmienia”. Ekran, wersja i tablet dopiszą się same.
+      </Text>
+      <Pole etykieta="Opis" value={tekst} onChangeText={setTekst} placeholder="Co nie działa…" multiline autoFocus style={styles.opisProblemu} />
+      <Przyciski>
+        <Przycisk tekst="Anuluj" rodzaj="anuluj" onPress={onZamknij} />
+        <Przycisk tekst="📨 Wyślij" onPress={wyslij} wylaczony={!tekst.trim()} />
       </Przyciski>
     </Okno>
   );
@@ -298,4 +331,5 @@ const styles = StyleSheet.create({
   oTxt: { fontFamily: Fonts.semibold, fontSize: 14 },
   oSub: { fontFamily: Fonts.regular, fontSize: 12, marginTop: 2 },
   oBtn: { paddingVertical: 8, paddingHorizontal: 14, minHeight: 40 },
+  opisProblemu: { minHeight: 110, textAlignVertical: 'top' },
 });

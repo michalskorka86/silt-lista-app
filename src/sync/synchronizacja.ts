@@ -12,6 +12,7 @@
 import { getUstawienie, setUstawienie } from '../db/ustawienia';
 import { doSqlite, kolumnyTabeli, KOLEJNOSC_TABEL, TABELE, type Tabela } from '../db/tabele';
 import { liczNiewyslane, nowyId, powiadom, teraz, transakcja, type Baza } from '../db/zapis';
+import { wyslijBledy } from '../logika/bledy';
 import { wczytajCennik, zapiszCennik, type Cennik } from '../logika/cennik';
 import { odswiezRezerwacjeWTle } from '../logika/rezerwacje';
 import { sha256 } from '../logika/sha256';
@@ -268,6 +269,12 @@ async function synchronizujRaz(db: Baza, klient: Klient): Promise<StanSynchroniz
     }
     await odswiezCennik(db, klient, s.cennik_wersja);
     await wyslijKolejke(db, klient);
+    try {
+      await wyslijBledy(db, klient);
+    } catch (e) {
+      if (e instanceof BladPolaczenia) throw e;
+      // zgłoszenie odrzucone przez serwer — nie blokuje synchronizacji list
+    }
     await pobierzZmiany(db, klient);
     await odswiezPracownikow(db, klient);
     try {

@@ -171,5 +171,23 @@ export async function migrateDbIfNeeded(db: SQLiteDatabase) {
     version = 2;
   }
 
+  if (version < 3) {
+    await transakcja(db, async (tx) => {
+      await tx.execAsync(`
+        -- Zgłoszenia błędów (awarie aplikacji, „📨 Zgłoś problem”) — czekają tu, aż będzie zasięg.
+        CREATE TABLE IF NOT EXISTS bledy (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          czas TEXT NOT NULL,
+          ekran TEXT,
+          komunikat TEXT NOT NULL,
+          stos TEXT,
+          wyslano TEXT
+        );
+        PRAGMA user_version = 3;
+      `);
+    });
+    version = 3;
+  }
+
   await db.execAsync(`PRAGMA user_version = ${version}`);
 }

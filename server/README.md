@@ -9,7 +9,7 @@ i jej nie rusza — obie działają równolegle do czasu wyłączenia PWA.
    (kodowanie utf-8): `001_schemat.sql` (tabele + cennik z v19), `002_statystyki.sql`, `003_min_wersja.sql`.
    Każdy plik importuje się raz; przy aktualizacji wgrywa się tylko nowe numery.
 2. **Pliki** — wgraj do nowego folderu `lista-api/` (obok `lista/` i `statystyka/`):
-   `api.php`, `cron.php`, `.htaccess`, cały folder `lib/`.
+   `api.php`, `cron.php`, `bledy.php`, `.htaccess`, cały folder `lib/`.
    Folderów `sql/` i `testy/` NIE wgrywaj.
 3. **Konfiguracja** — skopiuj `config.example.php` jako `config.php` w `lista-api/`
    i uzupełnij: użytkownik i hasło bazy, `LISTA_HASLO` (hasło tabletów), `CRON_KEY`,
@@ -24,6 +24,8 @@ i jej nie rusza — obie działają równolegle do czasu wyłączenia PWA.
    - wysyła SMS z danymi do faktur na 48534500503 (każda faktura raz; nieudany — ponowi następnego dnia),
    - sprząta kosz po 30 dniach.
    Wynik widać po otwarciu tego adresu w przeglądarce.
+6. **Zgłoszenia błędów z tabletów** (awarie aplikacji i „📨 Zgłoś problem” z Opcji):
+   `https://filedops.pl/lista-api/bledy.php?key=CRON_KEY` — ostatnie 200, najnowsze na górze.
 
 ## Zmiana cennika (do czasu panelu www)
 
