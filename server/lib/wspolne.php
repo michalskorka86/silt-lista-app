@@ -21,6 +21,7 @@ if (!defined('SMSAPI_URL'))        define('SMSAPI_URL', 'https://api.smsapi.pl/s
 if (!defined('SMS_FAKTURY_NUMER')) define('SMS_FAKTURY_NUMER', '48534500503');
 if (!defined('SMS_NADAWCA'))       define('SMS_NADAWCA', '');
 if (!defined('DNI_WSTECZ'))        define('DNI_WSTECZ', 14);
+if (!defined('REZ_PODGLAD_URL'))   define('REZ_PODGLAD_URL', '');
 
 date_default_timezone_set('Europe/Warsaw');   // dzień listy liczymy po polsku; znaczniki czasu w bazie są w UTC
 

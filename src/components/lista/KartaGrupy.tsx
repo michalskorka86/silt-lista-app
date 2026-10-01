@@ -33,18 +33,35 @@ export type AkcjeKarty = {
   onZdjecie: () => void;
 };
 
+const nic = () => {};
+/** Archiwum: karta tylko do podglądu (bez przycisków edycji). */
+const BRAK_AKCJI: AkcjeKarty = {
+  onDodajGracza: nic,
+  onEdytujGracza: nic,
+  onPozycje: nic,
+  onChip: nic,
+  onPlatnosc: nic,
+  onPodstawa: nic,
+  onKdod: nic,
+  onFaktura: nic,
+  onDodatek: nic,
+  onUsunDodatek: nic,
+  onZdjecie: nic,
+};
+
 /** Karta grupy (.group-card z v19): nagłówek, gracze, dodatki i ceny, Osób/Kulki/Kwota, Zadatek/Do zapłaty/Płatność/Faktura. */
 export function KartaGrupy({
   grupa: g,
   numer,
   atrakcja,
-  akcje,
+  akcje: akcjeZ,
   ikonaDodatku,
 }: {
   grupa: GrupaPelna;
   numer: number;
   atrakcja?: Atrakcja;
-  akcje: AkcjeKarty;
+  /** brak = tylko podgląd (Archiwum) */
+  akcje?: AkcjeKarty;
   /** ikona dodatku z katalogu (⭐ dla wpisanych ręcznie) */
   ikonaDodatku: (nazwa: string) => string;
 }) {
@@ -52,6 +69,8 @@ export function KartaGrupy({
   const db = useSQLiteContext();
   const { potwierdz, numpad } = useKomunikaty();
   const w = g.wynik;
+  const ro = !akcjeZ;
+  const akcje = akcjeZ ?? BRAK_AKCJI;
   const kolor = atrakcja?.kolor ?? '#888888';
   const nazwa = atrakcja?.nazwa ?? g.atrakcja;
 
@@ -82,7 +101,7 @@ export function KartaGrupy({
   const opisKulek =
     [w.kG ? `bez imion: ${liczba(w.kG)}` : '', w.kD ? `dokupione: ${liczba(w.kD)}` : '', w.kW ? `worki (wł. sprzęt): ${liczba(w.kW)}` : '']
       .filter(Boolean)
-      .join(' · ') || 'dotknij, aby wpisać kulki dla całej grupy';
+      .join(' · ') || (ro ? '' : 'dotknij, aby wpisać kulki dla całej grupy');
   const opisKwoty =
     g.kwota_reczna !== null
       ? `✋ ręcznie (auto: ${zl(w.auto)})`
@@ -110,7 +129,7 @@ export function KartaGrupy({
             </Text>
             <View style={styles.metaOsob}>
               <Text style={[styles.metaTxt, { color: c.text2 }]}>Osób: </Text>
-              <Pressable onPress={edytujGracze} style={[styles.osob, { backgroundColor: c.bg, borderColor: c.border }]}>
+              <Pressable onPress={edytujGracze} disabled={ro} style={[styles.osob, { backgroundColor: c.bg, borderColor: c.border }]}>
                 <Text style={[styles.osobTxt, { color: c.text }]}>{w.gracze}</Text>
               </Pressable>
             </View>
@@ -125,15 +144,17 @@ export function KartaGrupy({
             <Text style={[styles.metaTxt, { color: c.text2 }]}>🕙 {g.godzina}</Text>
           </View>
         </View>
-        <Pressable
-          onPress={usunTe}
-          accessibilityLabel="Usuń grupę"
-          style={({ pressed }) => [
-            styles.iconBtn,
-            { backgroundColor: pressed ? 'rgba(239,68,68,0.1)' : c.surface2, borderColor: pressed ? 'rgba(239,68,68,0.5)' : c.border },
-          ]}>
-          <Text style={styles.iconTxt}>🗑️</Text>
-        </Pressable>
+        {ro ? null : (
+          <Pressable
+            onPress={usunTe}
+            accessibilityLabel="Usuń grupę"
+            style={({ pressed }) => [
+              styles.iconBtn,
+              { backgroundColor: pressed ? 'rgba(239,68,68,0.1)' : c.surface2, borderColor: pressed ? 'rgba(239,68,68,0.5)' : c.border },
+            ]}>
+            <Text style={styles.iconTxt}>🗑️</Text>
+          </Pressable>
+        )}
       </View>
 
       {/* gracze */}
@@ -147,15 +168,18 @@ export function KartaGrupy({
             onPozycje={() => akcje.onPozycje(p)}
             onChip={(poz) => akcje.onChip(p, poz)}
             onUsun={() => usunGraczaZ(p)}
+            tylkoOdczyt={ro}
           />
         ))}
       </View>
-      <View style={styles.addRow}>
-        <Kreskowany onPress={akcje.onDodajGracza} style={styles.flex}>
-          👤＋ Dodaj gracza
-        </Kreskowany>
-        <Kreskowany onPress={akcje.onZdjecie}>📷 Gracze ze zdjęcia kartki</Kreskowany>
-      </View>
+      {ro ? null : (
+        <View style={styles.addRow}>
+          <Kreskowany onPress={akcje.onDodajGracza} style={styles.flex}>
+            👤＋ Dodaj gracza
+          </Kreskowany>
+          <Kreskowany onPress={akcje.onZdjecie}>📷 Gracze ze zdjęcia kartki</Kreskowany>
+        </View>
+      )}
 
       {/* dodatki i ceny */}
       <View style={styles.dod}>
@@ -163,30 +187,37 @@ export function KartaGrupy({
           <Pressable
             key={d.id}
             onPress={() => akcje.onUsunDodatek(d)}
+            disabled={ro}
             style={[styles.dodChip, { borderColor: 'rgba(34,197,94,0.5)', backgroundColor: 'rgba(34,197,94,0.1)' }]}>
             <Text style={[styles.dodTxt, { color: c.green }]}>
               {ikonaDodatku(d.nazwa)} {d.nazwa} {d.kwota ? zl(d.kwota) : 'gratis'}
             </Text>
           </Pressable>
         ))}
-        <Pressable onPress={akcje.onDodatek} style={[styles.dodAdd, { borderColor: c.border2 }]}>
-          <Text style={[styles.dodAddTxt, { color: c.text2 }]}>＋ Dodaj dodatek</Text>
-        </Pressable>
-        <Kafel etykieta="Podstawa" wartosc={etykietaPakietu(g)} onPress={akcje.onPodstawa} />
-        {g.kdod_ilosc ? <Kafel etykieta="Kulki dodatkowe" wartosc={`${zl(g.kdod_cena)} / ${g.kdod_ilosc} szt`} onPress={akcje.onKdod} /> : null}
-        <Kafel etykieta="Kulki bez imion" wartosc={w.kG ? `🎯 ${liczba(w.kG)}` : '＋ wpisz'} onPress={edytujKulki} />
+        {ro ? null : (
+          <Pressable onPress={akcje.onDodatek} style={[styles.dodAdd, { borderColor: c.border2 }]}>
+            <Text style={[styles.dodAddTxt, { color: c.text2 }]}>＋ Dodaj dodatek</Text>
+          </Pressable>
+        )}
+        <Kafel etykieta="Podstawa" wartosc={etykietaPakietu(g)} onPress={ro ? undefined : akcje.onPodstawa} />
+        {g.kdod_ilosc ? (
+          <Kafel etykieta="Kulki dodatkowe" wartosc={`${zl(g.kdod_cena)} / ${g.kdod_ilosc} szt`} onPress={ro ? undefined : akcje.onKdod} />
+        ) : null}
+        {ro && !w.kG ? null : (
+          <Kafel etykieta="Kulki bez imion" wartosc={w.kG ? `🎯 ${liczba(w.kG)}` : '＋ wpisz'} onPress={ro ? undefined : edytujKulki} />
+        )}
       </View>
 
       {/* osób / kulki / kwota */}
       <View style={[styles.sum, { borderTopColor: c.border, backgroundColor: c.surface2 }]}>
-        <Komorka etykieta="Osób" onPress={edytujGracze}>
+        <Komorka etykieta="Osób" onPress={ro ? undefined : edytujGracze}>
           <Text style={[styles.val, { color: c.text }]}>{w.gracze}</Text>
         </Komorka>
-        <Komorka etykieta="Kulki" onPress={edytujKulki}>
+        <Komorka etykieta="Kulki" onPress={ro ? undefined : edytujKulki}>
           <Text style={[styles.val, { color: c.text }]}>{liczba(w.kulki)}</Text>
           <Text style={[styles.sub, { color: c.text2 }]}>{opisKulek}</Text>
         </Komorka>
-        <Komorka etykieta="Kwota" onPress={edytujKwote} ostatnia>
+        <Komorka etykieta="Kwota" onPress={ro ? undefined : edytujKwote} ostatnia>
           <Text style={[styles.val, { color: c.accent }]}>{zlDash(w.kwota)}</Text>
           <Text style={[styles.sub, { color: c.text2 }]}>{opisKwoty}</Text>
         </Komorka>
@@ -194,16 +225,16 @@ export function KartaGrupy({
 
       {/* zadatek / do zapłaty / płatność / faktura */}
       <View style={[styles.pay, { borderTopColor: c.border }]}>
-        <PayKom etykieta="Zadatek" onPress={edytujZadatek} flex={1.4}>
+        <PayKom etykieta="Zadatek" onPress={ro ? undefined : edytujZadatek} flex={1.4}>
           <Text style={[styles.val, styles.big, { color: c.accent }]}>{zlDash(w.zad)}</Text>
         </PayKom>
         <PayKom etykieta="Do zapłaty">
           <Text style={[styles.val, styles.payVal, { color: c.green }]}>{w.doZap > 0 ? zl(w.doZap) : '—'}</Text>
         </PayKom>
-        <PayKom etykieta="Płatność" onPress={akcje.onPlatnosc}>
+        <PayKom etykieta="Płatność" onPress={ro ? undefined : akcje.onPlatnosc}>
           <Text style={[styles.val, styles.payVal, { color: c.text }]}>{g.platnosc ? `${IKONY_PLATNOSCI[g.platnosc]} ${g.platnosc}` : '—'}</Text>
         </PayKom>
-        <PayKom etykieta="Faktura" onPress={akcje.onFaktura} ostatnia>
+        <PayKom etykieta="Faktura" onPress={ro ? undefined : akcje.onFaktura} ostatnia>
           <Text style={[styles.val, styles.payVal, { color: g.faktura ? c.green : c.text }]}>🧾 {g.faktura ? 'Tak' : 'Nie'}</Text>
         </PayKom>
       </View>
@@ -220,27 +251,28 @@ function Kreskowany({ children, onPress, style }: { children: ReactNode; onPress
   );
 }
 
-function Kafel({ etykieta, wartosc, onPress }: { etykieta: string; wartosc: string; onPress: () => void }) {
+function Kafel({ etykieta, wartosc, onPress }: { etykieta: string; wartosc: string; onPress?: () => void }) {
   const { c } = useMotyw();
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.kafel, { backgroundColor: c.surface2, borderColor: pressed ? c.accent : c.border2 }]}>
+    <Pressable onPress={onPress} disabled={!onPress} style={({ pressed }) => [styles.kafel, { backgroundColor: c.surface2, borderColor: pressed ? c.accent : c.border2 }]}>
       <Text style={[styles.kafelLbl, { color: c.text2 }]}>{etykieta.toUpperCase()}</Text>
       <Text style={[styles.kafelVal, { color: c.text }]}>{wartosc}</Text>
     </Pressable>
   );
 }
 
-function Komorka({ etykieta, onPress, ostatnia, children }: { etykieta: string; onPress: () => void; ostatnia?: boolean; children: ReactNode }) {
+function Komorka({ etykieta, onPress, ostatnia, children }: { etykieta: string; onPress?: () => void; ostatnia?: boolean; children: ReactNode }) {
   const { c } = useMotyw();
   return (
     <Pressable
       onPress={onPress}
+      disabled={!onPress}
       style={({ pressed }) => [
         styles.kom,
         !ostatnia && { borderRightWidth: 1, borderRightColor: c.border },
         pressed && { backgroundColor: 'rgba(249,115,22,0.06)' },
       ]}>
-      <Text style={styles.edit}>✏️</Text>
+      {onPress ? <Text style={styles.edit}>✏️</Text> : null}
       <Text style={[styles.lbl, { color: c.text2 }]}>{etykieta.toUpperCase()}</Text>
       {children}
     </Pressable>

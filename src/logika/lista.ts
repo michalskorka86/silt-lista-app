@@ -89,6 +89,22 @@ export async function datyList(db: Baza): Promise<string[]> {
   return w.map((x) => x.data);
 }
 
+export type ListaArchiwum = { data: string; grupy: number; brutto: number; wyslane: boolean };
+
+/** Archiwum: listy z miesiąca (prefiks „2026-10”) — liczba grup, utarg brutto, czy statystyki wysłane. Od najnowszej. */
+export async function listyMiesiaca(db: Baza, rokMies: string): Promise<ListaArchiwum[]> {
+  const w = await db.getAllAsync<{ data: string; grupy: number; brutto: number | null; wyslane: string | null }>(
+    `SELECT l.data, l.s_stat_wyslano AS wyslane,
+            (SELECT COUNT(*) FROM grupy g WHERE g.data = l.data AND g.usunieto IS NULL) AS grupy,
+            (SELECT SUM(g.w_kwota) FROM grupy g WHERE g.data = l.data AND g.usunieto IS NULL) AS brutto
+       FROM listy l
+      WHERE l.usunieto IS NULL AND l.data LIKE ?
+      ORDER BY l.data DESC`,
+    `${rokMies}-%`,
+  );
+  return w.map((x) => ({ data: x.data, grupy: x.grupy, brutto: Math.round((x.brutto ?? 0) * 100) / 100, wyslane: !!x.wyslane }));
+}
+
 // ── Lista i instruktorzy (zakładki) ───────────────────────────
 
 /**

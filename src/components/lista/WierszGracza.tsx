@@ -17,6 +17,7 @@ export function WierszGracza({
   onPozycje,
   onChip,
   onUsun,
+  tylkoOdczyt = false,
 }: {
   gracz: GraczPelny;
   kolor: string;
@@ -24,6 +25,8 @@ export function WierszGracza({
   onPozycje: () => void;
   onChip: (p: Wiersz<'pozycje'>) => void;
   onUsun: () => void;
+  /** Archiwum: bez edycji i bez ✕ */
+  tylkoOdczyt?: boolean;
 }) {
   const { c } = useMotyw();
   const { width } = useWindowDimensions();
@@ -33,58 +36,62 @@ export function WierszGracza({
   const inne = gracz.pozycje.filter((i) => i.rodzaj === 'inne');
   const maSprzet = !!gracz.sprzet?.length;
 
-  const puste = !gracz.pozycje.length && !maSprzet && !gracz.worki_ilosc && gracz.pakiet_cena === null;
+  const ro = tylkoOdczyt;
+  const puste = !ro && !gracz.pozycje.length && !maSprzet && !gracz.worki_ilosc && gracz.pakiet_cena === null;
 
   return (
     <View style={[styles.wiersz, { backgroundColor: c.surface2, borderColor: c.border }]}>
-      <Pressable onPress={onEdytuj} style={[styles.ico, { backgroundColor: kolor }]}>
+      <Pressable onPress={onEdytuj} disabled={ro} style={[styles.ico, { backgroundColor: kolor }]}>
         <Text style={styles.icoTxt}>👤</Text>
       </Pressable>
-      <Pressable onPress={onEdytuj} style={[styles.imie, { width: width < 700 ? 120 : 190 }]}>
+      <Pressable onPress={onEdytuj} disabled={ro} style={[styles.imie, { width: width < 700 ? 120 : 190 }]}>
         <Text style={[styles.imieTxt, { color: c.text }]} numberOfLines={1}>
           {gracz.imie}
           {gracz.notatka ? <Text style={{ color: c.text2, fontFamily: Fonts.semibold }}> ({gracz.notatka})</Text> : null}
         </Text>
       </Pressable>
-      <Pressable onPress={onPozycje} style={({ pressed }) => [styles.pozycje, pressed && { backgroundColor: 'rgba(249,115,22,0.05)' }]}>
+      <Pressable onPress={onPozycje} disabled={ro} style={({ pressed }) => [styles.pozycje, pressed && { backgroundColor: 'rgba(249,115,22,0.05)' }]}>
         {puste ? <Text style={[styles.puste, { color: c.text3 }]}>＋ dotknij, aby dodać kulki / dym</Text> : null}
         {gracz.pakiet_cena !== null && !maSprzet ? (
-          <Chip styl="pk" tekst={`📦 ${gracz.pakiet_nazwa ?? ''} ${zl(gracz.pakiet_cena)}`} onPress={onEdytuj} />
+          <Chip styl="pk" tekst={`📦 ${gracz.pakiet_nazwa ?? ''} ${zl(gracz.pakiet_cena)}`} onPress={onEdytuj} ro={ro} />
         ) : null}
         {(gracz.sprzet ?? []).map((x, i) => (
-          <Chip key={`s${i}`} styl="sp" tekst={`${x.ikona ?? '🎒'} ${x.nazwa} ${zl(x.kwota)}`} onPress={onEdytuj} />
+          <Chip key={`s${i}`} styl="sp" tekst={`${x.ikona ?? '🎒'} ${x.nazwa} ${zl(x.kwota)}`} onPress={onEdytuj} ro={ro} />
         ))}
         {gracz.worki_ilosc ? (
           <Chip
             styl="sp"
             tekst={`🎯 Worek ${gracz.worki_szt ?? ''}${gracz.worki_ilosc > 1 ? ` ×${gracz.worki_ilosc}` : ''} · ${zl(gracz.worki_ilosc * (gracz.worki_cena ?? 0))}`}
             onPress={onEdytuj}
+            ro={ro}
           />
         ) : null}
         {kp.map((i) => (
-          <Chip key={i.id} styl="kulki" tekst={`🎯 ${i.ilosc}`} onPress={() => onChip(i)} />
+          <Chip key={i.id} styl="kulki" tekst={`🎯 ${i.ilosc}`} onPress={() => onChip(i)} ro={ro} />
         ))}
         {kd.length ? <View style={[styles.sep, { backgroundColor: c.red }]} /> : null}
         {kd.map((i) => (
-          <Chip key={i.id} styl="dok" tekst={`🎯 ${i.ilosc}`} onPress={() => onChip(i)} />
+          <Chip key={i.id} styl="dok" tekst={`🎯 ${i.ilosc}`} onPress={() => onChip(i)} ro={ro} />
         ))}
         {dym.map((i) => (
-          <Chip key={i.id} styl="dym" tekst={`💨 DYM ×${i.ilosc} · ${i.kwota ? zl(i.kwota) : 'gratis'}`} onPress={() => onChip(i)} />
+          <Chip key={i.id} styl="dym" tekst={`💨 DYM ×${i.ilosc} · ${i.kwota ? zl(i.kwota) : 'gratis'}`} onPress={() => onChip(i)} ro={ro} />
         ))}
         {inne.map((i) => (
-          <Chip key={i.id} styl="inne" tekst={`📦 ${i.nazwa ?? ''}${i.kwota ? ` ${zl(i.kwota)}` : ''}`} onPress={() => onChip(i)} />
+          <Chip key={i.id} styl="inne" tekst={`📦 ${i.nazwa ?? ''}${i.kwota ? ` ${zl(i.kwota)}` : ''}`} onPress={() => onChip(i)} ro={ro} />
         ))}
       </Pressable>
-      <Pressable onPress={onUsun} style={[styles.del, { borderLeftColor: c.border }]} accessibilityLabel="Usuń gracza">
-        <Text style={[styles.delTxt, { color: c.text3 }]}>✕</Text>
-      </Pressable>
+      {ro ? null : (
+        <Pressable onPress={onUsun} style={[styles.del, { borderLeftColor: c.border }]} accessibilityLabel="Usuń gracza">
+          <Text style={[styles.delTxt, { color: c.text3 }]}>✕</Text>
+        </Pressable>
+      )}
     </View>
   );
 }
 
 type StylChipa = 'kulki' | 'dok' | 'dym' | 'inne' | 'pk' | 'sp';
 
-function Chip({ tekst, styl, onPress }: { tekst: string; styl: StylChipa; onPress: () => void }) {
+function Chip({ tekst, styl, onPress, ro }: { tekst: string; styl: StylChipa; onPress: () => void; ro: boolean }) {
   const { c } = useMotyw();
   const s = {
     kulki: { bg: 'rgba(249,115,22,0.15)', bd: 'rgba(249,115,22,0.45)', fg: c.accent },
@@ -95,7 +102,7 @@ function Chip({ tekst, styl, onPress }: { tekst: string; styl: StylChipa; onPres
     sp: { bg: 'rgba(168,85,247,0.15)', bd: c.purple, fg: c.text },
   }[styl];
   return (
-    <Pressable onPress={onPress} style={[styles.chip, { backgroundColor: s.bg, borderColor: s.bd }]}>
+    <Pressable onPress={onPress} disabled={ro} style={[styles.chip, { backgroundColor: s.bg, borderColor: s.bd }]}>
       <Text style={[styles.chipTxt, { color: s.fg }]}>{tekst}</Text>
     </Pressable>
   );

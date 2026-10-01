@@ -43,7 +43,7 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 - [ ] Zrzuty ekranów v19 jako wzór wyglądu (Claude) — Wygląd zostaje jak w v19 (kolory, układ, zakładki, karty). Poprawki tylko po uzgodnieniu.
 - [x] Baza SQLite na tablecie + automatyczny zapis każdej zmiany (Claude) — src/db/zapis.ts, kolejka zmian. — Nic nie ginie po restarcie ani rozładowaniu.
 - [x] Logowanie tabletu hasłem (Claude) — ekran jak auth_lista.php z v19. — Jak w v19: raz na tablecie, potem pamięta.
-- [~] Start: Utwórz listę / Rezerwacje / Archiwum (Claude) — Utwórz listę gotowe; Archiwum i Rezerwacje w budowie.
+- [x] Start: Utwórz listę / Rezerwacje / Archiwum (Claude)
 - [x] Lista dnia: zakładki instruktorów, dodawanie grup (Claude)
 - [x] Karta grupy i gracze (Claude)
 - [x] Kulki i dym (Claude)
@@ -51,9 +51,9 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 - [x] Pieniądze: kwota, zadatek, płatność (Claude)
 - [x] Faktura i dodatki (Claude)
 - [x] Koniec dnia: godziny, pensje, wydatki (Claude) — ekran Wydatki: wydatki, pensje (pracownicy ze Statystyk, zaokrąglenie do 10 zł), podsumowanie, „📤 Wyślij statystyki”.
-- [ ] Archiwum list (z hasłem) (Claude)
-- [ ] Podgląd rezerwacji (SILT / Arsenał, działa offline) (Claude)
-- [~] Kafelek menu: Cennik / Raport / Rezerwacje / Opcje (Claude) — Popup na środku ekranu. — Menu: Cennik i Opcje gotowe; Rezerwacje i Raport PDF w budowie.
+- [x] Archiwum list (z hasłem) (Claude) — hasło aplikacji, ważne 10 min; podgląd bez edycji; usuwanie zawsze z hasłem.
+- [x] Podgląd rezerwacji (SILT / Arsenał, działa offline) (Claude) — przez serwer listy (REZ_PODGLAD_URL w config.php); tablet trzyma bieżący i następny miesiąc.
+- [~] Kafelek menu: Cennik / Raport / Rezerwacje / Opcje (Claude) — Popup na środku ekranu. — Menu: Cennik, Opcje i Rezerwacje gotowe; Raport PDF w budowie.
 - [ ] Zdjęcie kartki z graczami → odczyt (OCR / Claude) (Claude)
 - [x] Praca bez zasięgu + wysyłka w tle, znacznik „⏳ Niewysłane” (Claude) — src/sync/.
 
@@ -97,4 +97,5 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 - Ekrany (01.10): Utwórz listę (kalendarz, imię instruktora), lista dnia (zakładki, pasek, karty grup), gracze, kulki z pakietu/dokupione, dym, inne, osób/kulki bez imion/kwota/zadatek (numpad), płatność, podstawa i cena kulek dodatkowych. Sprawdzone w przeglądarce z lokalnym serwerem — dane dochodzą na serwer.
 - Pakiet gracza, własny sprzęt + worki, dodatki, faktura — gotowe (01.10).
 - Wydatki/pensje, podsumowanie dnia, wysyłka statystyk z tabletu, Menu (Cennik, Opcje) — gotowe (01.10).
-- Następny krok: Archiwum list (z hasłem), podgląd rezerwacji (offline), potem Raport PDF.
+- Archiwum list (z hasłem) i podgląd rezerwacji (offline) — gotowe (01.10). Na serwer: nowy lib/rezerwacje.php, api.php, wpis REZ_PODGLAD_URL w config.php.
+- Następny krok: Raport PDF (najpierw uzgodnić zawartość; pensje bez premii).

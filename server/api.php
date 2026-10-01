@@ -10,6 +10,7 @@
 //   GET  pobierz   &od_rev=N                           → wiersze zmienione po N
 //   POST statystyki {data, wymus?}                     → wyślij dzień do Statystyk teraz
 //   GET  pracownicy                                    → pracownicy ze Statystyk (ekran pensji)
+//   GET  rezerwacje &od=…&do=…                         → podgląd rezerwacji (z podglad.php)
 //   POST blad      {czas, ekran, komunikat, stos}       → zgłoszenie awarii
 //   POST wyloguj
 //
@@ -24,6 +25,7 @@ require_once __DIR__ . '/lib/tabele.php';
 require_once __DIR__ . '/lib/logowanie.php';
 require_once __DIR__ . '/lib/synchronizacja.php';
 require_once __DIR__ . '/lib/statystyki.php';
+require_once __DIR__ . '/lib/rezerwacje.php';
 
 $akcja = (string)($_GET['akcja'] ?? '');
 $metoda = $_SERVER['REQUEST_METHOD'] ?? 'GET';
@@ -77,6 +79,11 @@ try {
         case 'pracownicy':
             wymagaj_tabletu();
             akcja_pracownicy();
+            break;
+
+        case 'rezerwacje':
+            wymagaj_tabletu();
+            akcja_rezerwacje();
             break;
 
         case 'wyloguj':

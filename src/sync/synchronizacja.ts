@@ -13,6 +13,7 @@ import { getUstawienie, setUstawienie } from '../db/ustawienia';
 import { doSqlite, kolumnyTabeli, KOLEJNOSC_TABEL, TABELE, type Tabela } from '../db/tabele';
 import { liczNiewyslane, nowyId, powiadom, teraz, transakcja, type Baza } from '../db/zapis';
 import { wczytajCennik, zapiszCennik, type Cennik } from '../logika/cennik';
+import { odswiezRezerwacjeWTle } from '../logika/rezerwacje';
 import { sha256 } from '../logika/sha256';
 import { BladPolaczenia, BladSerwera, type Klient } from './klient';
 
@@ -257,6 +258,12 @@ async function synchronizujRaz(db: Baza, klient: Klient): Promise<StanSynchroniz
     await wyslijKolejke(db, klient);
     await pobierzZmiany(db, klient);
     await odswiezPracownikow(db, klient);
+    try {
+      await odswiezRezerwacjeWTle(db, klient);
+    } catch (e) {
+      if (e instanceof BladPolaczenia) throw e;
+      /* podgląd rezerwacji nieskonfigurowany / serwer rezerwacji nie odpowiada — lista działa dalej */
+    }
     await setUstawienie(db, 'sync_ostatnio', teraz());
     // stare, wysłane wpisy kolejki nie są potrzebne
     await db.runAsync("DELETE FROM kolejka WHERE wyslano IS NOT NULL AND wyslano < strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-30 days')");

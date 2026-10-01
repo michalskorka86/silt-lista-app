@@ -15,6 +15,7 @@ import {
   dodajKulki,
   dodajWorek,
   datyList,
+  listyMiesiaca,
   usunDodatek,
   dodajPensje,
   usunPensje,
@@ -201,4 +202,23 @@ test('Wydatki, pensje (zaokrąglenie do 10 zł) i podsumowanie dnia', async () =
   dz = await wczytajDzien(db, D);
   assert.equal(dz.podsumowanie.wydatki, 160);
   assert.equal(dz.podsumowanie.pensje, 0);
+});
+
+test('Archiwum: listy z miesiąca z liczbą grup i utargiem, od najnowszej; usunięte znikają', async () => {
+  const t = (await utworzListe(db, D, 'Monika'))!;
+  await dodajGrupe(db, D, t, 'Alex', KLASYK, KLASYK.pakiety[0]);
+  await dodajGrupe(db, D, t, 'Ola', KLASYK, KLASYK.pakiety[0]);
+  await utworzListe(db, '2026-10-05', 'Janek');
+  await utworzListe(db, '2026-09-30', 'Janek');
+  const paz = await listyMiesiaca(db, '2026-10');
+  assert.deepEqual(
+    paz.map((l) => [l.data, l.grupy, l.brutto, l.wyslane]),
+    [
+      ['2026-10-05', 0, 0, false],
+      [D, 2, 260, false],
+    ],
+  );
+  await usunListe(db, '2026-10-05');
+  assert.deepEqual((await listyMiesiaca(db, '2026-10')).map((l) => l.data), [D]);
+  assert.deepEqual((await listyMiesiaca(db, '2026-09')).map((l) => l.data), ['2026-09-30']);
 });

@@ -242,6 +242,12 @@ $out = $cron();
 sprawdz('następny cron → SMS wysłany', count($smsy()) === 2 && strpos($smsy()[1]['message'], 'Szkoła') !== false
     && $pdo->query("SELECT s_sms_blad FROM faktury WHERE grupa_id='g4'")->fetchColumn() === null, [$out, $smsy()]);
 
+$r = api('rezerwacje', null, ['od' => '2026-10-01', 'do' => '2026-10-31']);
+sprawdz('rezerwacje z podglad.php (przez serwer listy)', count($r['rezerwacje'] ?? []) === 2 && ($r['rezerwacje'][0]['klient'] ?? '') === 'Jan Kowalski'
+    && count($r['atrakcje'] ?? []) === 2 && !isset($r['rezerwacje'][0]['telefon']), $r);
+$r = api('rezerwacje', null, ['od' => 'zle', 'do' => '2026-10-31']);
+sprawdz('rezerwacje: zła data → 400', $r['_http'] === 400, $r);
+
 $r = api('pracownicy');
 sprawdz('pracownicy ze Statystyk (tylko aktywni)', count($r['pracownicy'] ?? []) === 1 && $r['pracownicy'][0]['imie'] === 'Janek' && $r['pracownicy'][0]['premia'] == 5, $r);
 

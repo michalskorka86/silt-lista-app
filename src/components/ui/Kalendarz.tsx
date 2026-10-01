@@ -16,10 +16,13 @@ export function Kalendarz({
   wybrana,
   onWybierz,
   zaznaczone,
+  onMiesiac,
 }: {
   wybrana?: string | null;
   onWybierz: (iso: string) => void;
   zaznaczone?: Set<string>;
+  /** po zmianie miesiąca strzałkami (Archiwum: lista list z tego miesiąca) */
+  onMiesiac?: (rok: number, mies0: number) => void;
 }) {
   const { c } = useMotyw();
   const start = wybrana ? new Date(`${wybrana}T12:00:00`) : new Date();
@@ -41,6 +44,7 @@ export function Kalendarz({
     const d = new Date(rok, mies + o, 1);
     setRok(d.getFullYear());
     setMies(d.getMonth());
+    onMiesiac?.(d.getFullYear(), d.getMonth());
   };
 
   return (

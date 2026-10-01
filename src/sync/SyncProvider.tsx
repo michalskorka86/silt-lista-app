@@ -5,6 +5,7 @@ import { AppState, Platform } from 'react-native';
 
 import { API_URL, SYNC_CO_MS_NIEWYSLANE, SYNC_CO_MS_SPOKOJNIE, SYNC_PO_ZMIANIE_MS } from '@/constants/serwer';
 import { liczNiewyslane, nasluchujZmian } from '@/db/zapis';
+import { pobierzMiesiac, type MiesiacRezerwacji } from '@/logika/rezerwacje';
 import { utworzKlienta } from '@/sync/klient';
 import {
   sprawdzHaslo as sprawdzHasloTabletu,
@@ -29,6 +30,8 @@ type Kontekst = {
   sprawdzHaslo: (haslo: string) => Promise<'ok' | 'zle' | 'offline' | 'blokada'>;
   /** „📤 Wyślij statystyki do bazy” — zwraca komunikat, rzuca Error z opisem */
   wyslijStatystyki: (data: string, wymus: boolean) => Promise<string>;
+  /** Pobiera miesiąc rezerwacji z serwera (i zapisuje na tablecie); rzuca błąd przy braku zasięgu. */
+  pobierzRezerwacje: (rok: number, mies0: number) => Promise<MiesiacRezerwacji>;
 };
 
 const Ctx = createContext<Kontekst>({
@@ -41,6 +44,7 @@ const Ctx = createContext<Kontekst>({
   wyloguj: async () => {},
   sprawdzHaslo: async () => 'zle',
   wyslijStatystyki: async () => '',
+  pobierzRezerwacje: async () => ({ t: '', rezerwacje: [], atrakcje: [] }),
 });
 
 export const WERSJA_APLIKACJI = Constants.expoConfig?.version ?? '0.0.0';
@@ -146,10 +150,12 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     [db, klient],
   );
 
+  const pobierzRezerwacje = useCallback((rok: number, mies0: number) => pobierzMiesiac(db, klient, rok, mies0), [db, klient]);
+
   const sprawdzHaslo = useCallback((haslo: string) => sprawdzHasloTabletu(db, klient, haslo, MODEL, WERSJA_APLIKACJI), [db, klient]);
 
   return (
-    <Ctx.Provider value={{ zalogowany, stan, niewyslane, trwa, synchronizujTeraz, zaloguj, wyloguj, sprawdzHaslo, wyslijStatystyki }}>
+    <Ctx.Provider value={{ zalogowany, stan, niewyslane, trwa, synchronizujTeraz, zaloguj, wyloguj, sprawdzHaslo, wyslijStatystyki, pobierzRezerwacje }}>
       {children}
     </Ctx.Provider>
   );

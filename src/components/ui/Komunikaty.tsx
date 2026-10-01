@@ -9,7 +9,14 @@ import { Numpad, type NumpadUstawienia } from './Numpad';
 import { Okno, Przycisk, Przyciski } from './Okno';
 import { Pole } from './Pole';
 
-type Potwierdzenie = { tytul: string; tekst: string; ok: string; onOk: () => void };
+type Potwierdzenie = {
+  tytul: string;
+  tekst: string;
+  ok: string;
+  onOk: () => void;
+  /** kolor przycisku OK: czerwony (usuwanie, domyślnie) albo pomarańczowy (np. otwarcie archiwum) */
+  rodzajOk?: 'czerwony' | 'dalej';
+};
 
 type Ctx = {
   /** Komunikat na dole ekranu (toast z v19), znika sam po ~2 s. */
@@ -132,7 +139,7 @@ function TrescHasla({ p, onZamknij }: { p: Potwierdzenie; onZamknij: () => void 
       {blad ? <Text style={[styles.blad, { color: c.red }]}>{blad}</Text> : null}
       <Przyciski>
         <Przycisk tekst="Anuluj" rodzaj="anuluj" onPress={onZamknij} />
-        <Przycisk tekst={czeka ? 'Sprawdzam…' : p.ok} rodzaj="czerwony" onPress={ok} wylaczony={!haslo || czeka} />
+        <Przycisk tekst={czeka ? 'Sprawdzam…' : p.ok} rodzaj={p.rodzajOk ?? 'czerwony'} onPress={ok} wylaczony={!haslo || czeka} />
       </Przyciski>
     </>
   );

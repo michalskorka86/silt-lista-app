@@ -34,3 +34,7 @@ define('SMS_NADAWCA',       '');                  // opcjonalnie: zarejestrowana
 
 // Ile dni wstecz cron sprawdza niewysłane statystyki i SMS-y.
 define('DNI_WSTECZ', 14);
+
+// ── Rezerwacje — podgląd dla instruktorów (Menu → Rezerwacje) ──
+// Ten sam adres co w lista/config.php z v19: podglad.php w systemie rezerwacji + ?token=PODGLAD_TOKEN
+define('REZ_PODGLAD_URL', '');                    // ← np. https://…/rezerwacjaapp/podglad.php?token=…
