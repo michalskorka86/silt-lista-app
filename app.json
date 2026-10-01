@@ -15,16 +15,7 @@
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false,
-      "intentFilters": [
-        {
-          "action": "MAIN",
-          "category": [
-            "HOME",
-            "DEFAULT"
-          ]
-        }
-      ]
+      "predictiveBackGestureEnabled": false
     },
     "web": {
       "output": "static",
@@ -51,7 +42,8 @@
           "photosPermission": "Dostęp do zdjęć jest potrzebny, żeby wybrać zdjęcie kartki z graczami.",
           "microphonePermission": false
         }
-      ]
+      ],
+      "./plugins/ekran-glowny.js"
     ],
     "experiments": {
       "typedRoutes": true,
