@@ -58,7 +58,7 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 - [x] Praca bez zasięgu + wysyłka w tle, znacznik „⏳ Niewysłane” (Claude) — src/sync/.
 
 ## 3. Nowe funkcje v1
-- [ ] Ustalić wygląd raportu PDF (co jest na wydruku) (Razem)
+- [ ] Ustalić wygląd raportu PDF (co jest na wydruku) (Razem) Pensje w PDF bez premii (tylko podstawa) — jak v19.
 - [ ] PDF dnia generowany na tablecie (bez internetu) (Claude)
 - [ ] Foldery miesięczne na tablecie (Claude) — Wybór miejsca przy 1. uruchomieniu, np. Dokumenty/SILT Lista/2026-09 Wrzesień/2026-09-30 Lista.pdf. Pliki przetrwają odinstalowanie.
 - [ ] Automatyczne tworzenie PDF ok. 3:00 w nocy (Claude) — Plus dorabianie brakujących PDF-ów przy każdym uruchomieniu.

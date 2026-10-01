@@ -23,6 +23,7 @@ Czytaj też `AGENTS.md` (zasady Expo) i `docs/PLAN.md` (ustalenia i zakres).
 - Tabele list: `src/db/tabele.ts` (typy + kolumny) = `server/lib/tabele.php`. Zmiana kolumny = nowa migracja SQLite + nowy plik SQL na serwerze + obie listy kolumn.
 - Każda zmiana listy TYLKO przez `zapisz()/zapiszWiele()/usun()/przywroc()` z `src/db/zapis.ts` — zapisują wiersz i wpis w kolejce w jednej transakcji. Po zmianie graczy/pozycji/dodatków/pól grupy: `przeliczGrupe()`.
 - Obliczenia grupy: `src/logika/obliczenia.ts` (port 1:1 `calc()` z v19 — nie zmieniać bez uzgodnienia).
+- Premia pracownika NIGDY nie jest pokazywana na tablecie ani drukowana w PDF / raporcie dnia (jak v19). Pensja na liście i wydruku = tylko podstawa (godziny × stawka, zaokrąglona do 10 zł). Premia trafia wyłącznie do Statystyk.
 - Id nowych wierszy: `nowyId('g')` itd. Czas: ISO UTC (`teraz()`). Dzień listy: data lokalna.
 - Wysyłka w tle: `src/sync/SyncProvider.tsx` (po zmianie, co minutę, po powrocie do aplikacji); logika bez React Native w `src/sync/synchronizacja.ts` — testowana w Node (`testy/`).
 - `src/db`, `src/logika`, `src/sync/klient.ts`, `src/sync/synchronizacja.ts` bez importów React Native i aliasu `@/` (względne ścieżki), żeby testy w Node działały.
