@@ -26,12 +26,13 @@ require_once __DIR__ . '/lib/logowanie.php';
 require_once __DIR__ . '/lib/synchronizacja.php';
 require_once __DIR__ . '/lib/statystyki.php';
 require_once __DIR__ . '/lib/rezerwacje.php';
+require_once __DIR__ . '/lib/kartka.php';
 
 $akcja = (string)($_GET['akcja'] ?? '');
 $metoda = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
 try {
-    $wymagaPost = ['zaloguj', 'wyslij', 'statystyki', 'blad', 'wyloguj'];
+    $wymagaPost = ['zaloguj', 'wyslij', 'statystyki', 'blad', 'wyloguj', 'kartka'];
     if (in_array($akcja, $wymagaPost, true) && $metoda !== 'POST') {
         throw new BladApi('metoda', 'Ta akcja wymaga POST', 405);
     }
@@ -84,6 +85,11 @@ try {
         case 'rezerwacje':
             wymagaj_tabletu();
             akcja_rezerwacje();
+            break;
+
+        case 'kartka':
+            wymagaj_tabletu();
+            akcja_kartka(tresc_zadania());
             break;
 
         case 'wyloguj':

@@ -26,6 +26,9 @@ i jej nie rusza — obie działają równolegle do czasu wyłączenia PWA.
    Wynik widać po otwarciu tego adresu w przeglądarce.
 6. **Zgłoszenia błędów z tabletów** (awarie aplikacji i „📨 Zgłoś problem” z Opcji):
    `https://filedops.pl/lista-api/bledy.php?key=CRON_KEY` — ostatnie 200, najnowsze na górze.
+7. **📷 Gracze ze zdjęcia kartki** (opcjonalnie): w `config.php` wpisz `ANTHROPIC_API_KEY`
+   (console.anthropic.com → API Keys). Bez klucza tablet mówi, że odczyt jest wyłączony, i pozwala wpisać graczy ręcznie.
+   Limit: 60 zdjęć na godzinę (ochrona klucza).
 
 ## Zmiana cennika (do czasu panelu www)
 

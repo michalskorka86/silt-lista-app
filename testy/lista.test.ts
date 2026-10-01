@@ -239,3 +239,27 @@ test('Raport PDF: grupy od najstarszej, pensja tylko podstawa (bez premii), pods
   assert.match(html, /Podsumowanie dnia/);
   assert.match(html, /Wydatki<\/td><td class="r">− 150 zł/);
 });
+
+test('Gracze ze zdjęcia kartki: nowi gracze z kulkami (pakiet | dokupione) i dymem; ten sam gracz dostaje dopisane', async () => {
+  const { dodajZKartki, liczbyZTekstu } = await import('../src/logika/kartka');
+  assert.deepEqual(liczbyZTekstu('100 100, 200 / x 0'), [100, 100, 200]);
+  const t = (await utworzListe(db, D, 'Monika'))!;
+  const gid = await dodajGrupe(db, D, t, 'Alex', KLASYK, KLASYK.pakiety[0]);
+  const n = await dodajZKartki(
+    db,
+    gid,
+    [
+      { imie: 'alex', pak: '100 100', dok: '500', dym: '1' },
+      { imie: 'Ola', pak: '200', dok: '', dym: '' },
+      { imie: '  ', pak: '100', dok: '', dym: '' },
+    ],
+    10,
+  );
+  assert.equal(n, 2);
+  const g = (await wczytajDzien(db, D)).grupy[0];
+  assert.deepEqual(g.gracze.map((p) => p.imie), ['Alex', 'Ola'], 'Alex (organizator) uzupełniony, bez dubla');
+  const alex = g.gracze[0];
+  assert.deepEqual(alex.pozycje.filter((x) => x.rodzaj === 'kulki').map((x) => [x.ilosc, !!x.dokupione]), [[100, false], [100, false], [500, true]]);
+  assert.equal(alex.pozycje.find((x) => x.rodzaj === 'dym')?.kwota, 10);
+  assert.equal(g.wynik.kulki, 900);
+});

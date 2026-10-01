@@ -37,6 +37,7 @@ function sprzatanie(): array
     $n = $pdo->exec('DELETE FROM zmiany WHERE przyjeto < UTC_TIMESTAMP() - INTERVAL 30 DAY');
     if ($n) $log[] = "zmiany: $n";
     $pdo->exec('DELETE FROM logowania_bledne WHERE czas < UTC_TIMESTAMP() - INTERVAL 1 DAY');
+    $pdo->prepare("DELETE FROM ustawienia WHERE klucz LIKE 'ocr\\_%' AND klucz < ?")->execute(['ocr_' . gmdate('YmdH', time() - 7200)]);
     $n = $pdo->exec('DELETE FROM bledy WHERE przyjeto < UTC_TIMESTAMP() - INTERVAL 180 DAY');
     if ($n) $log[] = "zgłoszenia błędów: $n";
     return $log;

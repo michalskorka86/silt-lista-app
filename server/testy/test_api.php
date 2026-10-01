@@ -162,6 +162,19 @@ $z = (string)@file_get_contents($bledyUrl . '?key=cron-test', false, $ctx);
 sprawdz('bledy.php z kluczem: oba zgłoszenia, tekst bezpieczny, tablet z nazwą/modelem',
     strpos($z, 'TypeError: x is undefined') !== false && strpos($z, 'kwota &lt;się&gt; nie zmienia') !== false && strpos($z, 'Lenovo TB328XU') !== false, mb_substr($z, 0, 300));
 
+echo "Gracze ze zdjęcia kartki\n";
+$r = api('kartka', ['obraz' => '', 'typ' => 'image/jpeg']);
+sprawdz('kartka bez zdjęcia → 400', $r['_http'] === 400, $r);
+$r = api('kartka', ['obraz' => base64_encode('jpeg-test'), 'typ' => 'image/gif']);
+sprawdz('kartka w złym formacie → 400', $r['_http'] === 400, $r);
+$r = api('kartka', ['obraz' => base64_encode('jpeg-test'), 'typ' => 'image/jpeg']);
+sprawdz('kartka → gracze (kulki, dokupione, dym), złe liczby odrzucone',
+    count($r['gracze'] ?? []) === 3 && $r['gracze'][0]['dokupione'] === [500] && $r['gracze'][0]['dym'] === 1 && $r['gracze'][1]['kulki'] === [200], $r);
+$t = $token; $token = '';
+$r = api('kartka', ['obraz' => base64_encode('x'), 'typ' => 'image/jpeg']);
+sprawdz('kartka bez logowania → 401', $r['_http'] === 401, $r);
+$token = $t;
+
 echo "Kosz — sprzątanie po 30 dniach\n";
 $pdo->exec("UPDATE grupy SET usunieto = UTC_TIMESTAMP() - INTERVAL 31 DAY WHERE id = 'g1'");
 $out = shell_exec('php ' . escapeshellarg(__DIR__ . '/../cron.php') . ' 2>&1');

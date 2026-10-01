@@ -54,7 +54,7 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 - [x] Archiwum list (z hasłem) (Claude) — hasło aplikacji, ważne 10 min; podgląd bez edycji; usuwanie zawsze z hasłem.
 - [x] Podgląd rezerwacji (SILT / Arsenał, działa offline) (Claude) — przez serwer listy (REZ_PODGLAD_URL w config.php); tablet trzyma bieżący i następny miesiąc.
 - [x] Kafelek menu: Cennik / Raport / Rezerwacje / Opcje (Claude) — Popup na środku ekranu.
-- [ ] Zdjęcie kartki z graczami → odczyt (OCR / Claude) (Claude)
+- [x] Zdjęcie kartki z graczami → odczyt (OCR / Claude) (Claude) — 📷 w karcie grupy: aparat/galeria → serwer (Claude, klucz w config.php) → tabela do poprawienia → „Dodaj graczy ✓”. Bez zasięgu: wpisanie ręczne w tej samej tabeli.
 - [x] Praca bez zasięgu + wysyłka w tle, znacznik „⏳ Niewysłane” (Claude) — src/sync/.
 
 ## 3. Nowe funkcje v1
@@ -104,4 +104,5 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 - Aktualizacje „w powietrzu” — gotowe (01.10); działają od następnego APK.
 - Kosz — gotowy (01.10), idzie aktualizacją „w powietrzu”.
 - Zgłaszanie błędów — gotowe (01.10). Na serwer: bledy.php.
-- Następny krok: zdjęcie kartki → gracze (potrzebny klucz Anthropic w config.php) albo panel www.
+- Zdjęcie kartki → gracze — gotowe (01.10). Wymaga nowego APK (aparat) i ANTHROPIC_API_KEY w config.php.
+- Następny krok: panel www.

@@ -42,3 +42,8 @@ define('REZ_PODGLAD_URL', '');                    // ← np. https://…/rezerwa
 // PIN admina (4 cyfry) — otwiera Archiwum i potwierdza usuwanie list na tabletach.
 // Puste = zamiast PIN-u tablet pyta o hasło aplikacji. Zmiana dochodzi do tabletów przy synchronizacji.
 define('PIN_ADMINA', '');
+
+// ── 📷 Gracze ze zdjęcia kartki (opcjonalnie) ──
+// Klucz API Anthropic (console.anthropic.com → API Keys). Bez klucza przycisk na tablecie powie, że odczyt jest wyłączony.
+define('ANTHROPIC_API_KEY', '');                   // ← sk-ant-…
+define('OCR_MODEL', 'claude-sonnet-5-5');          // model czytający zdjęcie

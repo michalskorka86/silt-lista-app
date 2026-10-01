@@ -26,11 +26,14 @@ export class BladSerwera extends Error {
 
 export type Klient = <T = Record<string, unknown>>(
   akcja: string,
-  opcje?: { body?: unknown; params?: Record<string, string | number> },
+  opcje?: { body?: unknown; params?: Record<string, string | number>; timeoutMs?: number },
 ) => Promise<T>;
 
 export function utworzKlienta(k: KonfiguracjaKlienta): Klient {
-  return async function zapytanie<T>(akcja: string, opcje: { body?: unknown; params?: Record<string, string | number> } = {}) {
+  return async function zapytanie<T>(
+    akcja: string,
+    opcje: { body?: unknown; params?: Record<string, string | number>; timeoutMs?: number } = {},
+  ) {
     const qs = new URLSearchParams({ akcja, ...Object.fromEntries(Object.entries(opcje.params ?? {}).map(([a, b]) => [a, String(b)])) });
     const token = await k.token();
     const headers: Record<string, string> = { 'X-App-Wersja': k.wersja, Accept: 'application/json' };
@@ -38,7 +41,7 @@ export function utworzKlienta(k: KonfiguracjaKlienta): Klient {
     if (opcje.body !== undefined) headers['Content-Type'] = 'application/json';
 
     const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), k.timeoutMs ?? 20000);
+    const timer = setTimeout(() => ctrl.abort(), opcje.timeoutMs ?? k.timeoutMs ?? 20000);
     let res: Response;
     try {
       res = await fetch(`${k.url}?${qs.toString()}`, {

@@ -23,6 +23,9 @@ if (!defined('SMS_NADAWCA'))       define('SMS_NADAWCA', '');
 if (!defined('DNI_WSTECZ'))        define('DNI_WSTECZ', 14);
 if (!defined('REZ_PODGLAD_URL'))   define('REZ_PODGLAD_URL', '');
 if (!defined('PIN_ADMINA'))        define('PIN_ADMINA', '');
+if (!defined('ANTHROPIC_API_KEY')) define('ANTHROPIC_API_KEY', '');
+if (!defined('OCR_MODEL'))         define('OCR_MODEL', 'claude-sonnet-5-5');
+if (!defined('ANTHROPIC_URL'))     define('ANTHROPIC_URL', 'https://api.anthropic.com/v1/messages');
 
 date_default_timezone_set('Europe/Warsaw');   // dzień listy liczymy po polsku; znaczniki czasu w bazie są w UTC
 

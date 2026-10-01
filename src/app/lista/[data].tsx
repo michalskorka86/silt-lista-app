@@ -16,6 +16,7 @@ import {
   OknoPodstawa,
   OknoPozycja,
 } from '@/components/lista/Okna';
+import { OknoKartka } from '@/components/lista/OknoKartka';
 import { Zakladki } from '@/components/lista/Zakladki';
 import { TopBar } from '@/components/TopBar';
 import { useKomunikaty } from '@/components/ui/Komunikaty';
@@ -49,6 +50,7 @@ export default function ListaDnia() {
   const [kdod, setKdod] = useState<GrupaPelna | null>(null);
   const [dodatek, setDodatek] = useState<GrupaPelna | null>(null);
   const [faktura, setFaktura] = useState<GrupaPelna | null>(null);
+  const [kartka, setKartka] = useState<GrupaPelna | null>(null);
 
 
   // Brak instruktorów na liście → od razu pytamy o imię (jak v19); „Anuluj” zamyka do następnego wejścia.
@@ -112,8 +114,6 @@ export default function ListaDnia() {
       },
     });
 
-  const wBudowie = (co: string) => () => toast(`🔧 ${co} — w następnym kroku`);
-
   const akcje = (g: GrupaPelna): AkcjeKarty => ({
     onDodajGracza: () => setGracz({ grupa: g }),
     onEdytujGracza: (p) => setGracz({ grupa: g, gracz: p }),
@@ -130,7 +130,7 @@ export default function ListaDnia() {
     onDodatek: () => setDodatek(g),
     onUsunDodatek: (d) =>
       potwierdz({ tytul: 'Usuń dodatek', tekst: `Usunąć „${d.nazwa}”?`, ok: 'Usuń', onOk: () => usunDodatek(db, d.id) }),
-    onZdjecie: wBudowie('Gracze ze zdjęcia kartki'),
+    onZdjecie: () => setKartka(g),
   });
 
   return (
@@ -203,6 +203,7 @@ export default function ListaDnia() {
       <OknoKdod grupa={kdod} atrakcja={atr(kdod)} onZamknij={() => setKdod(null)} />
       <OknoDodatek grupa={dodatek} cennik={cennik} onZamknij={() => setDodatek(null)} />
       <OknoFaktura grupa={aktualna(faktura)} onZamknij={() => setFaktura(null)} />
+      <OknoKartka grupa={kartka} dymCena={cennik?.dym_cena ?? 10} onZamknij={() => setKartka(null)} />
     </View>
   );
 }

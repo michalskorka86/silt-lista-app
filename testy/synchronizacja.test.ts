@@ -15,6 +15,7 @@ import { przeliczGrupe, usun, wczytaj, wczytajGdzie, zapisz, zapiszWiele, type B
 import { wczytajCennik } from '../src/logika/cennik';
 import { przywrocZKosza, wczytajKosz } from '../src/logika/kosz';
 import { ileBledowCzeka, zapiszBlad } from '../src/logika/bledy';
+import { odczytajKartke } from '../src/logika/kartka';
 import { BladSerwera, utworzKlienta } from '../src/sync/klient';
 import { jestPinAdmina, sprawdzHaslo, sprawdzPin, synchronizuj, tokenTabletu, wyslijStatystyki, zaloguj } from '../src/sync/synchronizacja';
 import { dodajPensje, zapiszWydatek } from '../src/logika/lista';
@@ -80,6 +81,15 @@ test('synchronizacja z serwerem', { skip: !API && 'brak SILT_API (serwer testowy
     assert.equal(await ileBledowCzeka(db), 2, 'powtórka w ciągu 10 min zapisana raz');
     assert.equal((await synchronizuj(db, klient)).stan, 'ok');
     assert.equal(await ileBledowCzeka(db), 0);
+  });
+
+  await t.test('zdjęcie kartki: serwer czyta (atrapa Claude) → wiersze do sprawdzenia, „?” jako puste imię', async () => {
+    const w = await odczytajKartke(klient, Buffer.from('jpeg').toString('base64'));
+    assert.deepEqual(w, [
+      { imie: 'Alex', pak: '100 100', dok: '500', dym: '1' },
+      { imie: 'Ola', pak: '200', dok: '', dym: '' },
+      { imie: '', pak: '100', dok: '', dym: '' },
+    ]);
   });
 
   await t.test('PIN admina z serwera: tablet zna tylko skrót, sprawdza bez zasięgu', async () => {

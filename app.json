@@ -34,7 +34,15 @@
         }
       ],
       "expo-sharing",
-      "expo-background-task"
+      "expo-background-task",
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Aparat jest potrzebny do zrobienia zdjęcia kartki z graczami.",
+          "photosPermission": "Dostęp do zdjęć jest potrzebny, żeby wybrać zdjęcie kartki z graczami.",
+          "microphonePermission": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
