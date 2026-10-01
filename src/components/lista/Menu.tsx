@@ -14,12 +14,11 @@ import { Okno, Przycisk, Przyciski } from '../ui/Okno';
 type Widok = 'menu' | 'cennik' | 'opcje';
 
 /** ☰ Menu z dolnego paska (ov-menu z v19): Cennik / Raport PDF / Rezerwacje / Opcje. */
-export function OknoMenu({ widoczne, onZamknij }: { widoczne: boolean; onZamknij: () => void }) {
-  return widoczne ? <TrescMenu onZamknij={onZamknij} /> : <Okno widoczne={false} onZamknij={onZamknij}>{null}</Okno>;
+export function OknoMenu({ widoczne, data, onZamknij }: { widoczne: boolean; data: string; onZamknij: () => void }) {
+  return widoczne ? <TrescMenu data={data} onZamknij={onZamknij} /> : <Okno widoczne={false} onZamknij={onZamknij}>{null}</Okno>;
 }
 
-function TrescMenu({ onZamknij }: { onZamknij: () => void }) {
-  const { toast } = useKomunikaty();
+function TrescMenu({ data, onZamknij }: { data: string; onZamknij: () => void }) {
   const [widok, setWidok] = useState<Widok>('menu');
 
   if (widok === 'cennik') return <OknoCennik onZamknij={onZamknij} />;
@@ -34,7 +33,7 @@ function TrescMenu({ onZamknij }: { onZamknij: () => void }) {
           nazwa="Raport PDF"
           onPress={() => {
             onZamknij();
-            toast('🔧 Raport PDF — w kolejnym etapie');
+            router.push({ pathname: '/raport/[data]', params: { data } });
           }}
         />
         <Kafel

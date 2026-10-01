@@ -5,7 +5,6 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { archiwumOtwarte, useArchiwum } from '@/components/archiwum/dostep';
 import { KartaGrupy } from '@/components/lista/KartaGrupy';
 import { TopBar } from '@/components/TopBar';
-import { useKomunikaty } from '@/components/ui/Komunikaty';
 import { Przycisk } from '@/components/ui/Okno';
 import { Fonts } from '@/constants/theme';
 import { useCennik, useDzien } from '@/hooks/useDane';
@@ -17,7 +16,6 @@ import { useMotyw } from '@/theme/motyw';
 export default function ListaArchiwum() {
   const { data } = useLocalSearchParams<{ data: string }>();
   const { c } = useMotyw();
-  const { toast } = useKomunikaty();
   const { usunZHaslem } = useArchiwum();
   const dzien = useDzien(data);
   const cennik = useCennik();
@@ -39,7 +37,7 @@ export default function ListaArchiwum() {
         <View style={styles.naglowek}>
           <Przycisk tekst="← Kalendarz" rodzaj="anuluj" rozciagnij={false} onPress={() => router.back()} style={styles.btn} />
           <Text style={[styles.tytul, { color: c.text }]}>Lista: {dataPL(data)}</Text>
-          <Przycisk tekst="🖨️ Drukuj / PDF" rodzaj="anuluj" rozciagnij={false} onPress={() => toast('🔧 Raport PDF — w kolejnym etapie')} style={styles.btn} />
+          <Przycisk tekst="🖨️ Drukuj / PDF" rodzaj="anuluj" rozciagnij={false} onPress={() => router.push({ pathname: '/raport/[data]', params: { data } })} style={styles.btn} />
           {dzien.lista ? (
             <Przycisk tekst="🗑 Usuń listę" rodzaj="usun" rozciagnij={false} onPress={() => usunZHaslem(data, () => router.back())} style={styles.btn} />
           ) : null}

@@ -53,13 +53,13 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 - [x] Koniec dnia: godziny, pensje, wydatki (Claude) — ekran Wydatki: wydatki, pensje (pracownicy ze Statystyk, zaokrąglenie do 10 zł), podsumowanie, „📤 Wyślij statystyki”.
 - [x] Archiwum list (z hasłem) (Claude) — hasło aplikacji, ważne 10 min; podgląd bez edycji; usuwanie zawsze z hasłem.
 - [x] Podgląd rezerwacji (SILT / Arsenał, działa offline) (Claude) — przez serwer listy (REZ_PODGLAD_URL w config.php); tablet trzyma bieżący i następny miesiąc.
-- [~] Kafelek menu: Cennik / Raport / Rezerwacje / Opcje (Claude) — Popup na środku ekranu. — Menu: Cennik, Opcje i Rezerwacje gotowe; Raport PDF w budowie.
+- [x] Kafelek menu: Cennik / Raport / Rezerwacje / Opcje (Claude) — Popup na środku ekranu.
 - [ ] Zdjęcie kartki z graczami → odczyt (OCR / Claude) (Claude)
 - [x] Praca bez zasięgu + wysyłka w tle, znacznik „⏳ Niewysłane” (Claude) — src/sync/.
 
 ## 3. Nowe funkcje v1
-- [ ] Ustalić wygląd raportu PDF (co jest na wydruku) (Razem) Pensje w PDF bez premii (tylko podstawa) — jak v19.
-- [ ] PDF dnia generowany na tablecie (bez internetu) (Claude)
+- [x] Ustalić wygląd raportu PDF (co jest na wydruku) (Razem) — jak v19 (A4 poziomo, grupy od najstarszej) + strona: pensje (tylko podstawa, bez premii), wydatki, podsumowanie dnia.
+- [x] PDF dnia generowany na tablecie (bez internetu) (Claude) — Menu → Raport PDF i Archiwum → Drukuj / PDF: podgląd, 🖨️ Drukuj, 📤 Zapisz / wyślij (menu Androida: Dysk, mail, WhatsApp, Pliki).
 - [ ] Foldery miesięczne na tablecie (Claude) — Wybór miejsca przy 1. uruchomieniu, np. Dokumenty/SILT Lista/2026-09 Wrzesień/2026-09-30 Lista.pdf. Pliki przetrwają odinstalowanie.
 - [ ] Automatyczne tworzenie PDF ok. 3:00 w nocy (Claude) — Plus dorabianie brakujących PDF-ów przy każdym uruchomieniu.
 - [ ] Wbudowana wysyłka PDF na Google Drive (konto firmowe) (Claude) — Ta sama struktura folderów. Bez zasięgu czeka w kolejce. Kopie NIE idą na serwer.
@@ -98,4 +98,5 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 - Pakiet gracza, własny sprzęt + worki, dodatki, faktura — gotowe (01.10).
 - Wydatki/pensje, podsumowanie dnia, wysyłka statystyk z tabletu, Menu (Cennik, Opcje) — gotowe (01.10).
 - Archiwum list (z hasłem) i podgląd rezerwacji (offline) — gotowe (01.10). Na serwer: nowy lib/rezerwacje.php, api.php, wpis REZ_PODGLAD_URL w config.php.
-- Następny krok: Raport PDF (najpierw uzgodnić zawartość; pensje bez premii).
+- Raport PDF ręczny — gotowy (01.10). Wymaga nowej wersji APK (nowe moduły: drukowanie, udostępnianie, podgląd).
+- Następny krok: automatyczny PDF ok. 3:00 + kopia na Google Drive (osobny krok, po teście ręcznego raportu).

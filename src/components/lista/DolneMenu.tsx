@@ -34,7 +34,7 @@ export function DolneMenu({ data }: { data: string }) {
           <Text style={[styles.txt, { color: p.akt ? c.accent : c.text2 }]}>{p.nazwa}</Text>
         </Pressable>
       ))}
-      <OknoMenu widoczne={menu} onZamknij={() => setMenu(false)} />
+      <OknoMenu widoczne={menu} data={data} onZamknij={() => setMenu(false)} />
     </View>
   );
 }

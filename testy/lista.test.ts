@@ -222,3 +222,20 @@ test('Archiwum: listy z miesiąca z liczbą grup i utargiem, od najnowszej; usun
   assert.deepEqual((await listyMiesiaca(db, '2026-10')).map((l) => l.data), [D]);
   assert.deepEqual((await listyMiesiaca(db, '2026-09')).map((l) => l.data), ['2026-09-30']);
 });
+
+test('Raport PDF: grupy od najstarszej, pensja tylko podstawa (bez premii), podsumowanie dnia', async () => {
+  const { htmlRaportu } = await import('../src/logika/raport');
+  const t = (await utworzListe(db, D, 'Monika'))!;
+  await dodajGrupe(db, D, t, 'Pierwszy <b>', KLASYK, KLASYK.pakiety[0]);
+  await new Promise((r) => setTimeout(r, 5));
+  await dodajGrupe(db, D, t, 'Drugi', KLASYK, KLASYK.pakiety[0]);
+  await zapiszWydatek(db, D, { opis: 'Paliwo', kwota: 150, uwagi: '' });
+  await dodajPensje(db, D, { imie: 'Janek', prac_id: 'pr1', godziny: 7.5, stawka: 30, premia_stawka: 5 });
+  const html = htmlRaportu(await wczytajDzien(db, D), null);
+  assert.ok(html.indexOf('Pierwszy &lt;b&gt;') < html.indexOf('Drugi'), 'najstarsza grupa pierwsza, tekst bezpieczny');
+  assert.match(html, /Janek<\/td><td class="r">7,5 h<\/td><td class="r">30 zł\/h<\/td><td class="r">230 zł/);
+  assert.doesNotMatch(html, /premi/i);
+  assert.doesNotMatch(html, /267|37,5/); // 7,5 h × 5 zł premii nigdzie
+  assert.match(html, /Podsumowanie dnia/);
+  assert.match(html, /Wydatki<\/td><td class="r">− 150 zł/);
+});
