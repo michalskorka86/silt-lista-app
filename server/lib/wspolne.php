@@ -25,6 +25,8 @@ if (!defined('REZ_PODGLAD_URL'))   define('REZ_PODGLAD_URL', '');
 if (!defined('PIN_ADMINA'))        define('PIN_ADMINA', '');
 if (!defined('ANTHROPIC_API_KEY')) define('ANTHROPIC_API_KEY', '');
 if (!defined('PANEL_HASLO'))       define('PANEL_HASLO', '');
+if (!defined('APK_REPO'))          define('APK_REPO', 'michalskorka86/silt-lista-app');
+if (!defined('APK_BAZA_URL'))      define('APK_BAZA_URL', 'https://github.com/' . APK_REPO . '/releases/latest/download/');
 if (!defined('OCR_MODEL'))         define('OCR_MODEL', 'claude-sonnet-5-5');
 if (!defined('ANTHROPIC_URL'))     define('ANTHROPIC_URL', 'https://api.anthropic.com/v1/messages');
 

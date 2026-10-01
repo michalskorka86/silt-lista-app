@@ -1,0 +1,65 @@
+# Budowanie APK NA GITHUBIE (bez kolejki Expo, ok. 20 min). Uruchamiane RĘCZNIE:
+# GitHub → Actions → „Buduj APK (szybko)” → Run workflow.
+# Wynik: wydanie (Releases) z plikiem silt-lista.apk — tablety pobierają je z
+#   https://filedops.pl/lista-api/apk.php
+# i same widzą „📥 Jest nowa wersja aplikacji”, gdy APK ma nowe moduły systemowe.
+# Podpis ten sam co w Expo (klucz z konta Expo), więc instaluje się na istniejącą aplikację bez utraty danych.
+# Wymaga sekretu EXPO_TOKEN (ten sam co do budowania w Expo).
+name: Buduj APK (szybko)
+on:
+  workflow_dispatch:
+    inputs:
+      opis:
+        description: 'Co nowego (krótko)'
+        type: string
+        default: 'Nowa wersja'
+permissions:
+  contents: write
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      - run: npm ci
+      - name: Zbuduj APK (na GitHubie, klucz podpisu z Expo)
+        env:
+          GRADLE_OPTS: -Dorg.gradle.jvmargs=-Xmx4g
+        run: eas build --platform android --profile preview --local --non-interactive --output silt-lista.apk
+      - name: Opis wersji (wersja.json)
+        env:
+          OPIS: ${{ inputs.opis }}
+          NUMER: ${{ github.run_number }}
+        run: |
+          npx expo-updates runtimeversion:resolve --platform android > rv.json
+          node -e '
+            const rv = JSON.parse(require("fs").readFileSync("rv.json", "utf8")).runtimeVersion;
+            const w = { runtimeVersion: rv, numer: Number(process.env.NUMER), data: new Date().toISOString(), opis: process.env.OPIS, commit: process.env.GITHUB_SHA.slice(0, 7) };
+            require("fs").writeFileSync("wersja.json", JSON.stringify(w));
+            console.log(w);
+          '
+      - name: Wydanie z plikiem APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OPIS: ${{ inputs.opis }}
+        run: |
+          gh release create "apk-${{ github.run_number }}" silt-lista.apk wersja.json \
+            --title "SILT Lista — APK ${{ github.run_number }}" --notes "$OPIS" --latest
+      - uses: actions/upload-artifact@v4
+        with:
+          name: silt-lista-apk
+          path: silt-lista.apk
+          retention-days: 30

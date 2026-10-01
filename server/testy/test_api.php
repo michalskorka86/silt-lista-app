@@ -211,6 +211,17 @@ $r = $www('?m=2025-06');
 sprawdz('panel: po wylogowaniu znowu hasło', strpos($r['tresc'], 'name="haslo"') !== false, mb_substr($r['tresc'], 0, 100));
 @unlink($ciastka); @unlink($zipPlik);
 
+echo "APK do pobrania\n";
+$apkUrl = preg_replace('#/api\.php$#', '/apk.php', $URL);
+$ch = curl_init($apkUrl);
+curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_HEADER => true, CURLOPT_FOLLOWLOCATION => false]);
+$r = (string)curl_exec($ch);
+$kod = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+curl_close($ch);
+sprawdz('apk.php → przekierowanie do najnowszego silt-lista.apk', $kod === 302 && preg_match('#Location: .*/silt-lista\.apk#i', $r) === 1, mb_substr($r, 0, 300));
+$info = json_decode((string)@file_get_contents($apkUrl . '?info'), true);
+sprawdz('apk.php?info → runtimeVersion i numer wydania', ($info['runtimeVersion'] ?? '') === 'abc123' && ($info['numer'] ?? 0) === 7, $info);
+
 echo "Kosz — sprzątanie po 30 dniach\n";
 $pdo->exec("UPDATE grupy SET usunieto = UTC_TIMESTAMP() - INTERVAL 31 DAY WHERE id = 'g1'");
 $out = shell_exec('php ' . escapeshellarg(__DIR__ . '/../cron.php') . ' 2>&1');

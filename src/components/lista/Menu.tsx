@@ -11,6 +11,7 @@ import { useSync, WERSJA_APLIKACJI } from '@/sync/SyncProvider';
 import { useMotyw } from '@/theme/motyw';
 
 import { opisWersji, pobierzIPrzeladuj } from '../Aktualizacje';
+import { opisApk, pobierzApk, useNowaWersja } from '../NowaWersja';
 import { folderPdf, KLUCZ_OSTATNI, wybierzFolder, zrobBrakujacePdf } from '../raport/automat';
 import { zglosProblem } from '../bledy/zglos';
 import { useKomunikaty } from '../ui/Komunikaty';
@@ -154,6 +155,7 @@ function OknoOpcje({ onZamknij, onProblem }: { onZamknij: () => void; onProblem:
   };
 
   const [aktTrwa, setAktTrwa] = useState(false);
+  const nowyApk = useNowaWersja();
   const sprawdzAktualizacje = async () => {
     if (aktTrwa) return;
     setAktTrwa(true);
@@ -235,6 +237,9 @@ function OknoOpcje({ onZamknij, onProblem }: { onZamknij: () => void; onProblem:
             onPress={zrobTeraz}
           />
         </>
+      ) : null}
+      {nowyApk ? (
+        <Opcja l="📥 Jest nowa wersja aplikacji" sub={`${opisApk(nowyApk)} — pobierz i zainstaluj (dane zostają)`} btn="📥" onPress={pobierzApk} />
       ) : null}
       <Opcja l="Coś nie działa?" sub="Opisz problem — trafi do Michała razem z danymi tabletu" btn="📨" onPress={onProblem} />
       <Opcja

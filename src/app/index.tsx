@@ -2,6 +2,7 @@ import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { PasekNowejWersji } from '@/components/NowaWersja';
 import { Tile } from '@/components/Tile';
 import { TopBar } from '@/components/TopBar';
 import { Fonts } from '@/constants/theme';
@@ -24,6 +25,7 @@ export default function Home() {
       <ScrollView contentContainerStyle={styles.body}>
         <Text style={[styles.logo, { color: c.accent }]}>SILT</Text>
         <Text style={[styles.date, { color: c.text2 }]}>{dzis}</Text>
+        <PasekNowejWersji />
 
         <View style={styles.grid}>
           <View style={styles.row}>

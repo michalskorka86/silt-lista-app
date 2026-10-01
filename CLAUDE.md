@@ -42,5 +42,5 @@ Czytaj też `AGENTS.md` (zasady Expo) i `docs/PLAN.md` (ustalenia i zakres).
 - Nie commituj danych klientów, dumpów bazy ani plików `.env`.
 
 ## Android
-- Pakiet: `pl.silt.lista` (po pierwszym wydaniu w Google Play nie do zmiany).
+- Pakiet: `pl.silt.lista`. Bez Google Play: APK z GitHub Releases (Actions „Buduj APK (szybko)”, link `lista-api/apk.php`), poprawki JS przez „Wyślij aktualizację” (EAS Update, runtimeVersion = fingerprint). Nowy APK tylko przy nowych modułach natywnych — wtedy powiedz o tym Michałowi.
 - Katalogi `android/` i `ios/` są generowane — nie edytować ręcznie, konfiguracja w `app.json`.

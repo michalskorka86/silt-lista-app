@@ -106,4 +106,5 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 - Zgłaszanie błędów — gotowe (01.10). Na serwer: bledy.php.
 - Zdjęcie kartki → gracze — gotowe (01.10). Wymaga nowego APK (aparat) i ANTHROPIC_API_KEY w config.php.
 - Panel www z ZIP-em miesiąca — gotowy (01.10). Na serwer: panel.php, lib/raport.php, lib/wspolne.php + PANEL_HASLO.
-- Następny krok: szybkie budowanie APK na GitHubie (bez kolejki Expo), instrukcja dla instruktorów, na koniec kopia PDF na Google Drive.
+- Szybkie budowanie APK na GitHubie (Actions → „Buduj APK (szybko)”, wydanie w Releases), stały link filedops.pl/lista-api/apk.php i „📥 Jest nowa wersja aplikacji” na tablecie — gotowe (01.10), pierwsze uruchomienie do sprawdzenia.
+- Następny krok: instrukcja dla instruktorów, na koniec kopia PDF na Google Drive.

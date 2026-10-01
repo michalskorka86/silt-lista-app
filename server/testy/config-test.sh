@@ -13,3 +13,4 @@ sed -e "s/'localhost'/'$2'/" -e "s/'serwer432573_lista');/'silt_test');/" \
     "$(dirname "$0")/../config.example.php" > "$1"
 echo "define('SMSAPI_URL', '$5/testy/mock/sms.php');" >> "$1"
 echo "define('ANTHROPIC_URL', '$5/testy/mock/anthropic.php');" >> "$1"
+echo "define('APK_BAZA_URL', '$5/testy/mock/apk/');" >> "$1"

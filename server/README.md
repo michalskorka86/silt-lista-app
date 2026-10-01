@@ -9,7 +9,7 @@ i jej nie rusza — obie działają równolegle do czasu wyłączenia PWA.
    (kodowanie utf-8): `001_schemat.sql` (tabele + cennik z v19), `002_statystyki.sql`, `003_min_wersja.sql`.
    Każdy plik importuje się raz; przy aktualizacji wgrywa się tylko nowe numery.
 2. **Pliki** — wgraj do nowego folderu `lista-api/` (obok `lista/` i `statystyka/`):
-   `api.php`, `cron.php`, `bledy.php`, `panel.php`, `.htaccess`, cały folder `lib/`.
+   `api.php`, `cron.php`, `bledy.php`, `panel.php`, `apk.php`, `.htaccess`, cały folder `lib/`.
    Folderów `sql/` i `testy/` NIE wgrywaj.
 3. **Konfiguracja** — skopiuj `config.example.php` jako `config.php` w `lista-api/`
    i uzupełnij: użytkownik i hasło bazy, `LISTA_HASLO` (hasło tabletów), `CRON_KEY`,
@@ -33,6 +33,9 @@ i jej nie rusza — obie działają równolegle do czasu wyłączenia PWA.
    (osobne, inne niż tabletów; puste = panel wyłączony). Miesiąc → dni z utargiem, wydatkami, pensjami (sama podstawa),
    dzień → raport jak PDF z tabletu, „Drukuj / PDF cały miesiąc”, „ZIP miesiąca” (raport każdego dnia + CSV do Excela).
    Wylogowanie po 30 min bez ruchu; 5 złych haseł = 15 min blokady.
+9. **APK do pobrania** — `https://filedops.pl/lista-api/apk.php` (na tablecie w przeglądarce → pobierz → zainstaluj).
+   Przekierowuje do najnowszego wydania z GitHuba (Actions → „Buduj APK (szybko)”); `apk.php?info` mówi tabletom,
+   czy jest nowy APK (wtedy na ekranie startowym pojawia się „📥 Jest nowa wersja aplikacji”).
 
 ## Zmiana cennika (do czasu panelu www)
 
