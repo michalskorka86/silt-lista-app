@@ -7,7 +7,7 @@ import { datyList, listyMiesiaca, wczytajDzien, type Dzien, type ListaArchiwum }
 import { wczytajPracownikow, type Pracownik } from '@/sync/synchronizacja';
 
 /** Odświeża dane po każdej zmianie na tablecie albo z serwera (zbiera kilka zmian w jedno odświeżenie). */
-function useOdswiezanie(wczytaj: () => Promise<void>) {
+export function useOdswiezanie(wczytaj: () => Promise<void>) {
   const czeka = useRef(false);
   useEffect(() => {
     wczytaj();

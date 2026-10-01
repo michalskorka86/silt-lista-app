@@ -17,7 +17,7 @@ import { Okno, Przycisk, Przyciski } from '../ui/Okno';
 
 type Widok = 'menu' | 'cennik' | 'opcje';
 
-/** ☰ Menu z dolnego paska (ov-menu z v19): Cennik / Raport PDF / Rezerwacje / Opcje. */
+/** ☰ Menu z dolnego paska (ov-menu z v19): Cennik / Raport PDF / Rezerwacje / Kosz / Opcje. */
 export function OknoMenu({ widoczne, data, onZamknij }: { widoczne: boolean; data: string; onZamknij: () => void }) {
   return widoczne ? <TrescMenu data={data} onZamknij={onZamknij} /> : <Okno widoczne={false} onZamknij={onZamknij}>{null}</Okno>;
 }
@@ -46,6 +46,14 @@ function TrescMenu({ data, onZamknij }: { data: string; onZamknij: () => void })
           onPress={() => {
             onZamknij();
             router.push('/rezerwacje');
+          }}
+        />
+        <Kafel
+          ico="🗑️"
+          nazwa="Kosz"
+          onPress={() => {
+            onZamknij();
+            router.push('/kosz');
           }}
         />
         <Kafel ico="⚙️" nazwa="Opcje" onPress={() => setWidok('opcje')} />

@@ -63,7 +63,7 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 - [x] Foldery miesięczne na tablecie (Claude) — folder wybierany przy 1. uruchomieniu lub w Opcjach (📁). — Wybór miejsca przy 1. uruchomieniu, np. Dokumenty/SILT Lista/2026-09 Wrzesień/2026-09-30 Lista.pdf. Pliki przetrwają odinstalowanie.
 - [x] Automatyczne tworzenie PDF ok. 3:00 w nocy (Claude) — Plus dorabianie brakujących PDF-ów przy każdym uruchomieniu. — Zadanie w tle co ok. godzinę (Android wybiera chwilę); wczorajsza lista po 3:00; zmieniona stara lista → nowy PDF; ostatnie 45 dni; Opcje → 🔄 robi od razu.
 - [ ] Wbudowana wysyłka PDF na Google Drive (konto firmowe) (Claude) — Ta sama struktura folderów. Bez zasięgu czeka w kolejce. Kopie NIE idą na serwer.
-- [ ] Kosz: skasowana grupa do przywrócenia przez 7 dni (Claude)
+- [x] Kosz: skasowana grupa do przywrócenia przez 7 dni (Claude) — ☰ Menu → 🗑️ Kosz: grupy, gracze, listy instruktorów, całe dni, wydatki, pensje; „↩ Przywróć” (wraca też na serwerze); po 7 dniach tablet kasuje na dobre.
 - [ ] Przywracanie danych na nowym tablecie (Claude)
 - [ ] Zgłaszanie błędów (raport, gdy aplikacja się wysypie) (Claude)
 - [ ] Blokada starej wersji w aplikacji (Claude)
@@ -102,4 +102,5 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 - Automatyczne PDF-y + foldery miesięcy — gotowe (01.10), do sprawdzenia na tablecie (nowy APK).
 - PIN admina zamiast hasła (Archiwum, usuwanie list) — gotowy (01.10). Kopia PDF na Google Drive — na sam koniec.
 - Aktualizacje „w powietrzu” — gotowe (01.10); działają od następnego APK.
-- Następny krok: kosz i zgłaszanie błędów.
+- Kosz — gotowy (01.10), idzie aktualizacją „w powietrzu”.
+- Następny krok: zgłaszanie błędów.

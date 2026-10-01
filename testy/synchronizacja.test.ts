@@ -13,6 +13,7 @@ import { migrateDbIfNeeded } from '../src/db/migrations';
 import { BazaNode } from './baza-node';
 import { przeliczGrupe, usun, wczytaj, wczytajGdzie, zapisz, zapiszWiele, type Baza } from '../src/db/zapis';
 import { wczytajCennik } from '../src/logika/cennik';
+import { przywrocZKosza, wczytajKosz } from '../src/logika/kosz';
 import { BladSerwera, utworzKlienta } from '../src/sync/klient';
 import { jestPinAdmina, sprawdzHaslo, sprawdzPin, synchronizuj, tokenTabletu, wyslijStatystyki, zaloguj } from '../src/sync/synchronizacja';
 import { dodajPensje, zapiszWydatek } from '../src/logika/lista';
@@ -171,6 +172,24 @@ test('synchronizacja z serwerem', { skip: !API && 'brak SILT_API (serwer testowy
     const ola = await wczytaj(t2.db, 'gracze', 'p-2');
     assert.ok(ola?.usunieto, 'gracz w koszu także na innym tablecie');
     assert.equal((await wczytajGdzie(t2.db, 'gracze', 'grupa_id = ?', [G])).length, 1);
+  });
+
+  await t.test('kosz: „↩ Przywróć” na jednym tablecie → gracz wraca na serwerze i na innym tablecie', async () => {
+    const k = await wczytajKosz(db, null);
+    const ola = k.find((x) => x.id === 'p-2')!;
+    assert.ok(ola, 'gracz w koszu');
+    await przywrocZKosza(db, ola);
+    assert.equal((await wczytaj(db, 'grupy', G))?.w_kwota, 1395 - 130 + 40);
+    assert.equal((await synchronizuj(db, klient)).stan, 'ok');
+    const t2 = await nowyTablet();
+    await zaloguj(t2.db, t2.klient, HASLO, 'piaty', '1.0.0');
+    await synchronizuj(t2.db, t2.klient);
+    assert.equal((await wczytaj(t2.db, 'gracze', 'p-2'))?.usunieto, null);
+    assert.equal((await wczytaj(t2.db, 'grupy', G))?.w_kwota, 1395 - 130 + 40);
+    // z powrotem do kosza (dalsze testy liczą na 1395)
+    await usun(db, 'gracze', 'p-2');
+    await przeliczGrupe(db, G);
+    await synchronizuj(db, klient);
   });
 
   await t.test('zmiana z tabletu jest wysyłana przed pobieraniem, więc nie ginie', async () => {

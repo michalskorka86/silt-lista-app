@@ -4,6 +4,7 @@ import { AppState, Platform, StyleSheet, Text } from 'react-native';
 
 import { Fonts } from '@/constants/theme';
 import { getUstawienie, setUstawienie } from '@/db/ustawienia';
+import { oczyscKosz } from '@/logika/kosz';
 import { useMotyw } from '@/theme/motyw';
 
 import { useKomunikaty } from '../ui/Komunikaty';
@@ -27,7 +28,10 @@ export function AutomatPdf() {
     if (Platform.OS === 'web') return;
     let aktywny = true;
     const uruchom = () => {
-      zrobBrakujacePdf(db).catch(() => {});
+      oczyscKosz(db)
+        .catch(() => 0)
+        .then(() => zrobBrakujacePdf(db))
+        .catch(() => {});
     };
     (async () => {
       await zarejestrujZadaniePdf();
