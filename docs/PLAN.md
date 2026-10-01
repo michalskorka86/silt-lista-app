@@ -13,7 +13,7 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 - **Połączenia:** Do Statystyk przez ich api.php, rezerwacje przez podglad.php — jak w v19.
 - **PDF:** PDF z każdego dnia, automatycznie ok. 3:00; brakujące dorabiane przy uruchomieniu.
 - **Foldery:** Folder na każdy miesiąc w pamięci tabletu (np. SILT Lista/2026-09 Wrzesień/).
-- **Kopia PDF:** Wbudowana wysyłka na Google Drive (konto firmowe). Nie na serwer.
+- **Kopia:** BEZ Google Drive (decyzja 01.10). Dane: serwer (główne) + tablety + Statystyki; od 3. dnia miesiąca serwer wysyła mailem ZIP poprzedniego miesiąca (MIESIECZNY_MAIL).
 - **Zakres v1 — dodatki:** Cennik z serwera, kosz 7 dni, przywracanie na nowym tablecie, zgłaszanie błędów, blokada starej wersji, podgląd dnia (PIN admina), panel www.
 - **Na później:** Historia zmian, rozliczenie kasy, powiadomienia o rezerwacjach, kiosk + profile, kilka tabletów na jednej liście.
 - **Bez zmian z v19:** Cron 6:00, SMS z danymi do faktur na 48534500503, wysyłka do Statystyk, podgląd rezerwacji.
@@ -25,7 +25,7 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 - [x] Podać model tabletu Lenovo (Ty) — Lenovo Tab M10 (3. gen.) LTE.
 - [ ] Sprawdzić wersję Androida na tablecie (Ty) — Ustawienia → Informacje o tablecie.
 - [x] Założyć nową bazę MySQL dla Listy na filedops.pl (Ty) — serwer432573_lista. — Osobna, trzecia baza. Statystyki i rezerwacje zostają bez zmian.
-- [ ] Przygotować firmowe konto Google na kopie PDF (Ty) — Jedno konto dla wszystkich tabletów, logowane raz w Opcjach.
+- [ ] Sprawdzić w LH.pl, czy kopie zapasowe hostingu obejmują bazę serwer432573_lista i jak ją przywrócić (Ty)
 - [ ] Wymyślić PIN admina (Ty) — 4 cyfry, wpisać w lista-api/config.php (PIN_ADMINA). Otwiera Archiwum, potwierdza usuwanie list (później: podgląd dnia).
 - [ ] Spisać ustalenia w skillu do budowy aplikacji (Claude) — Żeby każda sesja trzymała się tych samych zasad.
 
@@ -62,7 +62,7 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 - [x] PDF dnia generowany na tablecie (bez internetu) (Claude) — Menu → Raport PDF i Archiwum → Drukuj / PDF: podgląd, 🖨️ Drukuj, 📤 Zapisz / wyślij (menu Androida: Dysk, mail, WhatsApp, Pliki).
 - [x] Foldery miesięczne na tablecie (Claude) — folder wybierany przy 1. uruchomieniu lub w Opcjach (📁). — Wybór miejsca przy 1. uruchomieniu, np. Dokumenty/SILT Lista/2026-09 Wrzesień/2026-09-30 Lista.pdf. Pliki przetrwają odinstalowanie.
 - [x] Automatyczne tworzenie PDF ok. 3:00 w nocy (Claude) — Plus dorabianie brakujących PDF-ów przy każdym uruchomieniu. — Zadanie w tle co ok. godzinę (Android wybiera chwilę); wczorajsza lista po 3:00; zmieniona stara lista → nowy PDF; ostatnie 45 dni; Opcje → 🔄 robi od razu.
-- [ ] Wbudowana wysyłka PDF na Google Drive (konto firmowe) (Claude) — Ta sama struktura folderów. Bez zasięgu czeka w kolejce. Kopie NIE idą na serwer.
+- [x] Kopia miesiąca mailem zamiast Google Drive (Claude) — cron od 3. dnia miesiąca wysyła ZIP poprzedniego miesiąca na MIESIECZNY_MAIL; test: cron.php?key=…&mail=teraz.
 - [x] Kosz: skasowana grupa do przywrócenia przez 7 dni (Claude) — ☰ Menu → 🗑️ Kosz: grupy, gracze, listy instruktorów, całe dni, wydatki, pensje; „↩ Przywróć” (wraca też na serwerze); po 7 dniach tablet kasuje na dobre.
 - [ ] Przywracanie danych na nowym tablecie (Claude)
 - [x] Zgłaszanie błędów (raport, gdy aplikacja się wysypie) (Claude) — awarie + „📨 Zgłoś problem” (Opcje) → tablet → serwer przy zasięgu; podgląd: lista-api/bledy.php?key=CRON_KEY. Wysypany ekran pokazuje „Coś poszło nie tak / Spróbuj ponownie”.
@@ -77,7 +77,7 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 - [ ] Pierwszy APK — test na tablecie obok PWA v19 (Razem)
 - [ ] Test bez zasięgu, restart, rozładowanie baterii (Ty)
 - [ ] Test wysyłki do Statystyk (nie dubluje) i SMS faktur (Razem)
-- [ ] Test PDF w nocy i wysyłki na Google Drive (Ty)
+- [ ] Test PDF w nocy (tablet) i maila z kopią miesiąca (cron.php?…&mail=teraz) (Ty)
 - [ ] Wdrożenie: APK na wszystkie tablety + logowanie (Razem) — bez Google Play.
 - [ ] Aktualizacja instrukcji PDF dla instruktorów (Claude)
 - [ ] Wyłączenie starego PWA po okresie przejściowym (Ty)
@@ -107,4 +107,5 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 - Zdjęcie kartki → gracze — gotowe (01.10). Wymaga nowego APK (aparat) i ANTHROPIC_API_KEY w config.php.
 - Panel www z ZIP-em miesiąca — gotowy (01.10). Na serwer: panel.php, lib/raport.php, lib/wspolne.php + PANEL_HASLO.
 - Szybkie budowanie APK na GitHubie (Actions → „Buduj APK (szybko)”, wydanie w Releases), stały link filedops.pl/lista-api/apk.php i „📥 Jest nowa wersja aplikacji” na tablecie — gotowe (01.10), pierwsze uruchomienie do sprawdzenia.
-- Następny krok: instrukcja dla instruktorów, na koniec kopia PDF na Google Drive.
+- Kopia miesiąca mailem — gotowa (01.10). Na serwer: cron.php, lib/mail_miesiac.php, lib/raport.php, lib/wspolne.php, panel.php + MIESIECZNY_MAIL.
+- Następny krok: instrukcja dla instruktorów.

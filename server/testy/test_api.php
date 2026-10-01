@@ -321,6 +321,23 @@ sprawdz('rezerwacje: zła data → 400', $r['_http'] === 400, $r);
 $r = api('pracownicy');
 sprawdz('pracownicy ze Statystyk (tylko aktywni)', count($r['pracownicy'] ?? []) === 1 && $r['pracownicy'][0]['imie'] === 'Janek' && $r['pracownicy'][0]['premia'] == 5, $r);
 
+echo "Kopia miesiąca mailem\n";
+foreach (glob($MOCK . '/mail-*.eml') ?: [] as $f) unlink($f);
+$poprz = date('Y-m', strtotime(date('Y-m-01') . ' -1 month'));
+$out = shell_exec('php ' . escapeshellarg(__DIR__ . '/../cron.php') . ' mail=teraz 2>&1');
+$maile = glob($MOCK . '/mail-*.eml') ?: [];
+$eml = $maile ? (string)file_get_contents($maile[0]) : '';
+$zipOk = false;
+if (preg_match('/filename="SILT_lista_' . preg_quote($poprz) . '\.zip"\r\n\r\n([A-Za-z0-9+\/=\r\n]+)/', $eml, $m)) {
+    $tmp = tempnam(sys_get_temp_dir(), 'z');
+    file_put_contents($tmp, base64_decode($m[1]));
+    $z = new ZipArchive();
+    if ($z->open($tmp) === true) { $zipOk = $z->locateName('Podsumowanie ' . $poprz . '.csv', ZipArchive::FL_NODIR) !== false; $z->close(); }
+    unlink($tmp);
+}
+sprawdz('cron mail=teraz → mail na adres z config, ZIP poprzedniego miesiąca w załączniku: ' . trim((string)$out),
+    count($maile) === 1 && strpos($eml, 'To: test@example.com') !== false && $zipOk && stripos(base64_decode((string)preg_replace('/.*?Content-Transfer-Encoding: base64\r\n\r\n(.*?)--silt.*/s', '$1', $eml)), 'premi') === false, mb_substr($eml, 0, 400));
+
 echo "Wylogowanie i blokada haseł\n";
 $r = api('wyloguj', []);
 $r = api('start');

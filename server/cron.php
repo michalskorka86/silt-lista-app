@@ -6,7 +6,8 @@
 //
 // 1) statystyki dni do wczoraj (niewysłane albo poprawione po wysyłce) → Statystyki,
 // 2) SMS z danymi do faktur (każda faktura raz; nieudany — ponowienie następnego dnia),
-// 3) sprzątanie: kosz po KOSZ_DNI dniach, stare wpisy techniczne.
+// 3) sprzątanie: kosz po KOSZ_DNI dniach, stare wpisy techniczne,
+// 4) od 3. dnia miesiąca: ZIP z poprzedniego miesiąca mailem na MIESIECZNY_MAIL (test od razu: &mail=teraz).
 // ============================================================
 
 declare(strict_types=1);
@@ -14,6 +15,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/lib/wspolne.php';
 require_once __DIR__ . '/lib/tabele.php';
 require_once __DIR__ . '/lib/statystyki.php';
+require_once __DIR__ . '/lib/mail_miesiac.php';
 
 if (PHP_SAPI !== 'cli') {
     header('Content-Type: text/plain; charset=utf-8');
@@ -44,7 +46,8 @@ function sprzatanie(): array
 }
 
 try {
-    $log = array_merge(codzienna_wysylka(), sprzatanie());
+    $mailTeraz = PHP_SAPI === 'cli' ? in_array('mail=teraz', $argv ?? [], true) : (($_GET['mail'] ?? '') === 'teraz');
+    $log = array_merge(codzienna_wysylka(), sprzatanie(), miesieczny_mail($mailTeraz));
     echo date('Y-m-d H:i:s') . ' — ' . ($log ? implode("\n", $log) : 'brak zaległości') . "\n";
 } catch (Throwable $e) {
     http_response_code(500);

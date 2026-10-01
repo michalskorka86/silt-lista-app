@@ -108,10 +108,6 @@ widok_miesiaca($ym);
 
 // ── funkcje widoków ─────────────────────────────────────────
 
-function nazwa_miesiaca(string $ym): string
-{
-    return MIESIACE_PL[(int)substr($ym, 5, 2) - 1] . ' ' . substr($ym, 0, 4);
-}
 
 function przesun(string $ym, int $o): string
 {
@@ -190,36 +186,14 @@ function druk(string $tytul, string $tresc, string $wstecz): void
         . '<div class="kartka">' . $tresc . '</div></body></html>';
 }
 
-/** ⬇️ ZIP miesiąca: raport każdego dnia (HTML — otwiera się w przeglądarce, Ctrl+P → PDF), cały miesiąc w jednym pliku, podsumowanie CSV. */
+/** ⬇️ ZIP miesiąca (lib/raport.php → zip_miesiaca_plik). */
 function zip_miesiaca(string $ym): void
 {
-    if (!class_exists('ZipArchive')) {
+    $plik = zip_miesiaca_plik($ym);
+    if ($plik === null) {
         strona('ZIP', '<p class="pusto">Serwer nie ma modułu ZIP (php-zip). Użyj „Drukuj / PDF cały miesiąc”.</p>');
         return;
     }
-    $dni = miesiac_z_bazy($ym);
-    $plik = tempnam(sys_get_temp_dir(), 'silt');
-    $zip = new ZipArchive();
-    $zip->open($plik, ZipArchive::OVERWRITE);
-    $folder = 'SILT Lista ' . $ym . ' ' . MIESIACE_PL[(int)substr($ym, 5, 2) - 1];
-    $calosc = '';
-    $csv = "\xEF\xBB\xBF" . implode(';', ['Dzień', 'Instruktorzy', 'Grupy', 'Osoby', 'Kulki', 'Dym', 'Brutto', 'Zadatki', 'Wydatki', 'Pensje', 'Zostaje', 'Statystyki wysłane']) . "\r\n";
-    $liczba = function ($v): string { return str_replace('.', ',', (string)round((float)$v, 2)); };
-    foreach ($dni as $i => $x) {
-        $d = dzien_z_bazy($x['data']);
-        if (!$d) continue;
-        $tresc = raport_dnia($d);
-        $zip->addFromString($folder . '/' . $x['data'] . ' Lista.html', raport_plik_html('SILT lista ' . r_data_pl($x['data']), $tresc));
-        $calosc .= '<div class="' . ($i ? 'dzien-nowy' : '') . '">' . $tresc . '</div>';
-        $s = $d['podsumowanie'];
-        $pola = [$x['data'], $x['instruktorzy'] ?? '', $s['grupy'], $s['graczy'], $s['kulki'], (int)$x['dym'], $liczba($s['brutto']), $liczba($s['zadatki']),
-            $liczba($s['wydatki']), $liczba($s['pensje']), $liczba($s['netto']), $x['s_stat_wyslano'] ? 'tak' : 'nie'];
-        $csv .= implode(';', array_map(function ($v) { return '"' . str_replace('"', '""', (string)$v) . '"'; }, $pola)) . "\r\n";
-    }
-    if ($calosc !== '') $zip->addFromString($folder . '/Cały miesiąc ' . $ym . '.html', raport_plik_html('SILT lista ' . nazwa_miesiaca($ym), $calosc));
-    $zip->addFromString($folder . '/Podsumowanie ' . $ym . '.csv', $csv);
-    $zip->addFromString($folder . '/Jak zrobić PDF.txt', "Otwórz plik .html w przeglądarce i naciśnij Ctrl+P → „Zapisz jako PDF” (A4 poziomo).\r\nPodsumowanie .csv otwiera się w Excelu.\r\n");
-    $zip->close();
     header('Content-Type: application/zip');
     header('Content-Disposition: attachment; filename="SILT_lista_' . $ym . '.zip"');
     header('Content-Length: ' . filesize($plik));

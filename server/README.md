@@ -22,7 +22,8 @@ i jej nie rusza — obie działają równolegle do czasu wyłączenia PWA.
    Co robi (dni od 14 dni wstecz do wczoraj):
    - wysyła do Statystyk dni niewysłane albo poprawione po wysyłce (nadpisuje, nie dubluje),
    - wysyła SMS z danymi do faktur na 48534500503 (każda faktura raz; nieudany — ponowi następnego dnia),
-   - sprząta kosz po 30 dniach.
+   - sprząta kosz po 30 dniach,
+   - od 3. dnia miesiąca wysyła mailem ZIP poprzedniego miesiąca (punkt 10).
    Wynik widać po otwarciu tego adresu w przeglądarce.
 6. **Zgłoszenia błędów z tabletów** (awarie aplikacji i „📨 Zgłoś problem” z Opcji):
    `https://filedops.pl/lista-api/bledy.php?key=CRON_KEY` — ostatnie 200, najnowsze na górze.
@@ -36,6 +37,9 @@ i jej nie rusza — obie działają równolegle do czasu wyłączenia PWA.
 9. **APK do pobrania** — `https://filedops.pl/lista-api/apk.php` (na tablecie w przeglądarce → pobierz → zainstaluj).
    Przekierowuje do najnowszego wydania z GitHuba (Actions → „Buduj APK (szybko)”); `apk.php?info` mówi tabletom,
    czy jest nowy APK (wtedy na ekranie startowym pojawia się „📥 Jest nowa wersja aplikacji”).
+10. **Kopia miesiąca mailem** — w `config.php` wpisz `MIESIECZNY_MAIL` (adres). Od 3. dnia miesiąca cron (6:00)
+    wysyła ZIP z poprzedniego miesiąca (to samo co „ZIP miesiąca” w panelu). Raz na miesiąc; nieudany — ponowi jutro.
+    Sprawdzenie od razu: `https://filedops.pl/lista-api/cron.php?key=CRON_KEY&mail=teraz`.
 
 ## Zmiana cennika (do czasu panelu www)
 

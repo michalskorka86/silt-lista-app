@@ -51,3 +51,11 @@ define('OCR_MODEL', 'claude-sonnet-5-5');          // model czytający zdjęcie
 // ── Panel www (panel.php) — przeglądanie list z komputera, ZIP miesiąca ──
 // Osobne hasło (inne niż tabletów). Puste = panel wyłączony.
 define('PANEL_HASLO', '');
+
+// ── Kopia miesiąca mailem (cron) ──
+// Od MAIL_DZIEN dnia miesiąca cron wysyła ZIP z poprzedniego miesiąca. Puste = wyłączone.
+// Sprawdzenie od razu: https://filedops.pl/lista-api/cron.php?key=CRON_KEY&mail=teraz
+define('MIESIECZNY_MAIL', '');                    // ← np. twoj@adres.pl
+define('MAIL_OD', 'lista@filedops.pl');            // nadawca (najlepiej adres w domenie serwera)
+define('MAIL_DZIEN', 3);
+
