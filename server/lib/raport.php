@@ -267,7 +267,8 @@ function miesiac_z_bazy(string $ym): array
           WHERE l.usunieto IS NULL AND l.data BETWEEN ? AND ?
           ORDER BY l.data"
     );
-    $st->execute([$ym . '-01', $ym . '-31']);
+    $od = $ym . '-01';
+    $st->execute([$od, date('Y-m-t', strtotime($od . ' 12:00:00'))]); // ostatni dzień miesiąca (MySQL 8 nie lubi „-31” w krótkich miesiącach)
     $dni = $st->fetchAll();
     foreach ($dni as &$x) $x['netto'] = round((float)$x['brutto'] - (float)$x['wydatki'] - (float)$x['pensje'], 2);
     return $dni;
