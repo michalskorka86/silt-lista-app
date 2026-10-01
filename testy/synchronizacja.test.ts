@@ -7,44 +7,17 @@
 //     --import ./testy/rejestruj.mjs testy/synchronizacja.test.ts
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { DatabaseSync, type SQLInputValue } from 'node:sqlite';
 import { test } from 'node:test';
 
 import { migrateDbIfNeeded } from '../src/db/migrations';
-import { przeliczGrupe, usun, wczytaj, wczytajGdzie, zapisz, zapiszWiele, type Baza, type Parametr } from '../src/db/zapis';
+import { BazaNode } from './baza-node';
+import { przeliczGrupe, usun, wczytaj, wczytajGdzie, zapisz, zapiszWiele, type Baza } from '../src/db/zapis';
 import { wczytajCennik } from '../src/logika/cennik';
 import { BladSerwera, utworzKlienta } from '../src/sync/klient';
 import { synchronizuj, tokenTabletu, zaloguj } from '../src/sync/synchronizacja';
 
 const API = process.env.SILT_API;
 const HASLO = 'test123';
-
-/** node:sqlite udający bazę expo-sqlite (te same metody, których używa aplikacja). */
-class BazaNode implements Baza {
-  d = new DatabaseSync(':memory:');
-  async runAsync(sql: string, ...p: Parametr[]) {
-    return this.d.prepare(sql).run(...(p as SQLInputValue[]));
-  }
-  async getAllAsync<T>(sql: string, ...p: Parametr[]) {
-    return this.d.prepare(sql).all(...(p as SQLInputValue[])) as T[];
-  }
-  async getFirstAsync<T>(sql: string, ...p: Parametr[]) {
-    return (this.d.prepare(sql).get(...(p as SQLInputValue[])) as T | undefined) ?? null;
-  }
-  async execAsync(sql: string) {
-    this.d.exec(sql);
-  }
-  async withExclusiveTransactionAsync(task: (tx: Baza) => Promise<void>) {
-    this.d.exec('BEGIN');
-    try {
-      await task(this);
-      this.d.exec('COMMIT');
-    } catch (e) {
-      this.d.exec('ROLLBACK');
-      throw e;
-    }
-  }
-}
 
 async function nowyTablet(url = API!, wersja = '1.0.0') {
   const db = new BazaNode();

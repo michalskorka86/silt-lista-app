@@ -1,5 +1,7 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
+import { transakcja } from './zapis';
+
 /**
  * Migracje bazy na tablecie. Wersja trzymana w PRAGMA user_version.
  * Zasada: NIGDY nie zmieniamy starej migracji — zawsze dopisujemy nową (kolejny `if`).
@@ -44,7 +46,7 @@ export async function migrateDbIfNeeded(db: SQLiteDatabase) {
         zmieniono TEXT NOT NULL,
         usunieto  TEXT,
         rev       INTEGER`;
-    await db.withExclusiveTransactionAsync(async (tx) => {
+    await transakcja(db, async (tx) => {
       await tx.execAsync(`
       CREATE TABLE IF NOT EXISTS listy (
         data TEXT PRIMARY KEY NOT NULL,

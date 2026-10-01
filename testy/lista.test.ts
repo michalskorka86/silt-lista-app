@@ -1,0 +1,131 @@
+/// <reference types="node" />
+// Akcje listy dnia (to, co robią ekrany) na bazie tabletu w pamięci — bez serwera.
+import assert from 'node:assert/strict';
+import { beforeEach, test } from 'node:test';
+
+import { migrateDbIfNeeded } from '../src/db/migrations';
+import { liczNiewyslane } from '../src/db/zapis';
+import type { Atrakcja } from '../src/logika/cennik';
+import {
+  dodajDym,
+  dodajGracza,
+  dodajGrupe,
+  dodajInne,
+  dodajKulki,
+  datyList,
+  usunGracza,
+  usunInstruktora,
+  usunListe,
+  usunPozycje,
+  utworzListe,
+  wczytajDzien,
+  zmienGrupe,
+} from '../src/logika/lista';
+import { BazaNode } from './baza-node';
+
+const KLASYK: Atrakcja = {
+  klucz: 'klasyk', nazwa: 'Paintball Klasyczny', podpis: '0,68 cal', stat: 'KLASYK', kolor: '#8B6355',
+  kdod: { ilosc: 100, cena: 15 }, opcje_pakiet: [50, 100, 200, 500], opcje_dok: [100, 200, 500, 1000],
+  pakiety: [{ id: 2, nazwa: 'Pakiet SILT', kulki: 500, cena: 130, typ: 'os', limit: 0, extra: 0 }],
+};
+const GOTCHA: Atrakcja = {
+  klucz: 'gotcha', nazwa: 'Paintball Gotcha', podpis: '', stat: 'GOTHA', kolor: '#7B1FA2',
+  kdod: { ilosc: 100, cena: 15 }, opcje_pakiet: [], opcje_dok: [],
+  pakiety: [{ id: 9, nazwa: 'Pakiet urodzinowy do 10 osób', kulki: 0, cena: 850, typ: 'grupa', limit: 10, extra: 70 }],
+};
+const D = '2026-10-01';
+
+let db: BazaNode;
+beforeEach(async () => {
+  db = new BazaNode();
+  await migrateDbIfNeeded(db as never);
+});
+
+test('Utwórz listę z instruktorem; to samo imię drugi raz = ta sama zakładka', async () => {
+  const t1 = await utworzListe(db, D, 'Monika');
+  const t2 = await utworzListe(db, D, 'monika');
+  assert.equal(t1, t2);
+  const t3 = await utworzListe(db, D, 'Janek');
+  assert.notEqual(t1, t3);
+  const dz = await wczytajDzien(db, D);
+  assert.ok(dz.lista);
+  assert.deepEqual(dz.instruktorzy.map((i) => i.imie), ['Monika', 'Janek']);
+  assert.deepEqual(await datyList(db), [D]);
+});
+
+test('Nowa grupa: organizator jako pierwszy gracz „org.”, pakiet i kulki dodatkowe z cennika', async () => {
+  const t = (await utworzListe(db, D, 'Monika'))!;
+  await dodajGrupe(db, D, t, 'Alex', KLASYK, KLASYK.pakiety[0]);
+  const g = (await wczytajDzien(db, D)).grupy[0];
+  assert.equal(g.pakiet_cena, 130);
+  assert.equal(g.kdod_cena, 15);
+  assert.equal(g.gracze.length, 1);
+  assert.equal(g.gracze[0].imie, 'Alex');
+  assert.equal(g.gracze[0].notatka, 'org.');
+  assert.equal(g.w_kwota, 130);
+  assert.match(g.godzina, /^\d{2}:\d{2}$/);
+});
+
+test('Gracze, kulki, dym, inne → kwota grupy liczona i zapisana jak w v19', async () => {
+  const t = (await utworzListe(db, D, 'Monika'))!;
+  const gid = await dodajGrupe(db, D, t, 'Alex', KLASYK, KLASYK.pakiety[0]);
+  const org = (await wczytajDzien(db, D)).grupy[0].gracze[0].id;
+  const ola = await dodajGracza(db, gid, 'Ola');
+  await dodajKulki(db, org, 500, false);
+  await dodajKulki(db, org, 200, true);
+  await dodajDym(db, ola, 1, 10);
+  await dodajDym(db, ola, 2, 20); // dopisuje się do istniejącego dymu
+  await dodajInne(db, ola, 'Mundur', 10);
+  let g = (await wczytajDzien(db, D)).grupy[0];
+  assert.equal(g.gracze[1].pozycje.filter((p) => p.rodzaj === 'dym').length, 1);
+  assert.equal(g.w_dym, 3);
+  // 2 × 130 + 200 dokupionych (30 zł) + dym 30 + mundur 10
+  assert.equal(g.w_kwota, 260 + 30 + 30 + 10);
+  assert.equal(g.w_kulki, 700);
+
+  await zmienGrupe(db, gid, { gracze_reczne: 10, zadatek: 100, platnosc: 'Karta' });
+  g = (await wczytajDzien(db, D)).grupy[0];
+  assert.equal(g.w_gracze, 10);
+  assert.equal(g.w_kwota, 1300 + 70);
+  assert.equal(g.wynik.doZap, 1270);
+
+  await usunPozycje(db, g.gracze[1].pozycje.find((p) => p.rodzaj === 'inne')!.id);
+  await usunGracza(db, ola);
+  g = (await wczytajDzien(db, D)).grupy[0];
+  assert.equal(g.gracze.length, 1);
+  assert.equal(g.w_kwota, 1300 + 30);
+
+  await zmienGrupe(db, gid, { kwota_reczna: 1000 });
+  assert.equal((await wczytajDzien(db, D)).grupy[0].w_kwota, 1000);
+});
+
+test('Pakiet grupowy (Gotcha) bez organizatora', async () => {
+  const t = (await utworzListe(db, D, 'Monika'))!;
+  const gid = await dodajGrupe(db, D, t, '', GOTCHA, GOTCHA.pakiety[0]);
+  await zmienGrupe(db, gid, { gracze_reczne: 12 });
+  const g = (await wczytajDzien(db, D)).grupy[0];
+  assert.equal(g.gracze.length, 0);
+  assert.equal(g.w_kwota, 850 + 2 * 70);
+});
+
+test('Najnowsza grupa na górze; usunięcie instruktora zabiera jego grupy; usunięcie listy', async () => {
+  const t1 = (await utworzListe(db, D, 'Monika'))!;
+  const t2 = (await utworzListe(db, D, 'Janek'))!;
+  await dodajGrupe(db, D, t1, 'Pierwsza', KLASYK, KLASYK.pakiety[0]);
+  await new Promise((r) => setTimeout(r, 5));
+  await dodajGrupe(db, D, t2, 'Druga', KLASYK, KLASYK.pakiety[0]);
+  let dz = await wczytajDzien(db, D);
+  assert.deepEqual(dz.grupy.map((g) => g.organizator), ['Druga', 'Pierwsza']);
+
+  await usunInstruktora(db, t2);
+  dz = await wczytajDzien(db, D);
+  assert.deepEqual(dz.instruktorzy.map((i) => i.imie), ['Monika']);
+  assert.deepEqual(dz.grupy.map((g) => g.organizator), ['Pierwsza']);
+
+  await usunListe(db, D);
+  dz = await wczytajDzien(db, D);
+  assert.equal(dz.lista, null);
+  assert.equal(dz.grupy.length, 0);
+  assert.deepEqual(await datyList(db), []);
+  assert.ok((await liczNiewyslane(db)) > 0, 'usunięcia czekają w kolejce na serwer');
+});

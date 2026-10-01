@@ -32,6 +32,19 @@ export interface Baza {
   getFirstAsync<T>(sql: string, ...params: Parametr[]): Promise<T | null>;
   execAsync(sql: string): Promise<void>;
   withExclusiveTransactionAsync(task: (tx: Baza) => Promise<void>): Promise<void>;
+  withTransactionAsync?(task: () => Promise<void>): Promise<void>;
+}
+
+/** Przeglądarka (podgląd ekranów na komputerze) — tam expo-sqlite nie ma transakcji wyłącznych. */
+const wPrzegladarce = typeof document !== 'undefined' && typeof window !== 'undefined';
+
+/**
+ * Transakcja: na tablecie wyłączna (nic spoza niej się nie wmiesza),
+ * w przeglądarce zwykła (expo-sqlite web nie obsługuje wyłącznych).
+ */
+export async function transakcja(db: Baza, task: (tx: Baza) => Promise<void>): Promise<void> {
+  if (wPrzegladarce && db.withTransactionAsync) return db.withTransactionAsync(() => task(db));
+  return db.withExclusiveTransactionAsync(task);
 }
 
 // ── Powiadomienia o zmianach (odświeżanie ekranów, start wysyłki) ─────────
@@ -115,7 +128,7 @@ export async function zapisz<T extends Tabela>(db: Baza, tabela: T, rekord: Reko
 /** Kilka zapisów w jednej transakcji (np. nowa grupa + organizator jako pierwszy gracz). */
 export async function zapiszWiele(db: Baza, zmiany: [Tabela, Rekordy[Tabela]][]): Promise<void> {
   const kiedy = teraz();
-  await db.withExclusiveTransactionAsync(async (tx) => {
+  await transakcja(db, async (tx) => {
     for (const [tabela, rekord] of zmiany) {
       await zapiszWTransakcji(tx, tabela, rekord as unknown as Record<string, unknown>, null, kiedy);
     }
@@ -128,7 +141,7 @@ async function ustawKosz(db: Baza, tabela: Tabela, id: string, doKosza: boolean)
   const w = await wczytaj(db, tabela, id);
   if (!w) return;
   const kiedy = teraz();
-  await db.withExclusiveTransactionAsync(async (tx) => {
+  await transakcja(db, async (tx) => {
     await zapiszWTransakcji(tx, tabela, w as unknown as Record<string, unknown>, doKosza ? kiedy : null, kiedy);
   });
   powiadom(tabela);

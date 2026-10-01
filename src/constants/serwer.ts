@@ -1,5 +1,8 @@
-/** Adres API serwera Listy (server/ w repozytorium, wgrany na filedops.pl/lista-api/). */
-export const API_URL = 'https://filedops.pl/lista-api/api.php';
+/**
+ * Adres API serwera Listy (server/ w repozytorium, wgrany na filedops.pl/lista-api/).
+ * EXPO_PUBLIC_API_URL pozwala wskazać serwer testowy przy podglądzie na komputerze (np. /lista-api/api.php).
+ */
+export const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://filedops.pl/lista-api/api.php';
 
 /** Co ile sprawdzać serwer, gdy są niewysłane zmiany / gdy wszystko wysłane. */
 export const SYNC_CO_MS_NIEWYSLANE = 60 * 1000;

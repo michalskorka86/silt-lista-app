@@ -11,7 +11,7 @@
 
 import { getUstawienie, setUstawienie } from '../db/ustawienia';
 import { doSqlite, kolumnyTabeli, KOLEJNOSC_TABEL, TABELE, type Tabela } from '../db/tabele';
-import { liczNiewyslane, nowyId, powiadom, teraz, type Baza } from '../db/zapis';
+import { liczNiewyslane, nowyId, powiadom, teraz, transakcja, type Baza } from '../db/zapis';
 import { wczytajCennik, zapiszCennik, type Cennik } from '../logika/cennik';
 import { BladPolaczenia, BladSerwera, type Klient } from './klient';
 
@@ -81,7 +81,7 @@ async function wyslijKolejke(db: Baza, klient: Klient): Promise<void> {
       const r = await klient<{ wyniki: WynikZmiany[] }>('wyslij', { body: { zmiany } });
 
       const kiedy = teraz();
-      await db.withExclusiveTransactionAsync(async (tx) => {
+      await transakcja(db, async (tx) => {
         for (const w of r.wyniki) {
           const id = parseInt(w.id.slice(1), 10);
           if (w.wynik === 'zapisano' || w.wynik === 'starsza') {
@@ -109,7 +109,7 @@ async function pobierzZmiany(db: Baza, klient: Klient): Promise<void> {
   let zmieniono = false;
   for (let strona = 0; strona < 500; strona++) {
     const r = await klient<OdpowiedzPobierz>('pobierz', { params: { od_rev: od } });
-    await db.withExclusiveTransactionAsync(async (tx) => {
+    await transakcja(db, async (tx) => {
       for (const tabela of KOLEJNOSC_TABEL) {
         for (const w of r.dane[tabela] ?? []) {
           if (await zastosujWiersz(tx, tabela, w)) zmieniono = true;

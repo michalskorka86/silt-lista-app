@@ -43,12 +43,12 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 - [ ] Zrzuty ekranów v19 jako wzór wyglądu (Claude) — Wygląd zostaje jak w v19 (kolory, układ, zakładki, karty). Poprawki tylko po uzgodnieniu.
 - [x] Baza SQLite na tablecie + automatyczny zapis każdej zmiany (Claude) — src/db/zapis.ts, kolejka zmian. — Nic nie ginie po restarcie ani rozładowaniu.
 - [x] Logowanie tabletu hasłem (Claude) — ekran jak auth_lista.php z v19. — Jak w v19: raz na tablecie, potem pamięta.
-- [ ] Start: Utwórz listę / Rezerwacje / Archiwum (Claude)
-- [ ] Lista dnia: zakładki instruktorów, dodawanie grup (Claude)
-- [ ] Karta grupy i gracze (Claude)
-- [ ] Kulki i dym (Claude)
+- [~] Start: Utwórz listę / Rezerwacje / Archiwum (Claude) — Utwórz listę gotowe; Archiwum i Rezerwacje w budowie.
+- [x] Lista dnia: zakładki instruktorów, dodawanie grup (Claude)
+- [x] Karta grupy i gracze (Claude)
+- [x] Kulki i dym (Claude)
 - [ ] Inny pakiet / własny sprzęt (Claude)
-- [ ] Pieniądze: kwota, zadatek, płatność (Claude)
+- [x] Pieniądze: kwota, zadatek, płatność (Claude)
 - [ ] Faktura i dodatki (Claude)
 - [ ] Koniec dnia: godziny, pensje, wydatki (Claude)
 - [ ] Archiwum list (z hasłem) (Claude)
@@ -94,4 +94,5 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 - Etap 1 (serwer) ZAKOŃCZONY: baza serwer432573_lista + API na filedops.pl/lista-api/ (wgrane, działa). Cron 6:00: Statystyki + SMS faktur + kosz.
 - Etap 2 — fundament danych gotowy: tabele list w SQLite (migracja 2), zapis z kolejką, obliczenia grupy (port calc() z v19, zgodny na 5000 losowych grupach), synchronizacja (wysyłka, pobieranie, cennik, pracownicy), logowanie tabletu, „⏳ Niewysłane” w górnym pasku. Testy z prawdziwym serwerem PHP w GitHub.
 - Ustalenia: jedna lista na dzień z zakładkami instruktorów (jak v19); kwoty grup liczy tablet; kosz 7 dni na tablecie, 30 dni na serwerze; czas w bazie UTC; v19 nie ma danych do przeniesienia; wersje testowe aplikacji 0.x (min_wersja_app 0.1.0 do wydania 1.0).
-- Następny krok: ekrany — Utwórz listę, lista dnia (zakładki instruktorów, grupy), karta grupy i gracze.
+- Ekrany (01.10): Utwórz listę (kalendarz, imię instruktora), lista dnia (zakładki, pasek, karty grup), gracze, kulki z pakietu/dokupione, dym, inne, osób/kulki bez imion/kwota/zadatek (numpad), płatność, podstawa i cena kulek dodatkowych. Sprawdzone w przeglądarce z lokalnym serwerem — dane dochodzą na serwer.
+- Następny krok: pakiet gracza i własny sprzęt (worki), dodatki, faktura, ekran Wydatki/pensje, menu (Cennik/Raport/Rezerwacje/Opcje), Archiwum.

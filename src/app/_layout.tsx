@@ -14,6 +14,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 
 import { Logowanie } from '@/components/Logowanie';
+import { KomunikatyProvider } from '@/components/ui/Komunikaty';
 import { DB_NAME, migrateDbIfNeeded } from '@/db/migrations';
 import { SyncProvider, useSync } from '@/sync/SyncProvider';
 import { MotywProvider, useMotyw } from '@/theme/motyw';
@@ -55,7 +56,9 @@ export default function RootLayout() {
     <SQLiteProvider databaseName={DB_NAME} onInit={migrateDbIfNeeded}>
       <MotywProvider>
         <SyncProvider>
-          <Nawigacja />
+          <KomunikatyProvider>
+            <Nawigacja />
+          </KomunikatyProvider>
         </SyncProvider>
       </MotywProvider>
     </SQLiteProvider>
