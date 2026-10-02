@@ -1,5 +1,6 @@
-# Aktualizacja „w powietrzu” (EAS Update) — bez budowania i instalowania APK. Uruchamiana RĘCZNIE:
-# GitHub → Actions → „Wyślij aktualizację” → Run workflow → kanał + krótki opis.
+# Aktualizacja „w powietrzu” (EAS Update) — bez budowania i instalowania APK. Uruchamiana:
+#  - RĘCZNIE: GitHub → Actions → „Wyślij aktualizację” → Run workflow → kanał + krótki opis,
+#  - albo znacznikiem: git tag aktualizacja-N && git push origin aktualizacja-N (kanał preview, opis = opis commita).
 #   preview    = tablety z APK z „Buduj aplikację” (preview)
 #   production = aplikacja z Google Play
 # Tablety pobierają ją same (przy starcie / po powrocie do aplikacji).
@@ -7,6 +8,8 @@
 # Wymaga sekretu EXPO_TOKEN (ten sam co do budowania).
 name: Wyślij aktualizację
 on:
+  push:
+    tags: ['aktualizacja-*']
   workflow_dispatch:
     inputs:
       kanal:
@@ -34,6 +37,8 @@ jobs:
       - run: npm ci
       - name: Wyślij do EAS Update
         env:
-          KANAL: ${{ inputs.kanal }}
+          KANAL: ${{ inputs.kanal || 'preview' }}
           OPIS: ${{ inputs.opis }}
-        run: eas update --platform android --channel "$KANAL" --environment "$KANAL" --message "$OPIS" --non-interactive
+        run: |
+          [ -n "$OPIS" ] || OPIS="$(git log -1 --format=%s)"
+          eas update --platform android --channel "$KANAL" --environment "$KANAL" --message "$OPIS" --non-interactive
