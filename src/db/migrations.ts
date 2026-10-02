@@ -11,7 +11,8 @@ import { transakcja } from './zapis';
 export const DB_NAME = 'silt-lista.db';
 
 export async function migrateDbIfNeeded(db: SQLiteDatabase) {
-  await db.execAsync('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
+  // busy_timeout: gdy baza jest chwilowo zajęta (np. zadanie w tle), poczekaj zamiast od razu zgłaszać błąd
+  await db.execAsync('PRAGMA busy_timeout = 10000; PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
   const row = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
   let version = row?.user_version ?? 0;
 

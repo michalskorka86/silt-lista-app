@@ -1,5 +1,5 @@
 # Budowanie APK NA GITHUBIE (bez kolejki Expo, ok. 20 min). Uruchamiane RĘCZNIE:
-# GitHub → Actions → „Buduj APK (szybko)” → Run workflow.
+# GitHub → Actions → „Buduj APK (szybko)” → Run workflow — albo SAMO po commicie z „[apk]” w opisie na main.
 # Wynik: wydanie (Releases) z plikiem silt-lista.apk — tablety pobierają je z
 #   https://filedops.pl/lista-api/apk.php
 # i same widzą „📥 Jest nowa wersja aplikacji”, gdy APK ma nowe moduły systemowe.
@@ -7,6 +7,8 @@
 # Wymaga sekretu EXPO_TOKEN (ten sam co do budowania w Expo).
 name: Buduj APK (szybko)
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       opis:
@@ -17,6 +19,7 @@ permissions:
   contents: write
 jobs:
   apk:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[apk]')
     runs-on: ubuntu-latest
     timeout-minutes: 75
     steps:
@@ -45,7 +48,7 @@ jobs:
         run: eas build --platform android --profile preview --local --non-interactive --output silt-lista.apk
       - name: Opis wersji (wersja.json)
         env:
-          OPIS: ${{ inputs.opis }}
+          OPIS: ${{ inputs.opis || github.event.head_commit.message }}
           NUMER: ${{ github.run_number }}
         run: |
           npx expo-updates runtimeversion:resolve --platform android > rv.json
@@ -58,7 +61,7 @@ jobs:
       - name: Wydanie z plikiem APK
         env:
           GH_TOKEN: ${{ github.token }}
-          OPIS: ${{ inputs.opis }}
+          OPIS: ${{ inputs.opis || github.event.head_commit.message }}
         run: |
           gh release create "apk-${{ github.run_number }}" silt-lista.apk wersja.json \
             --title "SILT Lista — APK ${{ github.run_number }}" --notes "$OPIS" --latest

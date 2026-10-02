@@ -50,7 +50,8 @@
           "microphonePermission": "Mikrofon jest potrzebny do dyktowania imion graczy.",
           "speechRecognitionPermission": "Rozpoznawanie mowy zamienia powiedziane imiona na tekst."
         }
-      ]
+      ],
+      "./plugins/splash-naprawa.js"
     ],
     "experiments": {
       "typedRoutes": true,

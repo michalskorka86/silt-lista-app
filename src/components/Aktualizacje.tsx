@@ -2,6 +2,8 @@ import * as Updates from 'expo-updates';
 import { useEffect } from 'react';
 import { AppState } from 'react-native';
 
+import { wstrzymajZapisy, wznowZapisy } from '@/db/zapis';
+
 /** Po ilu minutach w tle wolno po cichu przeładować aplikację z nową wersją (nikt nie jest w trakcie wpisywania). */
 const PO_PRZERWIE_MS = 10 * 60 * 1000;
 
@@ -35,7 +37,18 @@ export async function pobierzIPrzeladuj(): Promise<'brak' | 'pobrano' | 'niedost
   const s = await Updates.checkForUpdateAsync();
   if (!s.isAvailable) return 'brak';
   await Updates.fetchUpdateAsync();
-  await Updates.reloadAsync();
+  // Przeładowanie tylko, gdy nic się akurat nie zapisuje — inaczej baza mogłaby zostać zablokowana.
+  // Gdy się nie da teraz, nowa wersja włączy się sama przy następnym uruchomieniu aplikacji.
+  if (!(await wstrzymajZapisy())) {
+    wznowZapisy();
+    return 'pobrano';
+  }
+  try {
+    await Updates.reloadAsync();
+  } catch (e) {
+    wznowZapisy();
+    throw e;
+  }
   return 'pobrano';
 }
 

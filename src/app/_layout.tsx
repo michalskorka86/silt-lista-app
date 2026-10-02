@@ -26,6 +26,8 @@ import { SyncProvider, useSync } from '@/sync/SyncProvider';
 import { MotywProvider, useMotyw } from '@/theme/motyw';
 
 SplashScreen.preventAutoHideAsync();
+// bez animacji znikania — krótsza chwila, w której Android może „zgubić” ekran powitalny na wierzchu
+SplashScreen.setOptions({ duration: 0, fade: false });
 zainstalujLapacz();
 
 /**
