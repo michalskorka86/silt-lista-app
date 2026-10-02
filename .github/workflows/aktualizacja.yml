@@ -1,6 +1,6 @@
 # Aktualizacja „w powietrzu” (EAS Update) — bez budowania i instalowania APK. Uruchamiana:
 #  - RĘCZNIE: GitHub → Actions → „Wyślij aktualizację” → Run workflow → kanał + krótki opis,
-#  - albo znacznikiem: git tag aktualizacja-N && git push origin aktualizacja-N (kanał preview, opis = opis commita).
+#  - albo SAMA po wysłaniu na main commita z „[aktualizacja]” w opisie (kanał preview, opis = tytuł commita).
 #   preview    = tablety z APK z „Buduj aplikację” (preview)
 #   production = aplikacja z Google Play
 # Tablety pobierają ją same (przy starcie / po powrocie do aplikacji).
@@ -9,7 +9,7 @@
 name: Wyślij aktualizację
 on:
   push:
-    tags: ['aktualizacja-*']
+    branches: [main]
   workflow_dispatch:
     inputs:
       kanal:
@@ -23,6 +23,7 @@ on:
         default: 'Poprawki'
 jobs:
   aktualizuj:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[aktualizacja]')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
