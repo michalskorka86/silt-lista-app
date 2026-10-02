@@ -35,47 +35,16 @@ export interface Baza {
   withTransactionAsync?(task: () => Promise<void>): Promise<void>;
 }
 
-// Transakcje idą JEDNA PO DRUGIEJ (kolejka w JS) na głównym połączeniu z bazą.
-// Wcześniej każda transakcja wyłączna otwierała osobne połączenie — gdy aplikacja przeładowała się
-// (aktualizacja) w trakcie takiej transakcji, blokada zapisu zostawała do restartu tabletu.
-let ostatnia: Promise<void> = Promise.resolve();
-let aktywne = 0;
-let wstrzymane = false;
-
-const pauza = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
-
-/** Transakcja: wszystko albo nic. Kolejne czekają na poprzednią. */
-export async function transakcja(db: Baza, task: (tx: Baza) => Promise<void>): Promise<void> {
-  const poprzednia = ostatnia;
-  let zwolnij!: () => void;
-  ostatnia = new Promise<void>((r) => (zwolnij = r));
-  try {
-    await poprzednia;
-    while (wstrzymane) await pauza(200); // trwa przeładowanie aplikacji — nie zaczynamy nowego zapisu
-    aktywne++;
-    try {
-      if (db.withTransactionAsync) await db.withTransactionAsync(() => task(db));
-      else await db.withExclusiveTransactionAsync(task);
-    } finally {
-      aktywne--;
-    }
-  } finally {
-    zwolnij();
-  }
-}
+/** Przeglądarka (podgląd ekranów na komputerze) — tam expo-sqlite nie ma transakcji wyłącznych. */
+const wPrzegladarce = typeof document !== 'undefined' && typeof window !== 'undefined';
 
 /**
- * Przed przeładowaniem aplikacji (aktualizacja): wstrzymuje nowe transakcje i czeka, aż skończą się trwające.
- * Zwraca false, gdy w `maxMs` się nie udało (wtedy NIE przeładowujemy — wznowZapisy()).
+ * Transakcja: na tablecie wyłączna (nic spoza niej się nie wmiesza),
+ * w przeglądarce zwykła (expo-sqlite web nie obsługuje wyłącznych).
  */
-export async function wstrzymajZapisy(maxMs = 15000): Promise<boolean> {
-  wstrzymane = true;
-  const koniec = Date.now() + maxMs;
-  while (aktywne > 0 && Date.now() < koniec) await pauza(100);
-  return aktywne === 0;
-}
-export function wznowZapisy(): void {
-  wstrzymane = false;
+export async function transakcja(db: Baza, task: (tx: Baza) => Promise<void>): Promise<void> {
+  if (wPrzegladarce && db.withTransactionAsync) return db.withTransactionAsync(() => task(db));
+  return db.withExclusiveTransactionAsync(task);
 }
 
 // ── Powiadomienia o zmianach (odświeżanie ekranów, start wysyłki) ─────────

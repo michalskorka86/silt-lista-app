@@ -78,11 +78,7 @@ export async function zrobBrakujacePdf(db: Baza): Promise<{ zrobione: string[]; 
   try {
     for (const d of await dniDoPdf(db)) {
       try {
-        // limit czasu: zawieszony PDF (np. przy wygaszonym ekranie) nie może zablokować kolejnych na zawsze
-        const { uri } = await Promise.race([
-          Print.printToFileAsync({ html: d.html, ...A4_POZIOMO }),
-          new Promise<never>((_, nie) => setTimeout(() => nie(new Error('PDF nie powstał w 2 min — spróbuję później')), 120000)),
-        ]);
+        const { uri } = await Print.printToFileAsync({ html: d.html, ...A4_POZIOMO });
         const tmp = new File(uri);
         const gdzie = await zapiszDoFolderu(db, d.data, tmp);
         if (tmp.exists) tmp.delete();
