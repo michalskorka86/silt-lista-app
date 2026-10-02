@@ -26,6 +26,18 @@ export function OknoMenu({ widoczne, data, onZamknij }: { widoczne: boolean; dat
   return widoczne ? <TrescMenu data={data} onZamknij={onZamknij} /> : <Okno widoczne={false} onZamknij={onZamknij}>{null}</Okno>;
 }
 
+/** ⚙️ Opcje z ekranu startowego (bez otwierania listy): synchronizacja, tryb kiosku, PDF-y, wersja. */
+export function OknoUstawien({ widoczne, onZamknij }: { widoczne: boolean; onZamknij: () => void }) {
+  return widoczne ? <TrescUstawien onZamknij={onZamknij} /> : <Okno widoczne={false} onZamknij={onZamknij}>{null}</Okno>;
+}
+
+function TrescUstawien({ onZamknij }: { onZamknij: () => void }) {
+  const [widok, setWidok] = useState<'opcje' | 'problem' | 'kiosk'>('opcje');
+  if (widok === 'problem') return <OknoProblem onZamknij={onZamknij} />;
+  if (widok === 'kiosk') return <OknoKiosk onZamknij={onZamknij} />;
+  return <OknoOpcje onZamknij={onZamknij} onProblem={() => setWidok('problem')} onKiosk={() => setWidok('kiosk')} />;
+}
+
 function TrescMenu({ data, onZamknij }: { data: string; onZamknij: () => void }) {
   const [widok, setWidok] = useState<Widok>('menu');
 
@@ -242,7 +254,7 @@ function OknoOpcje({ onZamknij, onProblem, onKiosk }: { onZamknij: () => void; o
       ) : null}
       {Platform.OS === 'android' ? (
         <Opcja
-          l="Tryb kiosku / ustawienia tabletu"
+          l="Tryb kiosku — włącz / wyłącz"
           sub="Lista jako ekran główny tabletu — zmiana tylko z PIN-em admina"
           btn="🏠"
           onPress={() =>

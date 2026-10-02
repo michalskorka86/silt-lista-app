@@ -95,15 +95,22 @@ function TrescNowaGrupa({ data, instruktorId, cennik, onZamknij }: PropsNowaGrup
   const [org, setOrg] = useState('');
   const [atr, setAtr] = useState<Atrakcja | null>(null);
   const [pk, setPk] = useState(0);
+  const [brakOrg, setBrakOrg] = useState(false);
+  const poleOrg = useRef<TextInput>(null);
 
   const dalej = () => {
+    if (!org.trim()) {
+      setBrakOrg(true);
+      poleOrg.current?.focus();
+      return toast('Wpisz imię organizatora');
+    }
     if (!atr) return toast('Wybierz atrakcję');
     setPk(0);
     setKrok(2);
   };
   const utworz = async () => {
-    if (!atr || !instruktorId) return;
-    await dodajGrupe(db, data, instruktorId, org, atr, atr.pakiety[pk]);
+    if (!atr || !instruktorId || !org.trim()) return;
+    await dodajGrupe(db, data, instruktorId, org.trim(), atr, atr.pakiety[pk]);
     onZamknij();
     toast(`✅ Dodano grupę ${atr.nazwa}`);
   };
@@ -121,7 +128,21 @@ function TrescNowaGrupa({ data, instruktorId, cennik, onZamknij }: PropsNowaGrup
       }>
       {krok === 1 ? (
         <>
-          <Pole etykieta="Imię organizatora" value={org} onChangeText={setOrg} placeholder="np. Alex" maxLength={40} autoFocus autoCapitalize="words" />
+          <Pole
+            ref={poleOrg}
+            etykieta="Imię organizatora *"
+            value={org}
+            onChangeText={(t) => {
+              setOrg(t);
+              if (t.trim()) setBrakOrg(false);
+            }}
+            placeholder="np. Alex"
+            maxLength={40}
+            autoFocus
+            autoCapitalize="words"
+            style={brakOrg ? { borderColor: c.red } : undefined}
+          />
+          {brakOrg ? <Text style={[styles.brakOrg, { color: c.red }]}>Wpisz imię organizatora — bez niego nie da się dodać grupy.</Text> : null}
           <Text style={[styles.label, { color: c.text2 }]}>Atrakcja</Text>
           {!cennik ? (
             <Podpowiedz>Brak cennika na tablecie — połącz tablet z internetem, żeby go pobrać.</Podpowiedz>
@@ -946,6 +967,7 @@ function TrescFaktura({ grupa, onZamknij }: { grupa: GrupaPelna; onZamknij: () =
 
 const styles = StyleSheet.create({
   imieRzad: { flexDirection: 'row', alignItems: 'flex-end', gap: 8 },
+  brakOrg: { fontFamily: Fonts.semibold, fontSize: 12, marginTop: -6, marginBottom: 10 },
   flex: { flex: 1 },
   dtGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   dtWiecej: { marginTop: 10, paddingTop: 10, borderTopWidth: 1 },
