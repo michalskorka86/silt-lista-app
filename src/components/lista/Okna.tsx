@@ -96,6 +96,11 @@ function TrescNowaGrupa({ data, instruktorId, cennik, onZamknij }: PropsNowaGrup
   const [atr, setAtr] = useState<Atrakcja | null>(null);
   const [pk, setPk] = useState(0);
   const [brakOrg, setBrakOrg] = useState(false);
+  // pakiet bez ceny na osobę (np. Dzień Otwarty) — cenę i kulki instruktor wpisuje sam, bez podpowiedzi
+  const [recznaCena, setRecznaCena] = useState('');
+  const [reczneKulki, setReczneKulki] = useState('');
+  const wybranyPk = atr?.pakiety[pk];
+  const reczny = !!wybranyPk && wybranyPk.typ !== 'grupa' && !wybranyPk.cena;
   const poleOrg = useRef<TextInput>(null);
 
   const dalej = () => {
@@ -110,7 +115,12 @@ function TrescNowaGrupa({ data, instruktorId, cennik, onZamknij }: PropsNowaGrup
   };
   const utworz = async () => {
     if (!atr || !instruktorId || !org.trim()) return;
-    await dodajGrupe(db, data, instruktorId, org.trim(), atr, atr.pakiety[pk]);
+    let pakiet = atr.pakiety[pk];
+    if (reczny) {
+      if (!recznaCena.trim()) return toast('Wpisz cenę za osobę');
+      pakiet = { ...pakiet, cena: Math.max(0, num(recznaCena)), kulki: Math.max(0, Math.round(num(reczneKulki))) };
+    }
+    await dodajGrupe(db, data, instruktorId, org.trim(), atr, pakiet);
     onZamknij();
     toast(`✅ Dodano grupę ${atr.nazwa}`);
   };
@@ -170,6 +180,15 @@ function TrescNowaGrupa({ data, instruktorId, cennik, onZamknij }: PropsNowaGrup
       ) : (
         <>
           <ListaPakietow pakiety={atr?.pakiety ?? []} wybrany={pk} onWybierz={setPk} />
+          {reczny ? (
+            <>
+              <View style={styles.odstep} />
+              <Rzad>
+                <PoleLiczby etykieta="Cena za osobę (zł) *" value={recznaCena} onChangeText={setRecznaCena} placeholder="wpisz" tytul={`${wybranyPk?.nazwa} — cena za osobę (zł)`} />
+                <PoleLiczby etykieta="Kulki na osobę" value={reczneKulki} onChangeText={setReczneKulki} placeholder="0" tytul={`${wybranyPk?.nazwa} — kulki na osobę`} />
+              </Rzad>
+            </>
+          ) : null}
           <Przyciski>
             <Przycisk tekst="← Wróć" rodzaj="anuluj" onPress={() => setKrok(1)} />
             <Przycisk tekst="Dodaj grupę ✓" onPress={utworz} />
@@ -191,6 +210,7 @@ export function ListaPakietow({ pakiety, wybrany, onWybierz }: { pakiety: Pakiet
           p.kulki ? `${p.kulki} kulek` : '',
           p.typ === 'grupa' && p.extra ? `dodatkowy gracz ${zl(p.extra)}` : '',
           p.typ === 'grupa' && !p.cena ? 'cenę podajesz ręcznie w „Podstawa”' : '',
+          p.typ !== 'grupa' && !p.cena ? 'cenę i kulki wpisujesz sam' : '',
         ]
           .filter(Boolean)
           .join(' · ');
@@ -203,7 +223,7 @@ export function ListaPakietow({ pakiety, wybrany, onWybierz }: { pakiety: Pakiet
               <Text style={[styles.pkNazwa, { color: c.text }]}>{p.nazwa}</Text>
               {opis ? <Text style={[styles.pkOpis, { color: c.text2 }]}>{opis}</Text> : null}
             </View>
-            <Text style={[styles.pkCena, { color: c.accent }]}>{p.cena ? zl(p.cena) + (p.typ === 'grupa' ? '' : ' / os.') : '—'}</Text>
+            <Text style={[styles.pkCena, { color: c.accent }]}>{p.cena ? zl(p.cena) + (p.typ === 'grupa' ? '' : ' / os.') : p.typ !== 'grupa' ? '✏️' : '—'}</Text>
           </Pressable>
         );
       })}
@@ -252,7 +272,7 @@ function TrescGracz({ stan, atrakcja, cennik, onZamknij }: PropsGracza & { stan:
 
   const wlasny = sprzet.length > 0;
   const naOsobe = g.pakiet_typ !== 'grupa';
-  const pakietyOs = (atrakcja?.pakiety ?? []).filter((p) => p.typ !== 'grupa');
+  const pakietyOs = (atrakcja?.pakiety ?? []).filter((p) => p.typ !== 'grupa' && (p.cena > 0 || p.nazwa === g.pakiet_nazwa));
 
   const reset = () => {
     setImie('');
