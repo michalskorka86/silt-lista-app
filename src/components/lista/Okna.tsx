@@ -96,11 +96,13 @@ function TrescNowaGrupa({ data, instruktorId, cennik, onZamknij }: PropsNowaGrup
   const [atr, setAtr] = useState<Atrakcja | null>(null);
   const [pk, setPk] = useState(0);
   const [brakOrg, setBrakOrg] = useState(false);
-  // pakiet bez ceny na osobę (np. Dzień Otwarty) — cenę i kulki instruktor wpisuje sam, bez podpowiedzi
-  const [recznaCena, setRecznaCena] = useState('');
+  // pakiet bez ceny (Dzień Otwarty, laser) — instruktor wpisuje tylko ilość osób, kulki i kasę, bez podpowiedzi
+  const [reczneOsoby, setReczneOsoby] = useState('');
   const [reczneKulki, setReczneKulki] = useState('');
+  const [recznaKasa, setRecznaKasa] = useState('');
   const wybranyPk = atr?.pakiety[pk];
-  const reczny = !!wybranyPk && wybranyPk.typ !== 'grupa' && !wybranyPk.cena;
+  const reczny = !!wybranyPk && !wybranyPk.cena;
+  const zKulkami = !!atr?.opcje_pakiet.length;
   const poleOrg = useRef<TextInput>(null);
 
   const dalej = () => {
@@ -116,11 +118,14 @@ function TrescNowaGrupa({ data, instruktorId, cennik, onZamknij }: PropsNowaGrup
   const utworz = async () => {
     if (!atr || !instruktorId || !org.trim()) return;
     let pakiet = atr.pakiety[pk];
-    if (reczny) {
-      if (!recznaCena.trim()) return toast('Wpisz cenę za osobę');
-      pakiet = { ...pakiet, cena: Math.max(0, num(recznaCena)), kulki: Math.max(0, Math.round(num(reczneKulki))) };
-    }
-    await dodajGrupe(db, data, instruktorId, org.trim(), atr, pakiet);
+    // kasa = cena pakietu na całą grupę (dym / dodatki dodane później doliczą się do niej)
+    if (reczny) pakiet = { ...pakiet, typ: 'grupa', cena: Math.max(0, num(recznaKasa)), limit: 0, extra: 0 };
+    const id = await dodajGrupe(db, data, instruktorId, org.trim(), atr, pakiet);
+    if (reczny && (reczneOsoby.trim() || reczneKulki.trim()))
+      await zmienGrupe(db, id, {
+        gracze_reczne: Math.max(0, Math.round(num(reczneOsoby))),
+        kulki_reczne: zKulkami ? Math.max(0, Math.round(num(reczneKulki))) : 0,
+      });
     onZamknij();
     toast(`✅ Dodano grupę ${atr.nazwa}`);
   };
@@ -184,9 +189,13 @@ function TrescNowaGrupa({ data, instruktorId, cennik, onZamknij }: PropsNowaGrup
             <>
               <View style={styles.odstep} />
               <Rzad>
-                <PoleLiczby etykieta="Cena za osobę (zł) *" value={recznaCena} onChangeText={setRecznaCena} placeholder="wpisz" tytul={`${wybranyPk?.nazwa} — cena za osobę (zł)`} />
-                <PoleLiczby etykieta="Kulki na osobę" value={reczneKulki} onChangeText={setReczneKulki} placeholder="0" tytul={`${wybranyPk?.nazwa} — kulki na osobę`} />
+                <PoleLiczby etykieta="Ilość osób" value={reczneOsoby} onChangeText={setReczneOsoby} tytul={`${wybranyPk?.nazwa} — ilość osób`} />
+                {zKulkami ? (
+                  <PoleLiczby etykieta="Kulki (razem)" value={reczneKulki} onChangeText={setReczneKulki} tytul={`${wybranyPk?.nazwa} — kulki razem`} />
+                ) : null}
+                <PoleLiczby etykieta="Kasa (zł)" value={recznaKasa} onChangeText={setRecznaKasa} tytul={`${wybranyPk?.nazwa} — kasa (zł)`} />
               </Rzad>
+              <Podpowiedz>Wszystko można potem zmienić na karcie grupy. Dym i dodatki dodasz normalnie — doliczą się do kasy.</Podpowiedz>
             </>
           ) : null}
           <Przyciski>
@@ -209,8 +218,7 @@ export function ListaPakietow({ pakiety, wybrany, onWybierz }: { pakiety: Pakiet
         const opis = [
           p.kulki ? `${p.kulki} kulek` : '',
           p.typ === 'grupa' && p.extra ? `dodatkowy gracz ${zl(p.extra)}` : '',
-          p.typ === 'grupa' && !p.cena ? 'cenę podajesz ręcznie w „Podstawa”' : '',
-          p.typ !== 'grupa' && !p.cena ? 'cenę i kulki wpisujesz sam' : '',
+          !p.cena ? 'wpisujesz sam: ilość osób, kulki, kasę' : '',
         ]
           .filter(Boolean)
           .join(' · ');
@@ -223,7 +231,7 @@ export function ListaPakietow({ pakiety, wybrany, onWybierz }: { pakiety: Pakiet
               <Text style={[styles.pkNazwa, { color: c.text }]}>{p.nazwa}</Text>
               {opis ? <Text style={[styles.pkOpis, { color: c.text2 }]}>{opis}</Text> : null}
             </View>
-            <Text style={[styles.pkCena, { color: c.accent }]}>{p.cena ? zl(p.cena) + (p.typ === 'grupa' ? '' : ' / os.') : p.typ !== 'grupa' ? '✏️' : '—'}</Text>
+            <Text style={[styles.pkCena, { color: c.accent }]}>{p.cena ? zl(p.cena) + (p.typ === 'grupa' ? '' : ' / os.') : '✏️'}</Text>
           </Pressable>
         );
       })}

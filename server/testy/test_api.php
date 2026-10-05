@@ -82,7 +82,7 @@ sprawdz('start: skrót PIN-u admina (bez samego PIN-u)', ($r['pin_skrot'] ?? '')
 $r = api('cennik');
 $klasyk = $r['atrakcje'][0] ?? [];
 sprawdz('cennik: 7 atrakcji, Klasyk ma 4 pakiety, SILT 130 zł', count($r['atrakcje'] ?? []) === 7 && count($klasyk['pakiety'] ?? []) === 4 && ($klasyk['pakiety'][1]['cena'] ?? 0) == 130, $r);
-sprawdz('cennik: Dzień Otwarty (Klasyk) bez ceny i kulek — wpisuje instruktor', ($klasyk['pakiety'][3]['nazwa'] ?? '') === 'Dzień Otwarty' && ($klasyk['pakiety'][3]['cena'] ?? 1) == 0 && ($klasyk['pakiety'][3]['kulki'] ?? 1) === 0, $klasyk['pakiety'] ?? null);
+sprawdz('cennik: Dzień Otwarty (Klasyk) na grupę, bez ceny — osoby, kulki i kasę wpisuje instruktor', ($klasyk['pakiety'][3]['typ'] ?? '') === 'grupa' && ($klasyk['pakiety'][3]['nazwa'] ?? '') === 'Dzień Otwarty' && ($klasyk['pakiety'][3]['cena'] ?? 1) == 0 && ($klasyk['pakiety'][3]['kulki'] ?? 1) === 0, $klasyk['pakiety'] ?? null);
 sprawdz('cennik: laser bez kulek dodatkowych, dym 10 zł, worek 500/40', array_key_exists('kdod', $r['atrakcje'][6] ?? []) && $r['atrakcje'][6]['kdod'] === null && ($r['dym_cena'] ?? 0) == 10 && ($r['worek']['szt'] ?? 0) === 500, $r);
 sprawdz('cennik: 4 pozycje sprzętu, emoji zachowane', count($r['sprzet'] ?? []) === 4 && ($r['sprzet'][0]['ikona'] ?? '') === '🎒', $r['sprzet'] ?? null);
 
