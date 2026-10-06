@@ -253,6 +253,8 @@ export function OknoGracz({ stan, ...props }: PropsGracza & { stan: StanGracza |
 }
 
 type PakietGracza = { nazwa: string; kulki: number; cena: number } | null;
+/** Gracz za darmo (np. nauczyciel) = własny pakiet gracza „Gratis” za 0 zł, kulki jak w pakiecie grupy. */
+export const GRATIS = 'Gratis';
 type Worki = { n: number; szt: number; cena: number };
 
 function pakietZGracza(p?: GraczPelny): PakietGracza {
@@ -279,6 +281,7 @@ function TrescGracz({ stan, atrakcja, cennik, onZamknij }: PropsGracza & { stan:
   const nowy = !stan.gracz;
 
   const wlasny = sprzet.length > 0;
+  const gratis = pk?.nazwa === GRATIS && pk.cena === 0;
   const naOsobe = g.pakiet_typ !== 'grupa';
   const pakietyOs = (atrakcja?.pakiety ?? []).filter((p) => p.typ !== 'grupa' && (p.cena > 0 || p.nazwa === g.pakiet_nazwa));
 
@@ -388,6 +391,18 @@ function TrescGracz({ stan, atrakcja, cennik, onZamknij }: PropsGracza & { stan:
             })}
           </View>
         </>
+      ) : null}
+      {naOsobe && !wlasny ? (
+        <Pressable
+          onPress={() => setPk(gratis ? null : { nazwa: GRATIS, kulki: g.pakiet_kulki, cena: 0 })}
+          style={[styles.gratis, { borderColor: gratis ? c.green : c.border, backgroundColor: gratis ? 'rgba(34,197,94,0.12)' : c.surface2 }]}>
+          <Text style={styles.gratisIco}>🎁</Text>
+          <View style={styles.flex}>
+            <Text style={[styles.plPkNazwa, { color: c.text }]}>Gratis</Text>
+            <Text style={[styles.plPkSub, { color: c.text2 }]}>gra za darmo, np. nauczyciel ze szkołą — kulki z pakietu grupy</Text>
+          </View>
+          <Text style={[styles.gratisCheck, { color: gratis ? c.green : c.text3 }]}>{gratis ? '✓' : '○'}</Text>
+        </Pressable>
       ) : null}
 
       <Pressable
@@ -995,6 +1010,9 @@ function TrescFaktura({ grupa, onZamknij }: { grupa: GrupaPelna; onZamknij: () =
 
 const styles = StyleSheet.create({
   imieRzad: { flexDirection: 'row', alignItems: 'flex-end', gap: 8 },
+  gratis: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderWidth: 1.5, borderRadius: 10, marginTop: 10 },
+  gratisIco: { fontSize: 24 },
+  gratisCheck: { fontFamily: Fonts.black, fontSize: 20 },
   brakOrg: { fontFamily: Fonts.semibold, fontSize: 12, marginTop: -6, marginBottom: 10 },
   flex: { flex: 1 },
   dtGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },

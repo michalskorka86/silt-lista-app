@@ -53,7 +53,7 @@ export function WierszGracza({
       <Pressable onPress={onPozycje} disabled={ro} style={({ pressed }) => [styles.pozycje, pressed && { backgroundColor: 'rgba(249,115,22,0.05)' }]}>
         {puste ? <Text style={[styles.puste, { color: c.text3 }]}>＋ dotknij, aby dodać kulki / dym</Text> : null}
         {gracz.pakiet_cena !== null && !maSprzet ? (
-          <Chip styl="pk" tekst={`📦 ${gracz.pakiet_nazwa ?? ''} ${zl(gracz.pakiet_cena)}`} onPress={onEdytuj} ro={ro} />
+          <Chip styl="pk" tekst={gracz.pakiet_cena === 0 && gracz.pakiet_nazwa === 'Gratis' ? '🎁 Gratis' : `📦 ${gracz.pakiet_nazwa ?? ''} ${zl(gracz.pakiet_cena)}`} onPress={onEdytuj} ro={ro} />
         ) : null}
         {(gracz.sprzet ?? []).map((x, i) => (
           <Chip key={`s${i}`} styl="sp" tekst={`${x.ikona ?? '🎒'} ${x.nazwa} ${zl(x.kwota)}`} onPress={onEdytuj} ro={ro} />
