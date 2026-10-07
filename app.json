@@ -51,7 +51,8 @@
           "speechRecognitionPermission": "Rozpoznawanie mowy zamienia powiedziane imiona na tekst."
         }
       ],
-      "./plugins/splash-naprawa.js"
+      "./plugins/splash-naprawa.js",
+      "./plugins/siec.js"
     ],
     "experiments": {
       "typedRoutes": true,
