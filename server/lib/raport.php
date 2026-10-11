@@ -235,6 +235,7 @@ function raport_dnia(array $d): string
         . '<tr><td>Grup / osób / kulek</td><td class="r">' . $s['grupy'] . ' / ' . $s['graczy'] . ' / ' . r_liczba($s['kulki']) . '</td></tr>'
         . '<tr><td>Przychód brutto</td><td class="r">' . r_zl($s['brutto']) . '</td></tr>'
         . '<tr><td>Zadatki (w przychodzie)</td><td class="r">' . r_zl($s['zadatki']) . '</td></tr>'
+        . '<tr><th>Do zapłaty na miejscu (bez zadatków)</th><th class="r">' . r_zl($s['brutto'] - $s['zadatki']) . '</th></tr>'
         . '<tr><td>Wydatki</td><td class="r">− ' . r_zl($s['wydatki']) . '</td></tr>'
         . '<tr><td>Pensje</td><td class="r">− ' . r_zl($s['pensje']) . '</td></tr>'
         . '<tr class="netto"><th>Zostaje (brutto − wydatki − pensje)</th><th class="r">' . r_zl($s['netto']) . '</th></tr></table>'

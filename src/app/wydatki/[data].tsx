@@ -110,6 +110,7 @@ export default function WydatkiDnia() {
             {[
               ['Przychód brutto', s.brutto],
               ['Zadatki', s.zadatki],
+              ['Do zapłaty na miejscu (bez zadatków)', s.brutto - s.zadatki],
               ['Wydatki', s.wydatki],
               ['Pensje', s.pensje],
             ].map(([n, v], i, a) => (

@@ -144,6 +144,7 @@ export function htmlRaportu(d: Dzien, cennik: Cennik | null, wygenerowano: Date 
       <tr><td>Grup / osób / kulek</td><td class="r">${grupy.length} / ${s.graczy} / ${liczba(s.kulki)}</td></tr>
       <tr><td>Przychód brutto</td><td class="r">${zl(s.brutto)}</td></tr>
       <tr><td>Zadatki (w przychodzie)</td><td class="r">${zl(s.zadatki)}</td></tr>
+      <tr><th>Do zapłaty na miejscu (bez zadatków)</th><th class="r">${zl(s.brutto - s.zadatki)}</th></tr>
       <tr><td>Wydatki</td><td class="r">− ${zl(s.wydatki)}</td></tr>
       <tr><td>Pensje</td><td class="r">− ${zl(s.pensje)}</td></tr>
       <tr class="netto"><th>Zostaje (brutto − wydatki − pensje)</th><th class="r">${zl(s.netto)}</th></tr>
