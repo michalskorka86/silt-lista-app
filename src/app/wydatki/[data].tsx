@@ -113,6 +113,7 @@ export default function WydatkiDnia() {
               ['Do zapłaty na miejscu (bez zadatków)', s.brutto - s.zadatki],
               ['Wydatki', s.wydatki],
               ['Pensje', s.pensje],
+              ['Zostaje w kasie z dnia (na miejscu − wydatki − pensje)', s.brutto - s.zadatki - s.wydatki - s.pensje],
             ].map(([n, v], i, a) => (
               <View key={n as string} style={[styles.raportRow, i < a.length - 1 && { borderBottomWidth: 1, borderBottomColor: c.border }]}>
                 <Text style={[styles.raportTxt, { color: c.text }]}>{n}</Text>

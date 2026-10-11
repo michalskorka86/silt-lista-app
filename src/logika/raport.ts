@@ -148,6 +148,7 @@ export function htmlRaportu(d: Dzien, cennik: Cennik | null, wygenerowano: Date 
       <tr><td>Wydatki</td><td class="r">− ${zl(s.wydatki)}</td></tr>
       <tr><td>Pensje</td><td class="r">− ${zl(s.pensje)}</td></tr>
       <tr class="netto"><th>Zostaje (brutto − wydatki − pensje)</th><th class="r">${zl(s.netto)}</th></tr>
+      <tr class="netto"><th>Zostaje w kasie z dnia (na miejscu − wydatki − pensje)</th><th class="r">${zl(s.brutto - s.zadatki - s.wydatki - s.pensje)}</th></tr>
     </table>
     <div class="p-stopka">SILT Lista · raport z ${dataPL(d.data)} · utworzono ${wygenerowano.toLocaleString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div></div>`;
 

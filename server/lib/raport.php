@@ -238,7 +238,8 @@ function raport_dnia(array $d): string
         . '<tr><th>Do zapłaty na miejscu (bez zadatków)</th><th class="r">' . r_zl($s['brutto'] - $s['zadatki']) . '</th></tr>'
         . '<tr><td>Wydatki</td><td class="r">− ' . r_zl($s['wydatki']) . '</td></tr>'
         . '<tr><td>Pensje</td><td class="r">− ' . r_zl($s['pensje']) . '</td></tr>'
-        . '<tr class="netto"><th>Zostaje (brutto − wydatki − pensje)</th><th class="r">' . r_zl($s['netto']) . '</th></tr></table>'
+        . '<tr class="netto"><th>Zostaje (brutto − wydatki − pensje)</th><th class="r">' . r_zl($s['netto']) . '</th></tr>'
+        . '<tr class="netto"><th>Zostaje w kasie z dnia (na miejscu − wydatki − pensje)</th><th class="r">' . r_zl($s['brutto'] - $s['zadatki'] - $s['wydatki'] - $s['pensje']) . '</th></tr></table>'
         . '<div class="p-stopka">SILT Lista · raport z ' . r_data_pl($d['data']) . ' · z serwera ' . date('d.m.Y H:i') . '</div></div>';
     return '<div class="raport">' . $h . '</div>';
 }
