@@ -60,41 +60,47 @@ export function Kalendarz({
           <Text style={[styles.strzalkaTxt, { color: c.text }]}>→</Text>
         </Pressable>
       </View>
-      <View style={styles.siatka}>
+      {/* Sztywne wiersze po 7 dni (flex: 1) — przy szerokościach w % Android potrafił zgubić ułamek piksela,
+          niedziela spadała do następnego wiersza i wszystkie dni przesuwały się o kolumnę. */}
+      <View style={styles.wiersz}>
         {DNI.map((d) => (
           <View key={d} style={styles.kom}>
             <Text style={[styles.dzienTyg, { color: c.text2 }]}>{d}</Text>
           </View>
         ))}
-        {komorki.map((iso, i) => {
-          if (!iso) return <View key={`p${i}`} style={styles.kom} />;
-          const jestDzis = iso === dzis;
-          const wyb = iso === wybrana;
-          const kropka = zaznaczone?.has(iso);
-          return (
-            <Pressable
-              key={iso}
-              onPress={() => onWybierz(iso)}
-              style={({ pressed }) => [
-                styles.kom,
-                styles.dzien,
-                jestDzis && { backgroundColor: 'rgba(249,115,22,0.2)' },
-                wyb && { backgroundColor: c.accent },
-                pressed && !wyb && { backgroundColor: 'rgba(249,115,22,0.1)' },
-              ]}>
-              <Text
-                style={[
-                  styles.dzienTxt,
-                  { color: wyb ? '#fff' : jestDzis ? c.accent : c.text },
-                  (jestDzis || wyb) && { fontFamily: Fonts.extrabold },
-                ]}>
-                {Number(iso.slice(8))}
-              </Text>
-              {kropka ? <View style={[styles.kropka, { backgroundColor: wyb ? '#fff' : c.accent }]} /> : null}
-            </Pressable>
-          );
-        })}
       </View>
+      {Array.from({ length: komorki.length / 7 }, (_, w) => (
+        <View key={w} style={styles.wiersz}>
+          {komorki.slice(w * 7, w * 7 + 7).map((iso, i) => {
+            if (!iso) return <View key={`p${i}`} style={styles.kom} />;
+            const jestDzis = iso === dzis;
+            const wyb = iso === wybrana;
+            const kropka = zaznaczone?.has(iso);
+            return (
+              <Pressable
+                key={iso}
+                onPress={() => onWybierz(iso)}
+                style={({ pressed }) => [
+                  styles.kom,
+                  styles.dzien,
+                  jestDzis && { backgroundColor: 'rgba(249,115,22,0.2)' },
+                  wyb && { backgroundColor: c.accent },
+                  pressed && !wyb && { backgroundColor: 'rgba(249,115,22,0.1)' },
+                ]}>
+                <Text
+                  style={[
+                    styles.dzienTxt,
+                    { color: wyb ? '#fff' : jestDzis ? c.accent : c.text },
+                    (jestDzis || wyb) && { fontFamily: Fonts.extrabold },
+                  ]}>
+                  {Number(iso.slice(8))}
+                </Text>
+                {kropka ? <View style={[styles.kropka, { backgroundColor: wyb ? '#fff' : c.accent }]} /> : null}
+              </Pressable>
+            );
+          })}
+        </View>
+      ))}
     </View>
   );
 }
@@ -104,8 +110,8 @@ const styles = StyleSheet.create({
   strzalka: { borderWidth: 1, borderRadius: 10, paddingVertical: 8, paddingHorizontal: 14 },
   strzalkaTxt: { fontFamily: Fonts.bold, fontSize: 16 },
   tytul: { fontFamily: Fonts.extrabold, fontSize: 16 },
-  siatka: { flexDirection: 'row', flexWrap: 'wrap' },
-  kom: { width: `${100 / 7}%`, aspectRatio: 1, alignItems: 'center', justifyContent: 'center', padding: 1 },
+  wiersz: { flexDirection: 'row' },
+  kom: { flex: 1, aspectRatio: 1, alignItems: 'center', justifyContent: 'center', margin: 1 },
   dzien: { borderRadius: 8 },
   dzienTyg: { fontFamily: Fonts.bold, fontSize: 11 },
   dzienTxt: { fontFamily: Fonts.semibold, fontSize: 14 },
