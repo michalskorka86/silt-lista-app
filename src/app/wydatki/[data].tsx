@@ -7,11 +7,13 @@ import { DolneMenu } from '@/components/lista/DolneMenu';
 import { TopBar } from '@/components/TopBar';
 import { DodajWiersz, Karta, Plakietka, WierszKarty } from '@/components/ui/Karta';
 import { useKomunikaty } from '@/components/ui/Komunikaty';
+import { Okno, Przycisk, Przyciski } from '@/components/ui/Okno';
 import { OknoPensja, OknoWydatek } from '@/components/wydatki/Okna';
 import { Fonts, Size } from '@/constants/theme';
 import type { Wiersz } from '@/db/tabele';
-import { useDzien, usePracownicy } from '@/hooks/useDane';
+import { useCennik, useDzien, usePracownicy } from '@/hooks/useDane';
 import { dataKrotko, zl } from '@/logika/format';
+import { brakiDnia, opisBrakow } from '@/logika/kontrola';
 import { usunPensje, usunWydatek, zmienPensje } from '@/logika/lista';
 import { useSync } from '@/sync/SyncProvider';
 import { useMotyw } from '@/theme/motyw';
@@ -29,6 +31,8 @@ export default function WydatkiDnia() {
   const [pensja, setPensja] = useState(false);
   const [status, setStatus] = useState<{ ok: boolean; tekst: string } | null>(null);
   const [wysyla, setWysyla] = useState(false);
+  const [braki, setBraki] = useState<string | null>(null);
+  const cennik = useCennik();
 
   if (!dzien) return <View style={[styles.root, { backgroundColor: c.bg }]} />;
   const s = dzien.podsumowanie;
@@ -49,6 +53,9 @@ export default function WydatkiDnia() {
     }
   };
   const wyslijPrzycisk = () => {
+    // tylko przy ręcznej wysyłce: sprawdź, czy instruktorzy niczego nie pominęli (6:00 wysyła bez tej kontroli)
+    const b = brakiDnia(dzien, cennik);
+    if (b.length) return setBraki(opisBrakow(b));
     if (wyslano)
       potwierdz({
         tytul: 'Statystyki już wysłane',
@@ -150,6 +157,13 @@ export default function WydatkiDnia() {
           </View>
         </Karta>
       </ScrollView>
+      <Okno widoczne={!!braki} onZamknij={() => setBraki(null)} tytul="⚠️ Uzupełnij przed wysyłką" rozmiar="md">
+        <Text style={[styles.brakiTxt, { color: c.text2 }]}>W tych grupach czegoś brakuje — popraw na liście i wyślij jeszcze raz:</Text>
+        <Text style={[styles.brakiLista, { color: c.text }]}>{braki}</Text>
+        <Przyciski>
+          <Przycisk tekst="Popraw" onPress={() => setBraki(null)} />
+        </Przyciski>
+      </Okno>
       <DolneMenu data={data} />
 
       <OknoWydatek data={data} stan={wydatek} onZamknij={() => setWydatek(null)} />
@@ -159,6 +173,8 @@ export default function WydatkiDnia() {
 }
 
 const styles = StyleSheet.create({
+  brakiTxt: { fontFamily: Fonts.regular, fontSize: 14, lineHeight: 20, marginBottom: 10 },
+  brakiLista: { fontFamily: Fonts.semibold, fontSize: 15, lineHeight: 23 },
   root: { flex: 1 },
   body: { padding: 12 },
   main: { flex: 1, minWidth: 0 },
