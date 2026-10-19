@@ -42,6 +42,7 @@ const TABELE = [
         'kwota_reczna'  => 'dec?',
         'zadatek'       => 'dec',
         'platnosc'      => 'str:10',
+        'platnosc_gotowka' => 'dec?',  // przy 'Mieszana': ile gotówką (reszta kartą)
         'w_gracze'      => 'int',
         'w_kulki'       => 'int',
         'w_kulki_dok'   => 'int',
@@ -111,7 +112,7 @@ const TABELE = [
 /** Dozwolone wartości kolumn tekstowych o zamkniętej liście. */
 const WARTOSCI = [
     'grupy.pakiet_typ' => ['os', 'grupa'],
-    'grupy.platnosc'   => ['', 'Gotówka', 'Karta', 'Przelew'],
+    'grupy.platnosc'   => ['', 'Gotówka', 'Karta', 'Przelew', 'Mieszana'],
     'pozycje.rodzaj'   => ['kulki', 'dym', 'inne'],
     'faktury.platnosc' => ['Gotówka', 'Karta', 'Przelew'],
 ];

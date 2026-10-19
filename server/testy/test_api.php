@@ -339,6 +339,12 @@ if (preg_match('/filename="SILT_lista_' . preg_quote($poprz) . '\.zip"\r\n\r\n([
 sprawdz('cron mail=teraz → mail na adres z config, ZIP poprzedniego miesiąca w załączniku: ' . trim((string)$out),
     count($maile) === 1 && strpos($eml, 'To: test@example.com') !== false && $zipOk && stripos(base64_decode((string)preg_replace('/.*?Content-Transfer-Encoding: base64\r\n\r\n(.*?)--silt.*/s', '$1', $eml)), 'premi') === false, mb_substr($eml, 0, 400));
 
+echo "Płatność gotówka + karta\n";
+$mix = $grupa; $mix['id'] = 'z16'; $mix['rekord']['id'] = 'gm1'; $mix['rekord']['platnosc'] = 'Mieszana'; $mix['rekord']['platnosc_gotowka'] = 300;
+$r = api('wyslij', ['zmiany' => [$mix]]);
+sprawdz('płatność „Mieszana” (gotówka 300 + karta) → zapisano', wyniki($r) === ['zapisano'] && (float)$pdo->query("SELECT platnosc_gotowka FROM grupy WHERE id='gm1'")->fetchColumn() === 300.0, $r);
+
+
 echo "Wylogowanie i blokada haseł\n";
 $r = api('wyloguj', []);
 $r = api('start');

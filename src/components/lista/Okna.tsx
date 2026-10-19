@@ -7,6 +7,7 @@ import type { Platnosc, SprzetGracza, Wiersz } from '@/db/tabele';
 import type { Atrakcja, Cennik, Pakiet } from '@/logika/cennik';
 import { liczba, num, zl } from '@/logika/format';
 import { imionaZMowy } from '@/logika/glos';
+import { podzialPlatnosci } from '@/logika/platnosc';
 import {
   dodajDodatek,
   dodajDym,
@@ -20,6 +21,7 @@ import {
   usunFakture,
   usunPozycje,
   ustawPlatnosc,
+  ustawPlatnoscMieszana,
   zmienGracza,
   zmienGrupe,
   zapiszFakture,
@@ -32,6 +34,7 @@ import { useMotyw } from '@/theme/motyw';
 import { useKomunikaty } from '../ui/Komunikaty';
 import { Okno, Przycisk, Przyciski } from '../ui/Okno';
 import { Podpowiedz, Pole, Rzad } from '../ui/Pole';
+import { Numpad, type NumpadUstawienia } from '../ui/Numpad';
 import { PoleLiczby } from '../ui/PoleLiczby';
 import { IKONY_PLATNOSCI } from './KartaGrupy';
 import { PrzyciskMikrofonu, useMikrofon } from './Mikrofon';
@@ -717,9 +720,9 @@ function KOpt({ glowny, pod, dym, szeroki, onPress }: { glowny: string; pod: str
 
 // ── Płatność ──────────────────────────────────────────────────
 
-export const PLATNOSCI: Exclude<Platnosc, ''>[] = ['Gotówka', 'Karta', 'Przelew'];
+export const PLATNOSCI: Exclude<Platnosc, '' | 'Mieszana'>[] = ['Gotówka', 'Karta', 'Przelew'];
 
-export function KafelkiPlatnosci({ wybrana, onWybierz }: { wybrana: string; onWybierz: (p: Exclude<Platnosc, ''>) => void }) {
+export function KafelkiPlatnosci({ wybrana, onWybierz }: { wybrana: string; onWybierz: (p: Exclude<Platnosc, '' | 'Mieszana'>) => void }) {
   const { c } = useMotyw();
   return (
     <View style={styles.payGrid}>
@@ -741,6 +744,22 @@ export function KafelkiPlatnosci({ wybrana, onWybierz }: { wybrana: string; onWy
 
 export function OknoPlatnosc({ grupa, onZamknij }: { grupa: GrupaPelna | null; onZamknij: () => void }) {
   const db = useSQLiteContext();
+  const { c } = useMotyw();
+  const [np, setNp] = useState<NumpadUstawienia | null>(null);
+  const mieszana = grupa?.platnosc === 'Mieszana';
+  const doZap = grupa?.wynik.doZap ?? 0;
+  const podzial = grupa ? podzialPlatnosci(grupa.platnosc, grupa.platnosc_gotowka, doZap) : null;
+  // gotówka + karta: wpisujesz ile gotówką, reszta liczy się sama jako karta
+  const wpiszGotowke = () =>
+    grupa &&
+    setNp({
+      tytul: `Ile gotówką? (do zapłaty ${zl(doZap)} — reszta kartą)`,
+      wartosc: mieszana ? grupa.platnosc_gotowka : null,
+      onOk: (v) => {
+        onZamknij();
+        ustawPlatnoscMieszana(db, grupa.id, Math.min(v, Math.max(doZap, 0)));
+      },
+    });
   return (
     <Okno widoczne={!!grupa} onZamknij={onZamknij} tytul="💳 Forma płatności" rozmiar="sm">
       <KafelkiPlatnosci
@@ -750,6 +769,18 @@ export function OknoPlatnosc({ grupa, onZamknij }: { grupa: GrupaPelna | null; o
           if (grupa) ustawPlatnosc(db, grupa.id, p);
         }}
       />
+      <Pressable
+        onPress={wpiszGotowke}
+        style={[styles.payMix, { borderColor: mieszana ? c.accent : c.border, backgroundColor: mieszana ? 'rgba(249,115,22,0.1)' : c.surface2 }]}>
+        <Text style={styles.payIco}>💵💳</Text>
+        <View style={styles.flex}>
+          <Text style={[styles.plPkNazwa, { color: c.text }]}>Gotówka + karta</Text>
+          <Text style={[styles.plPkSub, { color: c.text2 }]}>
+            {mieszana && podzial ? `gotówka ${zl(podzial.gotowka)} · karta ${zl(podzial.karta)} — stuknij, żeby zmienić` : 'wpisujesz ile gotówką, reszta liczy się jako karta'}
+          </Text>
+        </View>
+      </Pressable>
+      <Numpad ustawienia={np} onZamknij={() => setNp(null)} />
       <Przyciski>
         <Przycisk tekst="Anuluj" rodzaj="anuluj" onPress={onZamknij} />
       </Przyciski>
@@ -969,13 +1000,14 @@ function TrescFaktura({ grupa, onZamknij }: { grupa: GrupaPelna; onZamknij: () =
   const [tel, setTel] = useState(f?.tel ?? '');
   const [email, setEmail] = useState(f?.email ?? '');
   const [kwota, setKwota] = useState(String(f?.kwota ?? (grupa.wynik.kwota || '')));
-  const [plat, setPlat] = useState<Platnosc>(f?.platnosc ?? grupa.platnosc ?? '');
+  // na fakturze jedna forma: przy „gotówka + karta” nic nie podpowiadamy
+  const [plat, setPlat] = useState<Platnosc>(f?.platnosc ?? (grupa.platnosc === 'Mieszana' ? '' : grupa.platnosc) ?? '');
 
   const zapisz = async () => {
     const kw = num(kwota);
     if (!nip.trim() || !tel.trim() || !email.trim() || !kw || !plat) return toast('⚠️ Uzupełnij wszystkie pola i formę płatności');
     onZamknij();
-    await zapiszFakture(db, { grupa_id: grupa.id, nip, tel, email, kwota: kw, platnosc: plat as Exclude<Platnosc, ''> });
+    await zapiszFakture(db, { grupa_id: grupa.id, nip, tel, email, kwota: kw, platnosc: plat as Exclude<Platnosc, '' | 'Mieszana'> });
     toast('✅ Dane faktury zapisane — SMS pójdzie o 6:00');
   };
 
@@ -1010,6 +1042,7 @@ function TrescFaktura({ grupa, onZamknij }: { grupa: GrupaPelna; onZamknij: () =
 
 const styles = StyleSheet.create({
   imieRzad: { flexDirection: 'row', alignItems: 'flex-end', gap: 8 },
+  payMix: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderWidth: 1.5, borderRadius: 10, marginTop: 10 },
   gratis: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderWidth: 1.5, borderRadius: 10, marginTop: 10 },
   gratisIco: { fontSize: 24 },
   gratisCheck: { fontFamily: Fonts.black, fontSize: 20 },

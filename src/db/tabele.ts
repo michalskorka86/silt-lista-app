@@ -31,7 +31,7 @@ export const TABELE = {
       pakiet_nazwa: 'text', pakiet_typ: 'text', pakiet_kulki: 'int', pakiet_cena: 'real',
       pakiet_limit: 'int', pakiet_extra: 'real',
       kdod_ilosc: 'int', kdod_cena: 'real',
-      gracze_reczne: 'int', kulki_reczne: 'int', kwota_reczna: 'real', zadatek: 'real', platnosc: 'text',
+      gracze_reczne: 'int', kulki_reczne: 'int', kwota_reczna: 'real', zadatek: 'real', platnosc: 'text', platnosc_gotowka: 'real',
       w_gracze: 'int', w_kulki: 'int', w_kulki_dok: 'int', w_dym: 'int', w_kwota: 'real',
     },
   },
@@ -90,7 +90,8 @@ export type Lista = { data: string; uwagi: string | null } & Partial<{
 export type Instruktor = { id: string; data: string; imie: string; kolejnosc: number };
 
 export type PakietTyp = 'os' | 'grupa';
-export type Platnosc = '' | 'Gotówka' | 'Karta' | 'Przelew';
+/** 'Mieszana' = część gotówką (platnosc_gotowka), reszta kartą. */
+export type Platnosc = '' | 'Gotówka' | 'Karta' | 'Przelew' | 'Mieszana';
 
 export type Grupa = {
   id: string;
@@ -113,6 +114,8 @@ export type Grupa = {
   kwota_reczna: number | null;
   zadatek: number;
   platnosc: Platnosc;
+  /** przy płatności 'Mieszana': ile gotówką (reszta kartą) */
+  platnosc_gotowka: number | null;
   w_gracze: number;
   w_kulki: number;
   w_kulki_dok: number;
@@ -157,7 +160,7 @@ export type Faktura = {
   tel: string;
   email: string;
   kwota: number;
-  platnosc: Exclude<Platnosc, ''>;
+  platnosc: Exclude<Platnosc, '' | 'Mieszana'>;
 } & Partial<{ s_sms_wyslano: string | null; s_sms_blad: string | null }>;
 
 export type Wydatek = { id: string; data: string; opis: string; kwota: number; uwagi: string; kolejnosc: number };

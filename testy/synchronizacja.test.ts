@@ -42,9 +42,9 @@ const wczoraj = (() => {
 test('synchronizacja z serwerem', { skip: !API && 'brak SILT_API (serwer testowy)' }, async (t) => {
   const { db, klient } = await nowyTablet();
 
-  await t.test('migracje: baza tabletu w wersji 3', async () => {
+  await t.test('migracje: baza tabletu w wersji 4 (płatność gotówka + karta)', async () => {
     const v = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
-    assert.equal(v!.user_version, 3);
+    assert.equal(v!.user_version, 4);
   });
 
   await t.test('bez logowania → „zaloguj”, złe hasło → błąd, dobre → token', async () => {
@@ -110,7 +110,7 @@ test('synchronizacja z serwerem', { skip: !API && 'brak SILT_API (serwer testowy
       ['grupy', {
         id: G, data: wczoraj, instruktor_id: 't-1', godzina: '10:30', utworzono, organizator: 'Firma X', atrakcja: 'klasyk',
         pakiet_nazwa: 'Pakiet SILT', pakiet_typ: 'os', pakiet_kulki: 500, pakiet_cena: 130, pakiet_limit: 0, pakiet_extra: 0,
-        kdod_ilosc: 100, kdod_cena: 15, gracze_reczne: 10, kulki_reczne: 0, kwota_reczna: null, zadatek: 100, platnosc: 'Karta',
+        kdod_ilosc: 100, kdod_cena: 15, gracze_reczne: 10, kulki_reczne: 0, kwota_reczna: null, zadatek: 100, platnosc: 'Karta', platnosc_gotowka: null,
         w_gracze: 0, w_kulki: 0, w_kulki_dok: 0, w_dym: 0, w_kwota: 0,
       }],
       ['gracze', { id: 'p-1', grupa_id: G, imie: 'Firma X', notatka: 'org.', kolejnosc: 0, pakiet_nazwa: null, pakiet_kulki: null,

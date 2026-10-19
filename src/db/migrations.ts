@@ -190,5 +190,16 @@ export async function migrateDbIfNeeded(db: SQLiteDatabase) {
     version = 3;
   }
 
+  if (version < 4) {
+    await transakcja(db, async (tx) => {
+      await tx.execAsync(`
+        -- Płatność „Gotówka + karta”: ile gotówką (reszta kartą).
+        ALTER TABLE grupy ADD COLUMN platnosc_gotowka REAL;
+        PRAGMA user_version = 4;
+      `);
+    });
+    version = 4;
+  }
+
   await db.execAsync(`PRAGMA user_version = ${version}`);
 }

@@ -111,9 +111,13 @@ export default function WydatkiDnia() {
               ['Przychód brutto', s.brutto],
               ['Zadatki', s.zadatki],
               ['Do zapłaty na miejscu (bez zadatków)', s.brutto - s.zadatki],
+              ['   w tym gotówką', s.platnosci.gotowka],
+              ['   w tym kartą', s.platnosci.karta],
+              ...(s.platnosci.przelew ? [['   w tym przelewem', s.platnosci.przelew]] : []),
+              ...(s.platnosci.brak ? [['   ⚠ bez zaznaczonej formy płatności', s.platnosci.brak]] : []),
               ['Wydatki', s.wydatki],
               ['Pensje', s.pensje],
-              ['Zostaje w kasie z dnia (na miejscu − wydatki − pensje)', s.brutto - s.zadatki - s.wydatki - s.pensje],
+              ['💵 Gotówka w kasie (gotówka − wydatki − pensje)', s.platnosci.gotowka - s.wydatki - s.pensje],
             ].map(([n, v], i, a) => (
               <View key={n as string} style={[styles.raportRow, i < a.length - 1 && { borderBottomWidth: 1, borderBottomColor: c.border }]}>
                 <Text style={[styles.raportTxt, { color: c.text }]}>{n}</Text>

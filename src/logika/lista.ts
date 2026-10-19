@@ -4,6 +4,7 @@
  * Bez importów React Native (testy w Node: testy/lista.test.ts).
  */
 
+import { podzialPlatnosci, sumaPodzialow, type Podzial } from './platnosc';
 import type { Faktura, Gracz, Grupa, Platnosc, Pozycja, Wiersz } from '../db/tabele';
 import { nowyId, przeliczGrupe, teraz, usun, wczytaj, wczytajGdzie, zapisz, zapiszWiele, type Baza } from '../db/zapis';
 import type { Atrakcja, Pakiet } from './cennik';
@@ -31,7 +32,11 @@ export type Dzien = {
 };
 
 /** Podsumowanie dnia (karta „📊 Podsumowanie dnia” w v19). */
-export type Podsumowanie = { brutto: number; zadatki: number; wydatki: number; pensje: number; netto: number; graczy: number; kulki: number };
+export type Podsumowanie = {
+  brutto: number; zadatki: number; wydatki: number; pensje: number; netto: number; graczy: number; kulki: number;
+  /** „do zapłaty na miejscu” rozbite na formy płatności (brak = grupy bez zaznaczonej formy) */
+  platnosci: Podzial;
+};
 
 const wLiscie = (ids: string[]) => ids.map(() => '?').join(',');
 
@@ -77,6 +82,7 @@ export async function wczytajDzien(db: Baza, data: string): Promise<Dzien> {
     netto: 0,
     graczy: pelne.reduce((x, g) => x + g.wynik.gracze, 0),
     kulki: pelne.reduce((x, g) => x + g.wynik.kulki, 0),
+    platnosci: sumaPodzialow(pelne.map((g) => podzialPlatnosci(g.platnosc, g.platnosc_gotowka, g.wynik.doZap))),
   };
   podsumowanie.netto = Math.round((podsumowanie.brutto - podsumowanie.wydatki - podsumowanie.pensje) * 100) / 100;
 
@@ -196,6 +202,7 @@ export async function dodajGrupe(
     kwota_reczna: null,
     zadatek: 0,
     platnosc: '',
+    platnosc_gotowka: null,
     w_gracze: 0,
     w_kulki: 0,
     w_kulki_dok: 0,
@@ -217,7 +224,10 @@ export async function zmienGrupe(db: Baza, grupaId: string, zmiany: Partial<Grup
   await przeliczGrupe(db, grupaId);
 }
 
-export const ustawPlatnosc = (db: Baza, grupaId: string, platnosc: Platnosc) => zmienGrupe(db, grupaId, { platnosc });
+export const ustawPlatnosc = (db: Baza, grupaId: string, platnosc: Platnosc) => zmienGrupe(db, grupaId, { platnosc, platnosc_gotowka: null });
+/** Gotówka + karta: `gotowka` zł gotówką, reszta kartą. */
+export const ustawPlatnoscMieszana = (db: Baza, grupaId: string, gotowka: number) =>
+  zmienGrupe(db, grupaId, { platnosc: 'Mieszana', platnosc_gotowka: Math.max(0, Math.round(gotowka * 100) / 100) });
 
 export const usunGrupe = (db: Baza, grupaId: string) => usun(db, 'grupy', grupaId);
 

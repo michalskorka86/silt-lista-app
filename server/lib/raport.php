@@ -81,8 +81,39 @@ function dzien_z_bazy(string $data): ?array
         'pensje' => $suma($pen, 'kwota'),
     ];
     $pods['netto'] = round($pods['brutto'] - $pods['wydatki'] - $pods['pensje'], 2);
+    $pods['platnosci'] = ['gotowka' => 0.0, 'karta' => 0.0, 'przelew' => 0.0, 'brak' => 0.0];
+    foreach ($grupy as $g) {
+        foreach (podzial_platnosci($g) as $k => $v) $pods['platnosci'][$k] = round($pods['platnosci'][$k] + $v, 2);
+    }
 
     return ['data' => $data, 'lista' => $lista, 'instruktorzy' => $instr, 'grupy' => $grupy, 'wydatki' => $wyd, 'pensje' => $pen, 'podsumowanie' => $pods];
+}
+
+/** „Do zapłaty na miejscu” grupy rozbite na gotówkę / kartę / przelew / brak formy (jak src/logika/platnosc.ts). */
+function podzial_platnosci(array $g): array
+{
+    $d = round((float)$g['w_kwota'] - (float)$g['zadatek'], 2);
+    $p = ['gotowka' => 0.0, 'karta' => 0.0, 'przelew' => 0.0, 'brak' => 0.0];
+    switch ($g['platnosc']) {
+        case 'Gotówka': $p['gotowka'] = $d; break;
+        case 'Karta': $p['karta'] = $d; break;
+        case 'Przelew': $p['przelew'] = $d; break;
+        case 'Mieszana':
+            $p['gotowka'] = round(min(max((float)($g['platnosc_gotowka'] ?? 0), 0), max($d, 0)), 2);
+            $p['karta'] = round($d - $p['gotowka'], 2);
+            break;
+        default: $p['brak'] = $d;
+    }
+    return $p;
+}
+
+function opis_platnosci(array $g): string
+{
+    if ($g['platnosc'] === 'Mieszana') {
+        $p = podzial_platnosci($g);
+        return 'Gotówka ' . r_zl($p['gotowka']) . ' + Karta ' . r_zl($p['karta']);
+    }
+    return $g['platnosc'] !== '' ? $g['platnosc'] : '—';
 }
 
 function atrakcje_mapa(): array
@@ -203,7 +234,7 @@ function raport_grupa(array $g, int $nr, array $d): string
         . ($workiKw ? '<div>w tym worki kulek: ' . r_zl($workiKw) . ' (' . r_liczba($kW) . ' szt)</div>' : '')
         . ($zad ? '<div>− ' . r_zl($zad) . ' zadatek</div>' : '')
         . '<div class="big">' . r_zl($kwota - $zad) . '</div>'
-        . '<div>Forma płatności (' . r_h($g['platnosc'] !== '' ? $g['platnosc'] : '—') . ')</div>'
+        . '<div>Forma płatności (' . r_h(opis_platnosci($g)) . ')</div>'
         . ($g['faktura'] ? '<div style="margin-top:4px;font-size:10px">🧾 Faktura: NIP ' . r_h($g['faktura']['nip']) . '</div>' : '')
         . '</div></div></div>';
 }
@@ -236,10 +267,16 @@ function raport_dnia(array $d): string
         . '<tr><td>Przychód brutto</td><td class="r">' . r_zl($s['brutto']) . '</td></tr>'
         . '<tr><td>Zadatki (w przychodzie)</td><td class="r">' . r_zl($s['zadatki']) . '</td></tr>'
         . '<tr><th>Do zapłaty na miejscu (bez zadatków)</th><th class="r">' . r_zl($s['brutto'] - $s['zadatki']) . '</th></tr>'
+        . '<tr><td>&nbsp;&nbsp;w tym gotówką</td><td class="r">' . r_zl($s['platnosci']['gotowka']) . '</td></tr>'
+        . '<tr><td>&nbsp;&nbsp;w tym kartą</td><td class="r">' . r_zl($s['platnosci']['karta']) . '</td></tr>'
+        . ($s['platnosci']['przelew'] ? '<tr><td>&nbsp;&nbsp;w tym przelewem</td><td class="r">' . r_zl($s['platnosci']['przelew']) . '</td></tr>' : '')
+        . ($s['platnosci']['brak'] ? '<tr><td>&nbsp;&nbsp;⚠ bez zaznaczonej formy płatności</td><td class="r">' . r_zl($s['platnosci']['brak']) . '</td></tr>' : '')
         . '<tr><td>Wydatki</td><td class="r">− ' . r_zl($s['wydatki']) . '</td></tr>'
         . '<tr><td>Pensje</td><td class="r">− ' . r_zl($s['pensje']) . '</td></tr>'
         . '<tr class="netto"><th>Zostaje (brutto − wydatki − pensje)</th><th class="r">' . r_zl($s['netto']) . '</th></tr>'
-        . '<tr class="netto"><th>Zostaje w kasie z dnia (na miejscu − wydatki − pensje)</th><th class="r">' . r_zl($s['brutto'] - $s['zadatki'] - $s['wydatki'] - $s['pensje']) . '</th></tr></table>'
+        . '<tr class="netto"><th>Gotówka w kasie (gotówka − wydatki − pensje)</th><th class="r">' . r_zl($s['platnosci']['gotowka'] - $s['wydatki'] - $s['pensje']) . '</th></tr>'
+        . ($s['platnosci']['brak'] ? '<tr><td colspan="2" style="font-size:10px">⚠ Bez ' . r_zl($s['platnosci']['brak']) . ' z grup bez zaznaczonej formy płatności.</td></tr>' : '')
+        . '</table>'
         . '<div class="p-stopka">SILT Lista · raport z ' . r_data_pl($d['data']) . ' · z serwera ' . date('d.m.Y H:i') . '</div></div>';
     return '<div class="raport">' . $h . '</div>';
 }

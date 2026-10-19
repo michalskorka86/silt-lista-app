@@ -8,6 +8,7 @@
 import type { Cennik } from './cennik';
 import { dataPL, liczba, num, zl } from './format';
 import type { Dzien, GraczPelny, GrupaPelna } from './lista';
+import { opisPlatnosci } from './platnosc';
 
 const esc = (s: unknown): string =>
   String(s ?? '').replace(/[&<>"']/g, (z) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[z]!);
@@ -106,7 +107,7 @@ function grupaHtml(g: GrupaPelna, nr: number, d: Dzien, cennik: Cennik | null): 
         ${w.workiKw ? `<div>w tym worki kulek: ${zl(w.workiKw)} (${liczba(w.kW)} szt)</div>` : ''}
         ${w.zad ? `<div>− ${zl(w.zad)} zadatek</div>` : ''}
         <div class="big">${zl(w.doZap)}</div>
-        <div>Forma płatności (${esc(g.platnosc || '—')})</div>
+        <div>Forma płatności (${esc(opisPlatnosci(g.platnosc, g.platnosc_gotowka, w.doZap))})</div>
         ${g.faktura ? `<div style="margin-top:4px;font-size:10px">🧾 Faktura: NIP ${esc(g.faktura.nip)}</div>` : ''}
       </div></div></div>`;
 }
@@ -145,10 +146,15 @@ export function htmlRaportu(d: Dzien, cennik: Cennik | null, wygenerowano: Date 
       <tr><td>Przychód brutto</td><td class="r">${zl(s.brutto)}</td></tr>
       <tr><td>Zadatki (w przychodzie)</td><td class="r">${zl(s.zadatki)}</td></tr>
       <tr><th>Do zapłaty na miejscu (bez zadatków)</th><th class="r">${zl(s.brutto - s.zadatki)}</th></tr>
+      <tr><td>&nbsp;&nbsp;w tym gotówką</td><td class="r">${zl(s.platnosci.gotowka)}</td></tr>
+      <tr><td>&nbsp;&nbsp;w tym kartą</td><td class="r">${zl(s.platnosci.karta)}</td></tr>
+      ${s.platnosci.przelew ? `<tr><td>&nbsp;&nbsp;w tym przelewem</td><td class="r">${zl(s.platnosci.przelew)}</td></tr>` : ''}
+      ${s.platnosci.brak ? `<tr><td>&nbsp;&nbsp;⚠ bez zaznaczonej formy płatności</td><td class="r">${zl(s.platnosci.brak)}</td></tr>` : ''}
       <tr><td>Wydatki</td><td class="r">− ${zl(s.wydatki)}</td></tr>
       <tr><td>Pensje</td><td class="r">− ${zl(s.pensje)}</td></tr>
       <tr class="netto"><th>Zostaje (brutto − wydatki − pensje)</th><th class="r">${zl(s.netto)}</th></tr>
-      <tr class="netto"><th>Zostaje w kasie z dnia (na miejscu − wydatki − pensje)</th><th class="r">${zl(s.brutto - s.zadatki - s.wydatki - s.pensje)}</th></tr>
+      <tr class="netto"><th>Gotówka w kasie (gotówka − wydatki − pensje)</th><th class="r">${zl(s.platnosci.gotowka - s.wydatki - s.pensje)}</th></tr>
+      ${s.platnosci.brak ? `<tr><td colspan="2" style="font-size:10px">⚠ Bez ${zl(s.platnosci.brak)} z grup bez zaznaczonej formy płatności — zaznacz ją przy grupie, żeby gotówka się zgadzała.</td></tr>` : ''}
     </table>
     <div class="p-stopka">SILT Lista · raport z ${dataPL(d.data)} · utworzono ${wygenerowano.toLocaleString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div></div>`;
 

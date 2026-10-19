@@ -7,12 +7,13 @@ import type { Wiersz } from '@/db/tabele';
 import type { Atrakcja } from '@/logika/cennik';
 import { liczba, zl, zlDash } from '@/logika/format';
 import { usunGracza, usunGrupe, zmienGrupe, type GraczPelny, type GrupaPelna } from '@/logika/lista';
+import { podzialPlatnosci } from '@/logika/platnosc';
 import { useMotyw } from '@/theme/motyw';
 
 import { useKomunikaty } from '../ui/Komunikaty';
 import { WierszGracza } from './WierszGracza';
 
-export const IKONY_PLATNOSCI: Record<string, string> = { Gotówka: '💵', Karta: '💳', Przelew: '🏦' };
+export const IKONY_PLATNOSCI: Record<string, string> = { Gotówka: '💵', Karta: '💳', Przelew: '🏦', Mieszana: '💵💳' };
 
 export function etykietaPakietu(g: Pick<GrupaPelna, 'pakiet_typ' | 'pakiet_cena' | 'pakiet_limit'>): string {
   if (g.pakiet_typ === 'grupa') return g.pakiet_cena ? zl(g.pakiet_cena) + (g.pakiet_limit ? ` / do ${g.pakiet_limit} os.` : '') : 'ustal cenę';
@@ -232,7 +233,7 @@ export function KartaGrupy({
           <Text style={[styles.val, styles.payVal, { color: c.green }]}>{w.doZap > 0 ? zl(w.doZap) : '—'}</Text>
         </PayKom>
         <PayKom etykieta="Płatność" onPress={ro ? undefined : akcje.onPlatnosc}>
-          <Text style={[styles.val, styles.payVal, { color: c.text }]}>{g.platnosc ? `${IKONY_PLATNOSCI[g.platnosc]} ${g.platnosc}` : '—'}</Text>
+          <Text style={[styles.val, styles.payVal, { color: c.text }]}>{g.platnosc === 'Mieszana' ? `💵 ${zl(podzialPlatnosci(g.platnosc, g.platnosc_gotowka, w.doZap).gotowka)} + 💳 ${zl(podzialPlatnosci(g.platnosc, g.platnosc_gotowka, w.doZap).karta)}` : g.platnosc ? `${IKONY_PLATNOSCI[g.platnosc]} ${g.platnosc}` : '—'}</Text>
         </PayKom>
         <PayKom etykieta="Faktura" onPress={ro ? undefined : akcje.onFaktura} ostatnia>
           <Text style={[styles.val, styles.payVal, { color: g.faktura ? c.green : c.text }]}>🧾 {g.faktura ? 'Tak' : 'Nie'}</Text>

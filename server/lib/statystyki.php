@@ -104,7 +104,9 @@ function wiersze_statystyk(string $data): array
             . ((int)$g['w_kulki_dok'] ? ', dokupione ' . (int)$g['w_kulki_dok'] . ' kulek' : '')
             . ((int)$g['w_dym'] ? ', dym ' . (int)$g['w_dym'] : '')
             . ((int)$g['ma_fakture'] ? ', FAKTURA' : '')
-            . ($g['platnosc'] !== '' ? ', ' . $g['platnosc'] : '');
+            . ($g['platnosc'] === 'Mieszana'
+                ? ', gotówka ' . round((float)$g['platnosc_gotowka'], 2) . ' zł + karta'
+                : ($g['platnosc'] !== '' ? ', ' . $g['platnosc'] : ''));
         $wiersze[] = ['grupy', stat_id('LG', $data . $g['id']), [
             'data' => $data, 'atrakcja' => $g['stat_atrakcja'], 'gracze' => (int)$g['w_gracze'], 'grupy' => 1,
             'kulki' => (int)$g['w_kulki'], 'przychod' => round((float)$g['w_kwota'], 2), 'koszty' => 0,
