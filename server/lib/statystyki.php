@@ -19,10 +19,14 @@ function stat_wywolaj(string $metoda, string $tabela, string $id = '', ?array $b
     $url = STAT_API_URL . '?table=' . urlencode($tabela) . ($id !== '' ? '&id=' . urlencode($id) : '');
     $ch = curl_init($url);
     $opt = [CURLOPT_RETURNTRANSFER => true, CURLOPT_CUSTOMREQUEST => $metoda, CURLOPT_TIMEOUT => 20, CURLOPT_CONNECTTIMEOUT => 10];
+    // Statystyki wpuszczają serwer listy tylko z kluczem (STAT_API_KEY w config.php = STAT_SERVER_KEY w statystyka/config.php)
+    $naglowki = [];
+    if (defined('STAT_API_KEY') && STAT_API_KEY !== '') $naglowki[] = 'X-Stat-Key: ' . STAT_API_KEY;
     if ($body !== null) {
         $opt[CURLOPT_POSTFIELDS] = json_encode($body, JSON_UNESCAPED_UNICODE);
-        $opt[CURLOPT_HTTPHEADER] = ['Content-Type: application/json'];
+        $naglowki[] = 'Content-Type: application/json';
     }
+    if ($naglowki) $opt[CURLOPT_HTTPHEADER] = $naglowki;
     curl_setopt_array($ch, $opt);
     $res = curl_exec($ch);
     $kod = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);

@@ -26,6 +26,8 @@ define('KOSZ_DNI', 30);
 
 // ── Statystyki (aplikacja na filedops.pl) ───────────────────
 define('STAT_API_URL', 'https://filedops.pl/statystyka/api.php');
+// Klucz serwera do Statystyk (= STAT_SERVER_KEY w statystyka/config.php), wysyłany w nagłówku X-Stat-Key.
+define('STAT_API_KEY', '');                       // ←
 
 // ── SMSAPI.pl — SMS z danymi do faktur (codziennie o 6:00) ──
 define('SMSAPI_TOKEN',      '');                  // ← token OAuth z panelu smsapi.pl (puste = SMS-y nie idą)
