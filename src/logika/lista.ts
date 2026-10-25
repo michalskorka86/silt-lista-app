@@ -5,7 +5,7 @@
  */
 
 import { podzialPlatnosci, sumaPodzialow, type Podzial } from './platnosc';
-import type { Faktura, Gracz, Grupa, Platnosc, Pozycja, Wiersz } from '../db/tabele';
+import type { Faktura, Gracz, Grupa, Platnosc, Pozycja, SprzetGracza, Wiersz } from '../db/tabele';
 import { nowyId, przeliczGrupe, teraz, usun, wczytaj, wczytajGdzie, zapisz, zapiszWiele, type Baza } from '../db/zapis';
 import type { Atrakcja, Pakiet } from './cennik';
 import { terazHM } from './format';
@@ -257,6 +257,27 @@ export async function dodajGracza(db: Baza, grupaId: string, imie: string, notat
   await zapisz(db, 'gracze', g);
   await przeliczGrupe(db, grupaId);
   return g.id;
+}
+
+/**
+ * Kilka osób z własnym sprzętem naraz (np. 5 × Własny 40 zł) — zamiast dodawać każdą osobę osobno.
+ * Liczba osób w grupie rośnie o `ile`: osoby z pakietu zostają, dochodzą osoby ze sprzętem
+ * (5 os. × 130 zł + 5 os. × 40 zł = 850 zł, 10 os.).
+ */
+export async function dodajGraczyZeSprzetem(db: Baza, grupaId: string, ile: number, sprzet: SprzetGracza): Promise<void> {
+  const n = Math.round(ile);
+  const g = await wczytaj(db, 'grupy', grupaId);
+  if (!g || n <= 0) return;
+  const gracze = await wczytajGdzie(db, 'gracze', 'grupa_id = ?', [grupaId]);
+  const osobyPrzed = Math.max(Number(g.gracze_reczne) || 0, gracze.length);
+  const juz = gracze.filter((p) => /^Własny sprzęt \d+$/.test(p.imie)).length;
+  let kol = await nastepnaKolejnosc(db, 'gracze', 'grupa_id', grupaId);
+  const zmiany: Parameters<typeof zapiszWiele>[1] = [['grupy', { ...g, gracze_reczne: osobyPrzed + n }]];
+  for (let k = 1; k <= n; k++) {
+    zmiany.push(['gracze', { ...nowyGracz(grupaId, `Własny sprzęt ${juz + k}`, '', kol++), sprzet: [{ ...sprzet }] }]);
+  }
+  await zapiszWiele(db, zmiany);
+  await przeliczGrupe(db, grupaId);
 }
 
 export async function zmienGracza(db: Baza, graczId: string, zmiany: Partial<Gracz>): Promise<void> {

@@ -35,6 +35,7 @@ export type AkcjeKarty = {
   onDodatek: () => void;
   onUsunDodatek: (d: Wiersz<'dodatki'>) => void;
   onZdjecie: () => void;
+  onSprzetGrupy: () => void;
 };
 
 const nic = () => {};
@@ -51,6 +52,7 @@ const BRAK_AKCJI: AkcjeKarty = {
   onDodatek: nic,
   onUsunDodatek: nic,
   onZdjecie: nic,
+  onSprzetGrupy: nic,
 };
 
 /** Karta grupy (.group-card z v19): nagłówek, gracze, dodatki i ceny, Osób/Kulki/Kwota, Zadatek/Do zapłaty/Płatność/Faktura. */
@@ -183,6 +185,7 @@ export function KartaGrupy({
           <Kreskowany onPress={akcje.onDodajGracza} style={styles.flex}>
             👤＋ Dodaj gracza
           </Kreskowany>
+          <Kreskowany onPress={akcje.onSprzetGrupy}>🎒 Kilka osób z własnym sprzętem</Kreskowany>
           <Kreskowany onPress={akcje.onZdjecie}>📷 Gracze ze zdjęcia kartki</Kreskowany>
         </View>
       )}
@@ -332,7 +335,7 @@ const styles = StyleSheet.create({
   iconBtn: { width: 42, height: 42, borderRadius: 10, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   iconTxt: { fontSize: 17 },
   gracze: { gap: 6, paddingHorizontal: 12 },
-  addRow: { flexDirection: 'row', gap: 8, marginTop: 6, marginHorizontal: 12 },
+  addRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 6, marginHorizontal: 12 },
   kresk: { padding: 12, borderWidth: 1.5, borderStyle: 'dashed', borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   kreskTxt: { fontFamily: Fonts.bold, fontSize: 13 },
   dod: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6, paddingTop: 10, paddingHorizontal: 12, paddingBottom: 12 },

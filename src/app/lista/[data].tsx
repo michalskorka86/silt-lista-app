@@ -11,6 +11,7 @@ import {
   OknoGracz,
   OknoInstruktor,
   OknoKdod,
+  OknoSprzetGrupy,
   OknoNowaGrupa,
   OknoPlatnosc,
   OknoPodstawa,
@@ -51,6 +52,7 @@ export default function ListaDnia() {
   const [dodatek, setDodatek] = useState<GrupaPelna | null>(null);
   const [faktura, setFaktura] = useState<GrupaPelna | null>(null);
   const [kartka, setKartka] = useState<GrupaPelna | null>(null);
+  const [sprzetGrupy, setSprzetGrupy] = useState<GrupaPelna | null>(null);
 
 
   // Brak instruktorów na liście → od razu pytamy o imię (jak v19); „Anuluj” zamyka do następnego wejścia.
@@ -131,6 +133,7 @@ export default function ListaDnia() {
     onUsunDodatek: (d) =>
       potwierdz({ tytul: 'Usuń dodatek', tekst: `Usunąć „${d.nazwa}”?`, ok: 'Usuń', onOk: () => usunDodatek(db, d.id) }),
     onZdjecie: () => setKartka(g),
+    onSprzetGrupy: () => setSprzetGrupy(g),
   });
 
   return (
@@ -203,6 +206,7 @@ export default function ListaDnia() {
       <OknoKdod grupa={kdod} atrakcja={atr(kdod)} onZamknij={() => setKdod(null)} />
       <OknoDodatek grupa={dodatek} cennik={cennik} onZamknij={() => setDodatek(null)} />
       <OknoFaktura grupa={aktualna(faktura)} onZamknij={() => setFaktura(null)} />
+      <OknoSprzetGrupy grupa={sprzetGrupy} cennik={cennik} onZamknij={() => setSprzetGrupy(null)} />
       <OknoKartka grupa={kartka} dymCena={cennik?.dym_cena ?? 10} onZamknij={() => setKartka(null)} />
     </View>
   );

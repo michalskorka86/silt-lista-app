@@ -10,6 +10,7 @@ import {
   dodajDodatek,
   dodajDym,
   dodajGracza,
+  dodajGraczyZeSprzetem,
   dodajGrupe,
   dodajInne,
   dodajKulki,
@@ -140,6 +141,24 @@ test('Najnowsza grupa na górze; usunięcie instruktora zabiera jego grupy; usun
   assert.equal(dz.grupy.length, 0);
   assert.deepEqual(await datyList(db), []);
   assert.ok((await liczNiewyslane(db)) > 0, 'usunięcia czekają w kolejce na serwer');
+});
+
+test('Kilka osób z własnym sprzętem naraz: 5 × 130 + 5 × 40 = 850 zł, 10 osób', async () => {
+  const t = (await utworzListe(db, D, 'Monika'))!;
+  const gid = await dodajGrupe(db, D, t, 'Alex', KLASYK, KLASYK.pakiety[0]);
+  await zmienGrupe(db, gid, { gracze_reczne: 5 });
+  await dodajGraczyZeSprzetem(db, gid, 5, { nazwa: 'Własny', kwota: 40, ikona: '🎒', i: 0 });
+  let g = (await wczytajDzien(db, D)).grupy[0];
+  assert.equal(g.w_kwota, 850);
+  assert.equal(g.w_gracze, 10);
+  assert.equal(g.gracze.length, 6);
+  assert.equal(g.gracze[5].imie, 'Własny sprzęt 5');
+  // drugi raz — numeracja dalej, liczba osób rośnie
+  await dodajGraczyZeSprzetem(db, gid, 2, { nazwa: 'Sama Replika', kwota: 60, i: 1 });
+  g = (await wczytajDzien(db, D)).grupy[0];
+  assert.equal(g.w_gracze, 12);
+  assert.equal(g.w_kwota, 850 + 120);
+  assert.equal(g.gracze[7].imie, 'Własny sprzęt 7');
 });
 
 test('Własny sprzęt bez podstawy, worki, inny pakiet gracza, dodatki i faktura', async () => {

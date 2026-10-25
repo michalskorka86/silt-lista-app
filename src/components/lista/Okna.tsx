@@ -13,6 +13,7 @@ import {
   dodajDodatek,
   dodajDym,
   dodajGracza,
+  dodajGraczyZeSprzetem,
   dodajGrupe,
   dodajInne,
   dodajInstruktora,
@@ -629,6 +630,84 @@ function TrescSprzet({
       <Przyciski>
         <Przycisk tekst="Anuluj" rodzaj="anuluj" onPress={onAnuluj} />
         <Przycisk tekst="Zapisz ✓" onPress={zapisz} />
+      </Przyciski>
+    </>
+  );
+}
+
+// ── Kilka osób z własnym sprzętem naraz ───────────────────────
+
+export function OknoSprzetGrupy({ grupa, cennik, onZamknij }: { grupa: GrupaPelna | null; cennik: Cennik | null; onZamknij: () => void }) {
+  return (
+    <Okno widoczne={!!grupa} onZamknij={onZamknij} tytul="🎒 Osoby z własnym sprzętem" rozmiar="sm">
+      {grupa ? <TrescSprzetGrupy grupa={grupa} katalog={cennik?.sprzet ?? []} onZamknij={onZamknij} /> : null}
+    </Okno>
+  );
+}
+
+function TrescSprzetGrupy({
+  grupa,
+  katalog,
+  onZamknij,
+}: {
+  grupa: GrupaPelna;
+  katalog: { nazwa: string; cena: number; ikona: string }[];
+  onZamknij: () => void;
+}) {
+  const db = useSQLiteContext();
+  const { c } = useMotyw();
+  const { toast } = useKomunikaty();
+  const F = !!grupa.firma;
+  const [ile, setIle] = useState('');
+  const [wyb, setWyb] = useState(katalog.length ? 0 : -1);
+  const [cena, setCena] = useState(katalog.length ? doPola(katalog[0].cena, F) : '');
+  const osoby = Math.max(num(grupa.gracze_reczne), grupa.gracze.length);
+  const n = Math.round(num(ile));
+  const kw = zPola(num(cena), F);
+
+  const wybierz = (i: number) => {
+    setWyb(i);
+    setCena(doPola(katalog[i].cena, F));
+  };
+  const zapisz = async () => {
+    if (n <= 0) return toast('Podaj ilość osób');
+    if (n > 100) return toast('Za dużo osób naraz (maks. 100)');
+    const d = wyb >= 0 ? katalog[wyb] : null;
+    onZamknij();
+    await dodajGraczyZeSprzetem(db, grupa.id, n, { nazwa: d?.nazwa ?? 'Własny', kwota: kw, ikona: d?.ikona ?? '🎒', ...(d ? { i: wyb } : {}) });
+    toast(`🎒 Dodano ${n} os. z własnym sprzętem`);
+  };
+
+  return (
+    <>
+      <PoleLiczby etykieta="Ilu osób z własnym sprzętem?" value={ile} onChangeText={setIle} autoOtworz tytul="Osoby z własnym sprzętem — ilość" />
+      {katalog.length ? (
+        <View style={styles.spGrid}>
+          {katalog.map((d, i) => {
+            const on = i === wyb;
+            return (
+              <Pressable
+                key={i}
+                onPress={() => wybierz(i)}
+                style={[styles.spKafel, { borderColor: on ? c.purple : c.border, backgroundColor: on ? 'rgba(168,85,247,0.14)' : c.surface2 }]}>
+                {on ? <Text style={[styles.spChk, { color: c.purple }]}>✓</Text> : null}
+                <Text style={styles.spKafelIco}>{d.ikona}</Text>
+                <Text style={[styles.spKafelNazwa, { color: c.text }]}>{d.nazwa}</Text>
+                <Text style={[styles.spKafelCena, { color: c.purple }]}>{F ? `${zl(netto(d.cena))} netto` : zl(d.cena)}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      ) : null}
+      <PoleLiczby etykieta={F ? 'Cena za osobę — netto (zł)' : 'Cena za osobę (zł)'} value={cena} onChangeText={setCena} tytul={`Własny sprzęt — cena za osobę${F ? ' netto' : ''} (zł)`} />
+      <Podpowiedz>
+        {n > 0
+          ? `${n} × ${zl(F ? netto(kw) : kw)}${F ? ' netto' : ''} = ${zl(n * (F ? netto(kw) : kw))}. Osób w grupie: ${osoby} → ${osoby + n}. Osoby z pakietu zostają bez zmian.`
+          : `Osób w grupie teraz: ${osoby}. Dopiszę osoby „Własny sprzęt 1, 2, 3…” — bez wpisywania imion.`}
+      </Podpowiedz>
+      <Przyciski>
+        <Przycisk tekst="Anuluj" rodzaj="anuluj" onPress={onZamknij} />
+        <Przycisk tekst="Dodaj ✓" onPress={zapisz} />
       </Przyciski>
     </>
   );
