@@ -8,6 +8,7 @@ import type { Atrakcja } from '@/logika/cennik';
 import { liczba, zl, zlDash } from '@/logika/format';
 import { usunGracza, usunGrupe, zmienGrupe, type GraczPelny, type GrupaPelna } from '@/logika/lista';
 import { podzialPlatnosci } from '@/logika/platnosc';
+import { netto, zPola } from '@/logika/vat';
 import { useMotyw } from '@/theme/motyw';
 
 import { useKomunikaty } from '../ui/Komunikaty';
@@ -15,9 +16,11 @@ import { WierszGracza } from './WierszGracza';
 
 export const IKONY_PLATNOSCI: Record<string, string> = { Gotówka: '💵', Karta: '💳', Przelew: '🏦', Mieszana: '💵💳' };
 
-export function etykietaPakietu(g: Pick<GrupaPelna, 'pakiet_typ' | 'pakiet_cena' | 'pakiet_limit'>): string {
-  if (g.pakiet_typ === 'grupa') return g.pakiet_cena ? zl(g.pakiet_cena) + (g.pakiet_limit ? ` / do ${g.pakiet_limit} os.` : '') : 'ustal cenę';
-  return `${zl(g.pakiet_cena)} / os.`;
+export function etykietaPakietu(g: Pick<GrupaPelna, 'pakiet_typ' | 'pakiet_cena' | 'pakiet_limit' | 'firma'>): string {
+  // 🏢 firma: pokazujemy netto (tak jak było ustalone z klientem)
+  const cena = (v: number) => (g.firma ? `${zl(netto(v))} netto` : zl(v));
+  if (g.pakiet_typ === 'grupa') return g.pakiet_cena ? cena(g.pakiet_cena) + (g.pakiet_limit ? ` / do ${g.pakiet_limit} os.` : '') : 'ustal cenę';
+  return `${cena(g.pakiet_cena)} / os.`;
 }
 
 export type AkcjeKarty = {
@@ -79,11 +82,12 @@ export function KartaGrupy({
     numpad({ tytul: 'Liczba osób', wartosc: w.gracze || null, onOk: (v) => zmienGrupe(db, g.id, { gracze_reczne: Math.round(v) }) });
   const edytujKulki = () =>
     numpad({ tytul: 'Kulki dla całej grupy (bez imion)', wartosc: w.kG || null, onOk: (v) => zmienGrupe(db, g.id, { kulki_reczne: Math.round(v) }) });
+  const F = !!g.firma;
   const edytujKwote = () =>
     numpad({
-      tytul: 'Kwota grupy (zł)',
-      wartosc: w.kwota || null,
-      onOk: (v) => zmienGrupe(db, g.id, { kwota_reczna: v }),
+      tytul: F ? 'Kwota grupy netto (zł)' : 'Kwota grupy (zł)',
+      wartosc: (F ? netto(w.kwota) : w.kwota) || null,
+      onOk: (v) => zmienGrupe(db, g.id, { kwota_reczna: zPola(v, F) }),
       extra: { tekst: `↺ Licz automatycznie (${zl(w.auto)})`, onPress: () => zmienGrupe(db, g.id, { kwota_reczna: null }) },
     });
   const edytujZadatek = () => numpad({ tytul: 'Zadatek (zł)', wartosc: g.zadatek || 100, onOk: (v) => zmienGrupe(db, g.id, { zadatek: v }) });
@@ -123,6 +127,7 @@ export function KartaGrupy({
           <Text style={[styles.typ, { color: kolor }]} numberOfLines={1}>
             {nazwa.toUpperCase()}
             <Text style={[styles.typSmall, { color: c.text2 }]}>  {g.pakiet_nazwa}</Text>
+            {F ? <Text style={[styles.typSmall, { color: c.accent }]}>  🏢 FIRMA</Text> : null}
           </Text>
           <View style={styles.meta}>
             <Text style={[styles.metaTxt, { color: c.text2 }]}>
@@ -202,7 +207,7 @@ export function KartaGrupy({
         )}
         <Kafel etykieta="Podstawa" wartosc={etykietaPakietu(g)} onPress={ro ? undefined : akcje.onPodstawa} />
         {g.kdod_ilosc ? (
-          <Kafel etykieta="Kulki dodatkowe" wartosc={`${zl(g.kdod_cena)} / ${g.kdod_ilosc} szt`} onPress={ro ? undefined : akcje.onKdod} />
+          <Kafel etykieta="Kulki dodatkowe" wartosc={`${zl(F ? netto(g.kdod_cena ?? 0) : g.kdod_cena)}${F ? ' netto' : ''} / ${g.kdod_ilosc} szt`} onPress={ro ? undefined : akcje.onKdod} />
         ) : null}
         {ro && !w.kG ? null : (
           <Kafel etykieta="Kulki bez imion" wartosc={w.kG ? `🎯 ${liczba(w.kG)}` : '＋ wpisz'} onPress={ro ? undefined : edytujKulki} />
@@ -220,7 +225,7 @@ export function KartaGrupy({
         </Komorka>
         <Komorka etykieta="Kwota" onPress={ro ? undefined : edytujKwote} ostatnia>
           <Text style={[styles.val, { color: c.accent }]}>{zlDash(w.kwota)}</Text>
-          <Text style={[styles.sub, { color: c.text2 }]}>{opisKwoty}</Text>
+          <Text style={[styles.sub, { color: c.text2 }]}>{F ? `netto ${zl(netto(w.kwota))} · ` : ''}{opisKwoty}</Text>
         </Komorka>
       </View>
 

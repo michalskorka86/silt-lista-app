@@ -201,5 +201,17 @@ export async function migrateDbIfNeeded(db: SQLiteDatabase) {
     version = 4;
   }
 
+  if (version < 5) {
+    await transakcja(db, async (tx) => {
+      await tx.execAsync(`
+        -- Impreza firmowa (stawki netto) i cena świecy dymnej ustalona dla grupy.
+        ALTER TABLE grupy ADD COLUMN firma INTEGER DEFAULT 0;  -- bez NOT NULL: stary serwer nie przysyła tej kolumny
+        ALTER TABLE grupy ADD COLUMN dym_cena REAL;
+        PRAGMA user_version = 5;
+      `);
+    });
+    version = 5;
+  }
+
   await db.execAsync(`PRAGMA user_version = ${version}`);
 }

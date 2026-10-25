@@ -43,6 +43,8 @@ const TABELE = [
         'zadatek'       => 'dec',
         'platnosc'      => 'str:10',
         'platnosc_gotowka' => 'dec?',  // przy 'Mieszana': ile gotówką (reszta kartą)
+        'firma'         => 'int',      // 1 = impreza firmowa (stawki wpisywane netto, zapis brutto)
+        'dym_cena'      => 'dec?',     // cena świecy w tej grupie (brutto), NULL = z cennika
         'w_gracze'      => 'int',
         'w_kulki'       => 'int',
         'w_kulki_dok'   => 'int',

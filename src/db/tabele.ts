@@ -32,6 +32,7 @@ export const TABELE = {
       pakiet_limit: 'int', pakiet_extra: 'real',
       kdod_ilosc: 'int', kdod_cena: 'real',
       gracze_reczne: 'int', kulki_reczne: 'int', kwota_reczna: 'real', zadatek: 'real', platnosc: 'text', platnosc_gotowka: 'real',
+      firma: 'int', dym_cena: 'real',
       w_gracze: 'int', w_kulki: 'int', w_kulki_dok: 'int', w_dym: 'int', w_kwota: 'real',
     },
   },
@@ -116,6 +117,10 @@ export type Grupa = {
   platnosc: Platnosc;
   /** przy płatności 'Mieszana': ile gotówką (reszta kartą) */
   platnosc_gotowka: number | null;
+  /** 1 = impreza firmowa: stawki wpisywane netto (w bazie i tak brutto) */
+  firma: number;
+  /** cena świecy dymnej w tej grupie (brutto); null = z cennika */
+  dym_cena: number | null;
   w_gracze: number;
   w_kulki: number;
   w_kulki_dok: number;

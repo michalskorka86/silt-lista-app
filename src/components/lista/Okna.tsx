@@ -8,6 +8,7 @@ import type { Atrakcja, Cennik, Pakiet } from '@/logika/cennik';
 import { liczba, num, zl } from '@/logika/format';
 import { imionaZMowy } from '@/logika/glos';
 import { podzialPlatnosci } from '@/logika/platnosc';
+import { brutto, doPola, netto, zPola } from '@/logika/vat';
 import {
   dodajDodatek,
   dodajDym,
@@ -107,6 +108,12 @@ function TrescNowaGrupa({ data, instruktorId, cennik, onZamknij }: PropsNowaGrup
   const reczny = !!wybranyPk && !wybranyPk.cena;
   const zKulkami = !!atr?.opcje_pakiet.length;
   const poleOrg = useRef<TextInput>(null);
+  // 🏢 impreza firmowa: stawki ustalane indywidualnie, wpisywane NETTO (zapis brutto)
+  const [firma, setFirma] = useState(false);
+  const [fCena, setFCena] = useState('');
+  const [fKdod, setFKdod] = useState('');
+  const [fDym, setFDym] = useState('');
+  const [fCatering, setFCatering] = useState(false);
 
   const dalej = () => {
     if (!org.trim()) {
@@ -121,9 +128,19 @@ function TrescNowaGrupa({ data, instruktorId, cennik, onZamknij }: PropsNowaGrup
   const utworz = async () => {
     if (!atr || !instruktorId || !org.trim()) return;
     let pakiet = atr.pakiety[pk];
+    if (firma && !reczny && !fCena.trim()) return toast(`Wpisz cenę netto za ${pakiet.typ === 'grupa' ? 'grupę' : 'osobę'}`);
     // kasa = cena pakietu na całą grupę (dym / dodatki dodane później doliczą się do niej)
-    if (reczny) pakiet = { ...pakiet, typ: 'grupa', cena: Math.max(0, num(recznaKasa)), limit: 0, extra: 0 };
+    if (reczny) pakiet = { ...pakiet, typ: 'grupa', cena: zPola(Math.max(0, num(recznaKasa)), firma), limit: 0, extra: 0 };
+    else if (firma) pakiet = { ...pakiet, cena: brutto(Math.max(0, num(fCena))) };
     const id = await dodajGrupe(db, data, instruktorId, org.trim(), atr, pakiet);
+    if (firma) {
+      await zmienGrupe(db, id, {
+        firma: 1,
+        ...(fKdod.trim() && atr.kdod ? { kdod_cena: brutto(num(fKdod)) } : {}),
+        ...(fDym.trim() ? { dym_cena: brutto(num(fDym)) } : {}),
+      });
+      if (fCatering) await dodajDodatek(db, id, 'Catering', 0);
+    }
     if (reczny && (reczneOsoby.trim() || reczneKulki.trim()))
       await zmienGrupe(db, id, {
         gracze_reczne: Math.max(0, Math.round(num(reczneOsoby))),
@@ -180,6 +197,13 @@ function TrescNowaGrupa({ data, instruktorId, cennik, onZamknij }: PropsNowaGrup
               })}
             </View>
           )}
+          <Przelacznik
+            ikona="🏢"
+            tytul="Impreza firmowa"
+            opis="stawki ustalone indywidualnie, wpisywane netto (aplikacja doliczy 23% VAT)"
+            wlaczony={firma}
+            onPress={() => setFirma((x) => !x)}
+          />
           <Przyciski>
             <Przycisk tekst="Anuluj" rodzaj="anuluj" onPress={onZamknij} />
             <Przycisk tekst="Dalej →" onPress={dalej} wylaczony={!cennik} />
@@ -196,9 +220,45 @@ function TrescNowaGrupa({ data, instruktorId, cennik, onZamknij }: PropsNowaGrup
                 {zKulkami ? (
                   <PoleLiczby etykieta="Kulki (razem)" value={reczneKulki} onChangeText={setReczneKulki} tytul={`${wybranyPk?.nazwa} — kulki razem`} />
                 ) : null}
-                <PoleLiczby etykieta="Kasa (zł)" value={recznaKasa} onChangeText={setRecznaKasa} tytul={`${wybranyPk?.nazwa} — kasa (zł)`} />
+                <PoleLiczby etykieta={firma ? 'Kasa netto (zł)' : 'Kasa (zł)'} value={recznaKasa} onChangeText={setRecznaKasa} tytul={`${wybranyPk?.nazwa} — kasa${firma ? ' netto' : ''} (zł)`} />
               </Rzad>
               <Podpowiedz>Wszystko można potem zmienić na karcie grupy. Dym i dodatki dodasz normalnie — doliczą się do kasy.</Podpowiedz>
+            </>
+          ) : null}
+          {firma && !reczny ? (
+            <>
+              <View style={styles.odstep} />
+              <Text style={[styles.label, { color: c.text2 }]}>🏢 STAWKI DLA FIRMY — NETTO (pakiet wyżej = ile kulek na osobę)</Text>
+              <Rzad>
+                <PoleLiczby
+                  etykieta={wybranyPk?.typ === 'grupa' ? 'Cena za grupę netto *' : 'Cena za osobę netto *'}
+                  value={fCena}
+                  onChangeText={setFCena}
+                  placeholder="wpisz"
+                  autoOtworz={!fCena.trim()}
+                />
+                {atr?.kdod ? (
+                  <PoleLiczby etykieta={`Kulki dodatkowe netto / ${atr.kdod.ilosc} szt`} value={fKdod} onChangeText={setFKdod} placeholder={`cennik ${netto(atr.kdod.cena)}`} />
+                ) : null}
+                <PoleLiczby etykieta="Świeca dymna netto / szt" value={fDym} onChangeText={setFDym} placeholder={`cennik ${netto(cennik?.dym_cena ?? 10)}`} />
+              </Rzad>
+              <Przelacznik ikona="🍕" tytul="Catering w cenie" opis="dodaje do grupy „Catering” za 0 zł" wlaczony={fCatering} onPress={() => setFCatering((x) => !x)} />
+              <Podpowiedz>
+                {[
+                  fCena.trim() ? `${wybranyPk?.typ === 'grupa' ? 'grupa' : 'osoba'} ${zl(brutto(num(fCena)))}` : '',
+                  fKdod.trim() && atr?.kdod ? `kulki ${zl(brutto(num(fKdod)))} / ${atr.kdod.ilosc} szt` : '',
+                  fDym.trim() ? `świeca ${zl(brutto(num(fDym)))}` : '',
+                ].filter(Boolean).length
+                  ? 'Brutto: ' +
+                    [
+                      fCena.trim() ? `${wybranyPk?.typ === 'grupa' ? 'grupa' : 'osoba'} ${zl(brutto(num(fCena)))}` : '',
+                      fKdod.trim() && atr?.kdod ? `kulki ${zl(brutto(num(fKdod)))} / ${atr.kdod.ilosc} szt` : '',
+                      fDym.trim() ? `świeca ${zl(brutto(num(fDym)))}` : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')
+                  : 'Puste pola kulek i świecy = ceny z cennika. Wszystko zmienisz potem na karcie grupy.'}
+              </Podpowiedz>
             </>
           ) : null}
           <Przyciski>
@@ -208,6 +268,25 @@ function TrescNowaGrupa({ data, instruktorId, cennik, onZamknij }: PropsNowaGrup
         </>
       )}
     </Okno>
+  );
+}
+
+/** Kafelek tak/nie (impreza firmowa, catering w cenie). */
+function Przelacznik({ ikona, tytul, opis, wlaczony, onPress }: { ikona: string; tytul: string; opis: string; wlaczony: boolean; onPress: () => void }) {
+  const { c } = useMotyw();
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="switch"
+      accessibilityState={{ checked: wlaczony }}
+      style={[styles.gratis, { borderColor: wlaczony ? c.accent : c.border, backgroundColor: wlaczony ? 'rgba(249,115,22,0.12)' : c.surface2 }]}>
+      <Text style={styles.gratisIco}>{ikona}</Text>
+      <View style={styles.flex}>
+        <Text style={[styles.plPkNazwa, { color: c.text }]}>{tytul}</Text>
+        <Text style={[styles.plPkSub, { color: c.text2 }]}>{opis}</Text>
+      </View>
+      <Text style={[styles.gratisCheck, { color: wlaczony ? c.accent : c.text3 }]}>{wlaczony ? '✓' : '○'}</Text>
+    </Pressable>
   );
 }
 
@@ -579,7 +658,10 @@ function TrescPozycja({ stan, atrakcja, dymCena, worek, onZamknij }: PropsPozycj
   const [widok, setWidok] = useState<Widok>(stan.dym ? 'dym' : 'wybor');
   const [dok, setDok] = useState(mozeDokupic && !!limit && uzyte >= limit);
   const [dymIlosc, setDymIlosc] = useState(String(stan.dym?.ilosc ?? 1));
-  const [dymKwota, setDymKwota] = useState(String(stan.dym ? (stan.dym.kwota ?? 0) : dymCena));
+  // 🏢 firma: kwoty wpisywane netto; cena świecy może być ustalona dla grupy (dym_cena)
+  const F = !!g.firma;
+  const dymSzt = F ? netto(g.dym_cena ?? dymCena) : (g.dym_cena ?? dymCena);
+  const [dymKwota, setDymKwota] = useState(stan.dym ? doPola(stan.dym.kwota ?? 0, F) : String(dymSzt).replace('.', ','));
   const [inneNazwa, setInneNazwa] = useState('');
   const [inneKwota, setInneKwota] = useState('');
 
@@ -604,7 +686,7 @@ function TrescPozycja({ stan, atrakcja, dymCena, worek, onZamknij }: PropsPozycj
   };
   const zapiszDym = async () => {
     const n = Math.round(num(dymIlosc));
-    const kw = num(dymKwota);
+    const kw = zPola(num(dymKwota), F);
     onZamknij();
     if (stan.dym) {
       if (n <= 0) await usunPozycje(db, stan.dym.id);
@@ -614,7 +696,7 @@ function TrescPozycja({ stan, atrakcja, dymCena, worek, onZamknij }: PropsPozycj
   const zapiszInne = async () => {
     if (!inneNazwa.trim()) return;
     onZamknij();
-    await dodajInne(db, p.id, inneNazwa, num(inneKwota));
+    await dodajInne(db, p.id, inneNazwa, zPola(num(inneKwota), F));
   };
 
   return (
@@ -664,13 +746,15 @@ function TrescPozycja({ stan, atrakcja, dymCena, worek, onZamknij }: PropsPozycj
               value={dymIlosc}
               onChangeText={(t) => {
                 setDymIlosc(t);
-                setDymKwota(String(Math.round(num(t)) * dymCena));
+                setDymKwota(String(Math.round(Math.round(num(t)) * dymSzt * 100) / 100).replace('.', ','));
               }}
               autoOtworz={!dymIlosc.trim()}
             />
-            <PoleLiczby etykieta="Kwota łącznie (zł)" value={dymKwota} onChangeText={setDymKwota} />
+            <PoleLiczby etykieta={F ? 'Kwota łącznie netto (zł)' : 'Kwota łącznie (zł)'} value={dymKwota} onChangeText={setDymKwota} />
           </Rzad>
-          <Podpowiedz>Sugestia: {dymCena} zł / szt · 0 = gratis</Podpowiedz>
+          <Podpowiedz>
+            Sugestia: {zl(dymSzt)}{F ? ' netto' : ''} / szt · 0 = gratis{F && num(dymKwota) ? ` · brutto ${zl(brutto(num(dymKwota)))}` : ''}
+          </Podpowiedz>
           <Przyciski>
             {stan.dym ? (
               <Przycisk
@@ -690,7 +774,7 @@ function TrescPozycja({ stan, atrakcja, dymCena, worek, onZamknij }: PropsPozycj
       ) : (
         <>
           <Pole etykieta="Nazwa pozycji" value={inneNazwa} onChangeText={setInneNazwa} placeholder="np. Mundur, Butla" autoFocus />
-          <PoleLiczby etykieta="Kwota (zł) — 0 = gratis" value={inneKwota} onChangeText={setInneKwota} tytul={inneNazwa.trim() ? `${inneNazwa.trim()} — kwota (zł)` : undefined} />
+          <PoleLiczby etykieta={F ? 'Kwota netto (zł) — 0 = gratis' : 'Kwota (zł) — 0 = gratis'} value={inneKwota} onChangeText={setInneKwota} tytul={inneNazwa.trim() ? `${inneNazwa.trim()} — kwota (zł)` : undefined} />
           <Przyciski>
             <Przycisk tekst="← Wróć" rodzaj="anuluj" onPress={() => setWidok('wybor')} />
             <Przycisk tekst="Dodaj ✓" onPress={zapiszInne} wylaczony={!inneNazwa.trim()} />
@@ -805,14 +889,23 @@ function TrescPodstawa({ grupa, atrakcja, onZamknij }: PropsGrupy & { grupa: Gru
   const pakiety = atrakcja?.pakiety ?? [];
   const start = Math.max(0, pakiety.findIndex((p) => p.nazwa === grupa.pakiet_nazwa));
   const [idx, setIdx] = useState(start);
-  const [cena, setCena] = useState(grupa.pakiet_cena ? String(grupa.pakiet_cena) : '');
-  const [extra, setExtra] = useState(grupa.pakiet_extra ? String(grupa.pakiet_extra) : '');
+  const [firma, setFirma] = useState(!!grupa.firma);
+  const [cena, setCena] = useState(grupa.pakiet_cena ? doPola(grupa.pakiet_cena, !!grupa.firma) : '');
+  const [extra, setExtra] = useState(grupa.pakiet_extra ? doPola(grupa.pakiet_extra, !!grupa.firma) : '');
 
   const wybierz = (i: number) => {
     setIdx(i);
     const p = pakiety[i];
-    setCena(p?.cena ? String(p.cena) : '');
-    setExtra(p?.extra ? String(p.extra) : '');
+    setCena(p?.cena ? doPola(p.cena, firma) : '');
+    setExtra(p?.extra ? doPola(p.extra, firma) : '');
+  };
+  // przełączenie firmy przelicza wpisane kwoty (netto ↔ brutto), żeby cena się nie zmieniła
+  const przelaczFirme = () => {
+    const na = !firma;
+    const przelicz = (t: string) => (t.trim() ? String(na ? netto(num(t)) : brutto(num(t))).replace('.', ',') : t);
+    setCena(przelicz(cena));
+    setExtra(przelicz(extra));
+    setFirma(na);
   };
 
   const p = pakiety[idx];
@@ -825,8 +918,9 @@ function TrescPodstawa({ grupa, atrakcja, onZamknij }: PropsGrupy & { grupa: Gru
       pakiet_typ: p.typ,
       pakiet_kulki: p.kulki,
       pakiet_limit: p.limit,
-      pakiet_cena: num(cena),
-      pakiet_extra: grupowy && p.limit ? num(extra) : p.extra,
+      pakiet_cena: zPola(num(cena), firma),
+      pakiet_extra: grupowy && p.limit ? zPola(num(extra), firma) : p.extra,
+      firma: firma ? 1 : 0,
     });
   };
 
@@ -836,14 +930,21 @@ function TrescPodstawa({ grupa, atrakcja, onZamknij }: PropsGrupy & { grupa: Gru
       <View style={styles.odstep} />
       <Rzad>
         <PoleLiczby
-          etykieta={grupowy ? (p.limit ? `Cena za grupę do ${p.limit} os. (zł)` : 'Cena za grupę (zł)') : 'Cena za osobę (zł)'}
+          etykieta={(grupowy ? (p.limit ? `Cena za grupę do ${p.limit} os.` : 'Cena za grupę') : 'Cena za osobę') + (firma ? ' netto (zł)' : ' (zł)')}
           value={cena}
           onChangeText={setCena}
         />
         {grupowy && p.limit ? (
-          <PoleLiczby etykieta="Dodatkowy gracz (zł)" value={extra} onChangeText={setExtra} />
+          <PoleLiczby etykieta={firma ? 'Dodatkowy gracz netto (zł)' : 'Dodatkowy gracz (zł)'} value={extra} onChangeText={setExtra} />
         ) : null}
       </Rzad>
+      <Przelacznik
+        ikona="🏢"
+        tytul="Impreza firmowa"
+        opis={firma && cena.trim() ? `ceny netto · brutto ${zl(brutto(num(cena)))}${grupowy ? '' : ' / os.'}` : 'ceny wpisywane netto (+23% VAT)'}
+        wlaczony={firma}
+        onPress={przelaczFirme}
+      />
       <Podpowiedz>
         {p?.cena
           ? `Cennik: ${zl(p.cena)}${grupowy ? '' : ' / os.'} — możesz dać inną cenę dla tej grupy.`
@@ -871,18 +972,19 @@ function TrescKdod({ grupa, atrakcja, onZamknij }: PropsGrupy & { grupa: GrupaPe
   const db = useSQLiteContext();
   const { toast } = useKomunikaty();
   const [ilosc, setIlosc] = useState(String(grupa.kdod_ilosc ?? ''));
-  const [cena, setCena] = useState(String(grupa.kdod_cena ?? ''));
+  const F = !!grupa.firma;
+  const [cena, setCena] = useState(doPola(grupa.kdod_cena, F));
   const zapisz = async () => {
     const il = Math.round(num(ilosc));
     if (il <= 0) return toast('Podaj ilość kulek');
     onZamknij();
-    await zmienGrupe(db, grupa.id, { kdod_ilosc: il, kdod_cena: num(cena) });
+    await zmienGrupe(db, grupa.id, { kdod_ilosc: il, kdod_cena: zPola(num(cena), F) });
   };
   return (
     <>
       <Rzad>
         <PoleLiczby etykieta="Ilość kulek" value={ilosc} onChangeText={setIlosc} tytul="Dokupione kulki — ilość" />
-        <PoleLiczby etykieta="Cena (zł)" value={cena} onChangeText={setCena} tytul="Dokupione kulki — cena (zł)" />
+        <PoleLiczby etykieta={F ? 'Cena netto (zł)' : 'Cena (zł)'} value={cena} onChangeText={setCena} tytul={`Dokupione kulki — cena${F ? ' netto' : ''} (zł)`} />
       </Rzad>
       {atrakcja?.kdod ? (
         <Podpowiedz>
@@ -919,7 +1021,7 @@ function TrescDodatek({ grupa, cennik, onZamknij }: { grupa: GrupaPelna; cennik:
     if (!wybrany) return;
     const nazwa = inne ? opis.trim() || 'Inne' : wybrany.nazwa;
     onZamknij();
-    await dodajDodatek(db, grupa.id, nazwa, num(kwota));
+    await dodajDodatek(db, grupa.id, nazwa, zPola(num(kwota), !!grupa.firma));
     toast(`✅ Dodano: ${nazwa}`);
   };
 
@@ -928,7 +1030,7 @@ function TrescDodatek({ grupa, cennik, onZamknij }: { grupa: GrupaPelna; cennik:
       <Okno widoczne onZamknij={onZamknij} tytul={`${wybrany.ikona} ${wybrany.nazwa}`} rozmiar="sm">
         {inne ? <Pole etykieta="Nazwa" value={opis} onChangeText={setOpis} placeholder="np. Transport, Namiot" autoFocus /> : null}
         <PoleLiczby
-          etykieta="Kwota (zł) — 0 lub puste = gratis"
+          etykieta={grupa.firma ? 'Kwota netto (zł) — 0 lub puste = gratis' : 'Kwota (zł) — 0 lub puste = gratis'}
           value={kwota}
           onChangeText={setKwota}
           tytul={`${wybrany.ikona} ${wybrany.nazwa} — kwota (zł)`}

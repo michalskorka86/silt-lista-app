@@ -3,7 +3,9 @@
 /** 1395 → „1 395 zł”, 12.5 → „12,5 zł”. */
 export function zl(v: number | null | undefined): string {
   const n = Math.round((Number(v) || 0) * 100) / 100;
-  return n.toLocaleString('pl-PL', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + ' zł';
+  // grosze zawsze dwiema cyframi (184,50 zł), pełne złote bez nich (130 zł)
+  const grosze = Math.round(Math.abs(n) * 100) % 100 !== 0;
+  return n.toLocaleString('pl-PL', { minimumFractionDigits: grosze ? 2 : 0, maximumFractionDigits: 2 }) + ' zł';
 }
 
 /** 0 → „—”. */

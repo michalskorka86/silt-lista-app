@@ -203,6 +203,8 @@ export async function dodajGrupe(
     zadatek: 0,
     platnosc: '',
     platnosc_gotowka: null,
+    firma: 0,
+    dym_cena: null,
     w_gracze: 0,
     w_kulki: 0,
     w_kulki_dok: 0,

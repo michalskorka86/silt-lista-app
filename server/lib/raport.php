@@ -234,6 +234,7 @@ function raport_grupa(array $g, int $nr, array $d): string
         . ($workiKw ? '<div>w tym worki kulek: ' . r_zl($workiKw) . ' (' . r_liczba($kW) . ' szt)</div>' : '')
         . ($zad ? '<div>− ' . r_zl($zad) . ' zadatek</div>' : '')
         . '<div class="big">' . r_zl($kwota - $zad) . '</div>'
+        . (!empty($g['firma']) ? '<div>🏢 Firma — netto ' . r_zl(round($kwota / 1.23, 2)) . '</div>' : '')
         . '<div>Forma płatności (' . r_h(opis_platnosci($g)) . ')</div>'
         . ($g['faktura'] ? '<div style="margin-top:4px;font-size:10px">🧾 Faktura: NIP ' . r_h($g['faktura']['nip']) . '</div>' : '')
         . '</div></div></div>';

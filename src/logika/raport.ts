@@ -9,6 +9,7 @@ import type { Cennik } from './cennik';
 import { dataPL, liczba, num, zl } from './format';
 import type { Dzien, GraczPelny, GrupaPelna } from './lista';
 import { opisPlatnosci } from './platnosc';
+import { netto } from './vat';
 
 const esc = (s: unknown): string =>
   String(s ?? '').replace(/[&<>"']/g, (z) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[z]!);
@@ -107,6 +108,7 @@ function grupaHtml(g: GrupaPelna, nr: number, d: Dzien, cennik: Cennik | null): 
         ${w.workiKw ? `<div>w tym worki kulek: ${zl(w.workiKw)} (${liczba(w.kW)} szt)</div>` : ''}
         ${w.zad ? `<div>− ${zl(w.zad)} zadatek</div>` : ''}
         <div class="big">${zl(w.doZap)}</div>
+        ${g.firma ? `<div>🏢 Firma — netto ${zl(netto(w.kwota))}${w.zad ? `, do zapłaty netto ${zl(netto(w.doZap))}` : ''}</div>` : ''}
         <div>Forma płatności (${esc(opisPlatnosci(g.platnosc, g.platnosc_gotowka, w.doZap))})</div>
         ${g.faktura ? `<div style="margin-top:4px;font-size:10px">🧾 Faktura: NIP ${esc(g.faktura.nip)}</div>` : ''}
       </div></div></div>`;

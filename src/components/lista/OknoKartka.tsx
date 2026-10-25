@@ -68,7 +68,7 @@ function Tresc({ grupa, dymCena, onZamknij }: { grupa: GrupaPelna; dymCena: numb
     if (zapis) return;
     setZapis(true);
     try {
-      const n = await dodajZKartki(db, grupa.id, wiersze, dymCena);
+      const n = await dodajZKartki(db, grupa.id, wiersze, grupa.dym_cena ?? dymCena);
       onZamknij();
       toast(n ? `✅ Dodano / uzupełniono graczy: ${n}` : 'Nikogo nie dodano (brak imion)');
     } finally {

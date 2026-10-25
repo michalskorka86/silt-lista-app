@@ -103,6 +103,7 @@ function wiersze_statystyk(string $data): array
             . ($g['pakiet_nazwa'] !== '' ? ', ' . $g['pakiet_nazwa'] : '')
             . ((int)$g['w_kulki_dok'] ? ', dokupione ' . (int)$g['w_kulki_dok'] . ' kulek' : '')
             . ((int)$g['w_dym'] ? ', dym ' . (int)$g['w_dym'] : '')
+            . (!empty($g['firma']) ? ', FIRMA (netto ' . round((float)$g['w_kwota'] / 1.23, 2) . ' zł)' : '')
             . ((int)$g['ma_fakture'] ? ', FAKTURA' : '')
             . ($g['platnosc'] === 'Mieszana'
                 ? ', gotówka ' . round((float)$g['platnosc_gotowka'], 2) . ' zł + karta'
