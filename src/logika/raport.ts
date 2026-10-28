@@ -109,7 +109,7 @@ function grupaHtml(g: GrupaPelna, nr: number, d: Dzien, cennik: Cennik | null): 
         ${w.zad ? `<div>− ${zl(w.zad)} zadatek</div>` : ''}
         <div class="big">${zl(w.doZap)}</div>
         ${g.firma ? `<div>🏢 Firma — netto ${zl(netto(w.kwota))}${w.zad ? `, do zapłaty netto ${zl(netto(w.doZap))}` : ''}</div>` : ''}
-        <div>Forma płatności (${esc(opisPlatnosci(g.platnosc, g.platnosc_gotowka, w.doZap))})</div>
+        <div>Forma płatności (${esc(opisPlatnosci(g.platnosc, g.platnosc_gotowka, w.doZap, g.platnosc_reszta))})</div>
         ${g.faktura ? `<div style="margin-top:4px;font-size:10px">🧾 Faktura: NIP ${esc(g.faktura.nip)}</div>` : ''}
       </div></div></div>`;
 }

@@ -31,7 +31,7 @@ export const TABELE = {
       pakiet_nazwa: 'text', pakiet_typ: 'text', pakiet_kulki: 'int', pakiet_cena: 'real',
       pakiet_limit: 'int', pakiet_extra: 'real',
       kdod_ilosc: 'int', kdod_cena: 'real',
-      gracze_reczne: 'int', kulki_reczne: 'int', kwota_reczna: 'real', zadatek: 'real', platnosc: 'text', platnosc_gotowka: 'real',
+      gracze_reczne: 'int', kulki_reczne: 'int', kwota_reczna: 'real', zadatek: 'real', platnosc: 'text', platnosc_gotowka: 'real', platnosc_reszta: 'text',
       firma: 'int', dym_cena: 'real',
       w_gracze: 'int', w_kulki: 'int', w_kulki_dok: 'int', w_dym: 'int', w_kwota: 'real',
     },
@@ -91,8 +91,9 @@ export type Lista = { data: string; uwagi: string | null } & Partial<{
 export type Instruktor = { id: string; data: string; imie: string; kolejnosc: number };
 
 export type PakietTyp = 'os' | 'grupa';
-/** 'Mieszana' = część gotówką (platnosc_gotowka), reszta kartą. */
+/** 'Mieszana' = część gotówką (platnosc_gotowka), reszta kartą albo przelewem (platnosc_reszta). */
 export type Platnosc = '' | 'Gotówka' | 'Karta' | 'Przelew' | 'Mieszana';
+export type ResztaPlatnosci = '' | 'Karta' | 'Przelew';
 
 export type Grupa = {
   id: string;
@@ -115,8 +116,10 @@ export type Grupa = {
   kwota_reczna: number | null;
   zadatek: number;
   platnosc: Platnosc;
-  /** przy płatności 'Mieszana': ile gotówką (reszta kartą) */
+  /** przy płatności 'Mieszana': ile gotówką */
   platnosc_gotowka: number | null;
+  /** przy płatności 'Mieszana': czym reszta — 'Przelew'; '' / null = karta */
+  platnosc_reszta: ResztaPlatnosci | null;
   /** 1 = impreza firmowa: stawki wpisywane netto (w bazie i tak brutto) */
   firma: number;
   /** cena świecy dymnej w tej grupie (brutto); null = z cennika */

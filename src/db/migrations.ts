@@ -213,5 +213,16 @@ export async function migrateDbIfNeeded(db: SQLiteDatabase) {
     version = 5;
   }
 
+  if (version < 6) {
+    await transakcja(db, async (tx) => {
+      await tx.execAsync(`
+        -- Płatność mieszana: reszta (poza gotówką) kartą albo przelewem. NULL / '' = karta.
+        ALTER TABLE grupy ADD COLUMN platnosc_reszta TEXT;
+        PRAGMA user_version = 6;
+      `);
+    });
+    version = 6;
+  }
+
   await db.execAsync(`PRAGMA user_version = ${version}`);
 }

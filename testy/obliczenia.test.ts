@@ -10,7 +10,7 @@ import { policzGrupe, round10, type GraczZPozycjami } from '../src/logika/oblicz
 const grupa = (z: Partial<Grupa>): Grupa => ({
   id: 'g', data: '2026-09-30', instruktor_id: null, godzina: '10:00', utworzono: '', organizator: '', atrakcja: 'klasyk',
   pakiet_nazwa: 'Pakiet SILT', pakiet_typ: 'os', pakiet_kulki: 500, pakiet_cena: 130, pakiet_limit: 0, pakiet_extra: 0,
-  kdod_ilosc: 100, kdod_cena: 15, gracze_reczne: 0, kulki_reczne: 0, kwota_reczna: null, zadatek: 0, platnosc: '', platnosc_gotowka: null, firma: 0, dym_cena: null,
+  kdod_ilosc: 100, kdod_cena: 15, gracze_reczne: 0, kulki_reczne: 0, kwota_reczna: null, zadatek: 0, platnosc: '', platnosc_gotowka: null, platnosc_reszta: null, firma: 0, dym_cena: null,
   w_gracze: 0, w_kulki: 0, w_kulki_dok: 0, w_dym: 0, w_kwota: 0, ...z,
 });
 const gracz = (z: Partial<GraczZPozycjami>): GraczZPozycjami => ({

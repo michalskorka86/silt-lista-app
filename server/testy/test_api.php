@@ -343,6 +343,12 @@ echo "Płatność gotówka + karta\n";
 $mix = $grupa; $mix['id'] = 'z16'; $mix['rekord']['id'] = 'gm1'; $mix['rekord']['platnosc'] = 'Mieszana'; $mix['rekord']['platnosc_gotowka'] = 300;
 $r = api('wyslij', ['zmiany' => [$mix]]);
 sprawdz('płatność „Mieszana” (gotówka 300 + karta) → zapisano', wyniki($r) === ['zapisano'] && (float)$pdo->query("SELECT platnosc_gotowka FROM grupy WHERE id='gm1'")->fetchColumn() === 300.0, $r);
+$mixP = $grupa; $mixP['id'] = 'z17'; $mixP['rekord']['id'] = 'gm2'; $mixP['rekord']['platnosc'] = 'Mieszana'; $mixP['rekord']['platnosc_gotowka'] = 200; $mixP['rekord']['platnosc_reszta'] = 'Przelew';
+$r = api('wyslij', ['zmiany' => [$mixP]]);
+sprawdz('płatność gotówka 200 + przelew → zapisano', wyniki($r) === ['zapisano'] && $pdo->query("SELECT platnosc_reszta FROM grupy WHERE id='gm2'")->fetchColumn() === 'Przelew', $r);
+$zla = $grupa; $zla['id'] = 'z18'; $zla['rekord']['id'] = 'gm3'; $zla['rekord']['platnosc'] = 'Mieszana'; $zla['rekord']['platnosc_reszta'] = 'Bitcoin';
+$r = api('wyslij', ['zmiany' => [$zla]]);
+sprawdz('nieznana reszta płatności → odrzucono', wyniki($r) === ['odrzucono'], $r);
 
 
 echo "Wylogowanie i blokada haseł\n";

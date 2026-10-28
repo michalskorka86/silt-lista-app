@@ -42,7 +42,8 @@ const TABELE = [
         'kwota_reczna'  => 'dec?',
         'zadatek'       => 'dec',
         'platnosc'      => 'str:10',
-        'platnosc_gotowka' => 'dec?',  // przy 'Mieszana': ile gotówką (reszta kartą)
+        'platnosc_gotowka' => 'dec?',  // przy 'Mieszana': ile gotówką
+        'platnosc_reszta' => 'str:10',  // przy 'Mieszana': reszta 'Karta' / 'Przelew' ('' = karta)
         'firma'         => 'int',      // 1 = impreza firmowa (stawki wpisywane netto, zapis brutto)
         'dym_cena'      => 'dec?',     // cena świecy w tej grupie (brutto), NULL = z cennika
         'w_gracze'      => 'int',
@@ -115,6 +116,7 @@ const TABELE = [
 const WARTOSCI = [
     'grupy.pakiet_typ' => ['os', 'grupa'],
     'grupy.platnosc'   => ['', 'Gotówka', 'Karta', 'Przelew', 'Mieszana'],
+    'grupy.platnosc_reszta' => ['', 'Karta', 'Przelew'],
     'pozycje.rodzaj'   => ['kulki', 'dym', 'inne'],
     'faktury.platnosc' => ['Gotówka', 'Karta', 'Przelew'],
 ];

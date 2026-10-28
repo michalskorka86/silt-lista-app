@@ -100,7 +100,7 @@ function podzial_platnosci(array $g): array
         case 'Przelew': $p['przelew'] = $d; break;
         case 'Mieszana':
             $p['gotowka'] = round(min(max((float)($g['platnosc_gotowka'] ?? 0), 0), max($d, 0)), 2);
-            $p['karta'] = round($d - $p['gotowka'], 2);
+            $p[($g['platnosc_reszta'] ?? '') === 'Przelew' ? 'przelew' : 'karta'] = round($d - $p['gotowka'], 2);
             break;
         default: $p['brak'] = $d;
     }
@@ -111,7 +111,9 @@ function opis_platnosci(array $g): string
 {
     if ($g['platnosc'] === 'Mieszana') {
         $p = podzial_platnosci($g);
-        return 'Gotówka ' . r_zl($p['gotowka']) . ' + Karta ' . r_zl($p['karta']);
+        return ($g['platnosc_reszta'] ?? '') === 'Przelew'
+            ? 'Gotówka ' . r_zl($p['gotowka']) . ' + Przelew ' . r_zl($p['przelew'])
+            : 'Gotówka ' . r_zl($p['gotowka']) . ' + Karta ' . r_zl($p['karta']);
     }
     return $g['platnosc'] !== '' ? $g['platnosc'] : '—';
 }

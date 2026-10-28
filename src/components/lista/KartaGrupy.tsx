@@ -7,7 +7,7 @@ import type { Wiersz } from '@/db/tabele';
 import type { Atrakcja } from '@/logika/cennik';
 import { liczba, zl, zlDash } from '@/logika/format';
 import { usunGracza, usunGrupe, zmienGrupe, type GraczPelny, type GrupaPelna } from '@/logika/lista';
-import { podzialPlatnosci } from '@/logika/platnosc';
+import { podzialPlatnosci, type Podzial } from '@/logika/platnosc';
 import { netto, zPola } from '@/logika/vat';
 import { useMotyw } from '@/theme/motyw';
 
@@ -15,6 +15,9 @@ import { useKomunikaty } from '../ui/Komunikaty';
 import { WierszGracza } from './WierszGracza';
 
 export const IKONY_PLATNOSCI: Record<string, string> = { Gotówka: '💵', Karta: '💳', Przelew: '🏦', Mieszana: '💵💳' };
+/** „💵 300 zł + 💳 200 zł” albo „💵 300 zł + 🏦 200 zł” */
+const opisMieszanej = (p: Podzial, reszta: string | null) =>
+  reszta === 'Przelew' ? `💵 ${zl(p.gotowka)} + 🏦 ${zl(p.przelew)}` : `💵 ${zl(p.gotowka)} + 💳 ${zl(p.karta)}`;
 
 export function etykietaPakietu(g: Pick<GrupaPelna, 'pakiet_typ' | 'pakiet_cena' | 'pakiet_limit' | 'firma'>): string {
   // 🏢 firma: pokazujemy netto (tak jak było ustalone z klientem)
@@ -241,7 +244,7 @@ export function KartaGrupy({
           <Text style={[styles.val, styles.payVal, { color: c.green }]}>{w.doZap > 0 ? zl(w.doZap) : '—'}</Text>
         </PayKom>
         <PayKom etykieta="Płatność" onPress={ro ? undefined : akcje.onPlatnosc}>
-          <Text style={[styles.val, styles.payVal, { color: c.text }]}>{g.platnosc === 'Mieszana' ? `💵 ${zl(podzialPlatnosci(g.platnosc, g.platnosc_gotowka, w.doZap).gotowka)} + 💳 ${zl(podzialPlatnosci(g.platnosc, g.platnosc_gotowka, w.doZap).karta)}` : g.platnosc ? `${IKONY_PLATNOSCI[g.platnosc]} ${g.platnosc}` : '—'}</Text>
+          <Text style={[styles.val, styles.payVal, { color: c.text }]}>{g.platnosc === 'Mieszana' ? opisMieszanej(podzialPlatnosci(g.platnosc, g.platnosc_gotowka, w.doZap, g.platnosc_reszta), g.platnosc_reszta) : g.platnosc ? `${IKONY_PLATNOSCI[g.platnosc]} ${g.platnosc}` : '—'}</Text>
         </PayKom>
         <PayKom etykieta="Faktura" onPress={ro ? undefined : akcje.onFaktura} ostatnia>
           <Text style={[styles.val, styles.payVal, { color: g.faktura ? c.green : c.text }]}>🧾 {g.faktura ? 'Tak' : 'Nie'}</Text>

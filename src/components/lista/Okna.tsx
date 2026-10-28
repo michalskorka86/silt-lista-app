@@ -910,17 +910,18 @@ export function OknoPlatnosc({ grupa, onZamknij }: { grupa: GrupaPelna | null; o
   const { c } = useMotyw();
   const [np, setNp] = useState<NumpadUstawienia | null>(null);
   const mieszana = grupa?.platnosc === 'Mieszana';
+  const resztaTeraz = grupa?.platnosc_reszta === 'Przelew' ? 'Przelew' : 'Karta';
   const doZap = grupa?.wynik.doZap ?? 0;
-  const podzial = grupa ? podzialPlatnosci(grupa.platnosc, grupa.platnosc_gotowka, doZap) : null;
-  // gotówka + karta: wpisujesz ile gotówką, reszta liczy się sama jako karta
-  const wpiszGotowke = () =>
+  const podzial = grupa ? podzialPlatnosci(grupa.platnosc, grupa.platnosc_gotowka, doZap, grupa.platnosc_reszta) : null;
+  // gotówka + karta / gotówka + przelew: wpisujesz ile gotówką, reszta liczy się sama
+  const wpiszGotowke = (reszta: 'Karta' | 'Przelew') =>
     grupa &&
     setNp({
-      tytul: `Ile gotówką? (do zapłaty ${zl(doZap)} — reszta kartą)`,
+      tytul: `Ile gotówką? (do zapłaty ${zl(doZap)} — reszta ${reszta === 'Przelew' ? 'przelewem' : 'kartą'})`,
       wartosc: mieszana ? grupa.platnosc_gotowka : null,
       onOk: (v) => {
         onZamknij();
-        ustawPlatnoscMieszana(db, grupa.id, Math.min(v, Math.max(doZap, 0)));
+        ustawPlatnoscMieszana(db, grupa.id, Math.min(v, Math.max(doZap, 0)), reszta);
       },
     });
   return (
@@ -932,17 +933,26 @@ export function OknoPlatnosc({ grupa, onZamknij }: { grupa: GrupaPelna | null; o
           if (grupa) ustawPlatnosc(db, grupa.id, p);
         }}
       />
-      <Pressable
-        onPress={wpiszGotowke}
-        style={[styles.payMix, { borderColor: mieszana ? c.accent : c.border, backgroundColor: mieszana ? 'rgba(249,115,22,0.1)' : c.surface2 }]}>
-        <Text style={styles.payIco}>💵💳</Text>
-        <View style={styles.flex}>
-          <Text style={[styles.plPkNazwa, { color: c.text }]}>Gotówka + karta</Text>
-          <Text style={[styles.plPkSub, { color: c.text2 }]}>
-            {mieszana && podzial ? `gotówka ${zl(podzial.gotowka)} · karta ${zl(podzial.karta)} — stuknij, żeby zmienić` : 'wpisujesz ile gotówką, reszta liczy się jako karta'}
-          </Text>
-        </View>
-      </Pressable>
+      {(['Karta', 'Przelew'] as const).map((r) => {
+        const wyb = mieszana && resztaTeraz === r;
+        const nazwa = r === 'Karta' ? 'karta' : 'przelew';
+        return (
+          <Pressable
+            key={r}
+            onPress={() => wpiszGotowke(r)}
+            style={[styles.payMix, { borderColor: wyb ? c.accent : c.border, backgroundColor: wyb ? 'rgba(249,115,22,0.1)' : c.surface2 }]}>
+            <Text style={styles.payIco}>{r === 'Karta' ? '💵💳' : '💵🏦'}</Text>
+            <View style={styles.flex}>
+              <Text style={[styles.plPkNazwa, { color: c.text }]}>Gotówka + {nazwa}</Text>
+              <Text style={[styles.plPkSub, { color: c.text2 }]}>
+                {wyb && podzial
+                  ? `gotówka ${zl(podzial.gotowka)} · ${nazwa} ${zl(r === 'Karta' ? podzial.karta : podzial.przelew)} — stuknij, żeby zmienić`
+                  : `wpisujesz ile gotówką, reszta liczy się jako ${nazwa}`}
+              </Text>
+            </View>
+          </Pressable>
+        );
+      })}
       <Numpad ustawienia={np} onZamknij={() => setNp(null)} />
       <Przyciski>
         <Przycisk tekst="Anuluj" rodzaj="anuluj" onPress={onZamknij} />

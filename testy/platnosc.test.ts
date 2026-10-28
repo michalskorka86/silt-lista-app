@@ -10,6 +10,13 @@ test('gotówka + karta: część gotówką, reszta kartą', () => {
   assert.equal(opisPlatnosci('Mieszana', 300, 780), 'Gotówka 300 zł + Karta 480 zł');
 });
 
+test('gotówka + przelew: część gotówką, reszta przelewem; stara grupa bez pola = karta', () => {
+  assert.deepEqual(podzialPlatnosci('Mieszana', 300, 780, 'Przelew'), { gotowka: 300, karta: 0, przelew: 480, brak: 0 });
+  assert.equal(opisPlatnosci('Mieszana', 300, 780, 'Przelew'), 'Gotówka 300 zł + Przelew 480 zł');
+  assert.deepEqual(podzialPlatnosci('Mieszana', 300, 780, null), { gotowka: 300, karta: 480, przelew: 0, brak: 0 });
+  assert.deepEqual(podzialPlatnosci('Mieszana', 300, 780, ''), { gotowka: 300, karta: 480, przelew: 0, brak: 0 });
+});
+
 test('gotówka większa niż do zapłaty → cała kwota gotówką, karta 0', () => {
   assert.deepEqual(podzialPlatnosci('Mieszana', 1000, 780), { gotowka: 780, karta: 0, przelew: 0, brak: 0 });
 });
