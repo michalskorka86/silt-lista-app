@@ -28,7 +28,7 @@ export type StanSynchronizacji = {
 };
 
 const PACZKA = 100;
-const PRACOWNICY_CO_MS = 6 * 3600 * 1000;
+const PRACOWNICY_CO_MS = 3600 * 1000;
 
 // ── Logowanie ─────────────────────────────────────────────────
 
@@ -223,6 +223,9 @@ async function odswiezPracownikow(db: Baza, klient: Klient): Promise<void> {
     /* Statystyki nie odpowiadają — zostaje ostatnia lista; pensję można wpisać ręcznie */
   }
 }
+
+/** Przy następnej synchronizacji pobierz pracowników od razu (np. po otwarciu „Dodaj instruktora”). */
+export const pobierzPracownikowPrzySync = (db: Baza) => setUstawienie(db, 'pracownicy_kiedy', null);
 
 export async function wczytajPracownikow(db: Baza): Promise<Pracownik[]> {
   try {

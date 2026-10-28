@@ -16,6 +16,7 @@ import { dataKrotko, zl } from '@/logika/format';
 import { brakiDnia, opisBrakow } from '@/logika/kontrola';
 import { usunPensje, usunWydatek, zmienPensje } from '@/logika/lista';
 import { useSync } from '@/sync/SyncProvider';
+import { pobierzPracownikowPrzySync } from '@/sync/synchronizacja';
 import { useMotyw } from '@/theme/motyw';
 
 /** Wydatki, pensje, podsumowanie dnia i wysyłka statystyk (#screen-wydatki z v19). */
@@ -24,7 +25,7 @@ export default function WydatkiDnia() {
   const { c } = useMotyw();
   const db = useSQLiteContext();
   const { potwierdz, numpad } = useKomunikaty();
-  const { wyslijStatystyki } = useSync();
+  const { wyslijStatystyki, synchronizujTeraz } = useSync();
   const dzien = useDzien(data);
   const pracownicy = usePracownicy();
   const [wydatek, setWydatek] = useState<{ wydatek?: Wiersz<'wydatki'> } | null>(null);
@@ -109,7 +110,14 @@ export default function WydatkiDnia() {
               />
             </WierszKarty>
           ))}
-          <DodajWiersz tekst="＋ Dodaj instruktora" onPress={() => setPensja(true)} />
+          <DodajWiersz
+            tekst="＋ Dodaj instruktora"
+            onPress={() => {
+              setPensja(true);
+              // nowy pracownik dodany w Statystykach → pobierz listę od razu (bez czekania)
+              void pobierzPracownikowPrzySync(db).then(() => synchronizujTeraz());
+            }}
+          />
         </Karta>
 
         <Karta ico="📊" tytul="Podsumowanie dnia">
