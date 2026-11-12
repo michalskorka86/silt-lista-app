@@ -101,29 +101,18 @@ export default function PlanDnia() {
       <Pressable onPress={() => setData(przesun(data, -1))} style={[styles.strz, { backgroundColor: c.surface2, borderColor: c.border }]} hitSlop={6} accessibilityLabel="Dzień wcześniej">
         <Text style={[styles.strzTxt, { color: c.text }]}>←</Text>
       </Pressable>
-      <Pressable onPress={() => setKalendarz(true)} style={[styles.chip, waski && styles.rosnie, { borderColor: c.border, backgroundColor: c.surface2 }]} accessibilityLabel="Wybierz dzień">
-        <Text style={[styles.chipTxt, { color: c.text }]}>📅 {waski ? dataPL(data).slice(0, 5) : 'Wybierz dzień'}</Text>
+      <Pressable onPress={() => setKalendarz(true)} style={[styles.chip, waski && styles.rosnie, { borderColor: c.accent, backgroundColor: c.surface2 }]} accessibilityLabel="Wybierz dzień">
+        <Text style={[styles.chipTxt, { color: c.text }]}>📅 {dataPL(data)}</Text>
       </Pressable>
       <Pressable onPress={() => setData(przesun(data, 1))} style={[styles.strz, { backgroundColor: c.surface2, borderColor: c.border }]} hitSlop={6} accessibilityLabel="Dzień później">
         <Text style={[styles.strzTxt, { color: c.text }]}>→</Text>
       </Pressable>
-      {[
-        { iso: dzis, tekst: 'Dziś' },
-        { iso: jutro, tekst: 'Jutro' },
-      ].map((d) => (
-        <Pressable
-          key={d.tekst}
-          onPress={() => setData(d.iso)}
-          style={[styles.chip, { borderColor: data === d.iso ? c.accent : c.border, backgroundColor: data === d.iso ? 'rgba(249,115,22,0.12)' : c.surface2 }]}>
-          <Text style={[styles.chipTxt, { color: data === d.iso ? c.accent : c.text }]}>{d.tekst}</Text>
-        </Pressable>
-      ))}
     </>
   );
 
   return (
     <View style={[styles.root, { backgroundColor: c.bg }]}>
-      {/* pasek: ✕, dzień, edycja · strzałki, kalendarz, dziś / jutro (na telefonie w dwóch rzędach) */}
+      {/* pasek: ✕, dzień, edycja · strzałki, kalendarz (na telefonie w dwóch rzędach) */}
       <View style={[styles.bar, { paddingTop: insets.top + 8, backgroundColor: c.surface, borderBottomColor: c.border }]}>
         <View style={styles.barRzad}>
           <Pressable onPress={zamknij} style={[styles.x, { backgroundColor: c.surface2, borderColor: c.border }]} hitSlop={8} accessibilityLabel="Zamknij plan">

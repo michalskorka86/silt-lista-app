@@ -125,8 +125,9 @@ function TrescNowaGrupa({ data, instruktorId, cennik, onZamknij }: PropsNowaGrup
   const wybierzZPlanu = (g: GrupaPlanu) => {
     if (zPlanu?.id === g.id) return setZPlanu(null);
     setZPlanu(g);
+    // kwota z planu; przy samym „TAK” podpowiadamy 100 zł (najczęstszy zadatek) — do zmiany na klawiaturze
     const kw = kwotaZadatku(g.zadatek);
-    setZadatekPlanu(kw > 0 ? String(kw).replace('.', ',') : '');
+    setZadatekPlanu(kw > 0 ? String(kw).replace('.', ',') : bylZadatek(g.zadatek) ? '100' : '');
     setOrg(ladneImie(g.organizator));
     setBrakOrg(false);
     const a = cennik?.atrakcje.find((x) => x.klucz === g.atrakcja);
