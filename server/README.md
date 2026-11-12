@@ -9,7 +9,7 @@ i jej nie rusza — obie działają równolegle do czasu wyłączenia PWA.
    (kodowanie utf-8): `001_schemat.sql` (tabele + cennik z v19), `002_statystyki.sql`, `003_min_wersja.sql`.
    Każdy plik importuje się raz; przy aktualizacji wgrywa się tylko nowe numery.
 2. **Pliki** — wgraj do nowego folderu `lista-api/` (obok `lista/` i `statystyka/`):
-   `api.php`, `cron.php`, `bledy.php`, `panel.php`, `apk.php`, `.htaccess`, cały folder `lib/`.
+   `api.php`, `cron.php`, `bledy.php`, `panel.php`, `plan.php`, `apk.php`, `.htaccess`, cały folder `lib/`.
    Folderów `sql/` i `testy/` NIE wgrywaj.
 3. **Konfiguracja** — skopiuj `config.example.php` jako `config.php` w `lista-api/`
    i uzupełnij: użytkownik i hasło bazy, `LISTA_HASLO` (hasło tabletów), `CRON_KEY`,
@@ -40,6 +40,12 @@ i jej nie rusza — obie działają równolegle do czasu wyłączenia PWA.
 10. **Kopia miesiąca mailem** — w `config.php` wpisz `MIESIECZNY_MAIL` (adres). Od 3. dnia miesiąca cron (6:00)
     wysyła ZIP z poprzedniego miesiąca (to samo co „ZIP miesiąca” w panelu). Raz na miesiąc; nieudany — ponowi jutro.
     Sprawdzenie od razu: `https://filedops.pl/lista-api/cron.php?key=CRON_KEY&mail=teraz`.
+11. **🗓️ Plan dnia** (rozpiska dla instruktorów) — `https://filedops.pl/lista-api/plan.php`, to samo hasło co panel.
+    Dzień → grupy (godzina, organizator, atrakcja, uwagi, osoby, zadatek) + „Do spakowania” (graczy w jednym czasie,
+    kartony kulek PB / EM, worki masek, rzeczy do zabrania). Tablety pobierają plan przy synchronizacji: na ekranie
+    głównym „🗓️ Plan dnia” (dziś / jutro — do pakowania), na liście w dolnym menu „Plan”, a przy „＋ Dodaj grupę”
+    kafelki z organizatorami z planu. Na stronie widać, która grupa jest już na liście i u którego instruktora;
+    „🖨️ Drukuj” daje rozpiskę jak z Excela (A4 poziomo). Baza: `sql/008_plan_dnia.sql`.
 
 ## Zmiana cennika (do czasu panelu www)
 

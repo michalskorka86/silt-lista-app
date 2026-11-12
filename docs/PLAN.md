@@ -69,6 +69,7 @@ Pełna lista do odhaczania: plik SILT_Lista_aplikacja_plan.xlsx (u użytkownika)
 - [ ] Blokada starej wersji w aplikacji (Claude)
 - [x] Aktualizacje „w powietrzu” (bez nowej instalacji) (Claude) — EAS Update: GitHub → Actions → „Wyślij aktualizację”. Tablet pobiera przy starcie i po powrocie po 10 min przerwy; Opcje → ⬇️ od razu. Nowy APK tylko przy nowych modułach systemowych.
 - [x] PIN admina (Claude) — 4 cyfry do Archiwum i usuwania list. Podgląd dnia dla admina — NIE robimy (wszystko jest w PDF dnia; decyzja Michała 01.10).
+- [x] 🗓️ Plan dnia — rozpiska dla instruktorów (Claude, 12.11) — wpisywanie na stronie lista-api/plan.php (hasło panelu; zamiast PDF z Excela), tablet: kafelek „Plan dnia” na ekranie głównym (dziś / jutro, do pakowania), „Plan” w dolnym menu listy (cały ekran, ✕), „Do spakowania” z odhaczaniem (wspólne dla tabletów), grupy z uwagami — która przyszła robi się ciemniejsza, ale zostaje; ✅ przyszła / ❌ nie przyszła; przy „＋ Dodaj grupę” kafelki z organizatorami z planu (wpisują organizatora, atrakcję, ilość osób; instruktor w planie uzupełnia się sam); poprawki planu na tablecie z PIN-em admina. Liczby do spakowania wpisuje Michał (PB = Klasyk + Sportowy, EM = Emek + Gotcha; strona podpowiada sumy).
 
 ## 4. Panel www
 - [x] Panel w przeglądarce do przeglądania list (Claude) — lista-api/panel.php, hasło PANEL_HASLO; miesiąc → dni, dzień → raport jak PDF, druk całego miesiąca, ZIP miesiąca (HTML dni + CSV).

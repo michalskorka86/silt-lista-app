@@ -71,7 +71,32 @@ export const TABELE = {
       kwota: 'real', premia_stawka: 'real', kolejnosc: 'int',
     },
   },
+  // ── Plan dnia (rozpiska): wpisywany na stronie lista-api/plan.php, poprawiany na tablecie z PIN-em ──
+  plan_dni: {
+    pk: 'data',
+    kol: { data: 'text', pakowanie: 'json', do_zabrania: 'text', uwagi: 'text' },
+  },
+  plan_grupy: {
+    pk: 'id',
+    kol: {
+      id: 'text', data: 'text', godzina: 'text', organizator: 'text', atrakcja: 'text',
+      uwagi: 'text', osoby: 'int', zadatek: 'text', kolejnosc: 'int',
+    },
+  },
+  /** co się stało z grupą z planu — osobno, żeby poprawka planu na stronie nie kasowała odhaczenia */
+  plan_stan: {
+    pk: 'plan_id',
+    kol: { plan_id: 'text', data: 'text', status: 'text', grupa_id: 'text' },
+  },
+  /** „spakowane” — każda pozycja osobnym wierszem (dwa tablety nie nadpisują sobie odhaczeń) */
+  plan_odhaczenia: {
+    pk: 'id',
+    kol: { id: 'text', data: 'text', klucz: 'text', zrobione: 'bool' },
+  },
 } as const satisfies Record<string, OpisTabeli>;
+
+/** Tabele dodane po pierwszej wersji — po aktualizacji tablet dociąga je z serwera od zera. */
+export const TABELE_PLANU = ['plan_dni', 'plan_grupy', 'plan_stan', 'plan_odhaczenia'] as const;
 
 export type Tabela = keyof typeof TABELE;
 
@@ -185,6 +210,39 @@ export type Pensja = {
   kolejnosc: number;
 };
 
+/** Liczby w „Do spakowania” (wpisuje Michał na stronie planu). */
+export type Pakowanie = Partial<{
+  pb_osoby: number;
+  pb_kartony: number;
+  em_osoby: number;
+  em_kartony: number;
+  maski_worki: number;
+  gotcha_worki: number;
+  /** graczy w jednym czasie, klucz = atrakcja (klasyk, emek…) */
+  naraz: Record<string, number>;
+}>;
+
+export type PlanDzien = { data: string; pakowanie: Pakowanie | null; do_zabrania: string; uwagi: string };
+
+export type PlanGrupa = {
+  id: string;
+  data: string;
+  /** „09:00” albo „11:00-14:00” */
+  godzina: string;
+  organizator: string;
+  /** klucz atrakcji z cennika ('' = nie wiadomo) */
+  atrakcja: string;
+  uwagi: string;
+  osoby: number;
+  /** 'TAK' / 'NIE' / kwota — jak w rozpisce */
+  zadatek: string;
+  kolejnosc: number;
+};
+
+export type StatusPlanu = '' | 'przyszla' | 'nie';
+export type PlanStan = { plan_id: string; data: string; status: StatusPlanu; grupa_id: string | null };
+export type PlanOdhaczenie = { id: string; data: string; klucz: string; zrobione: boolean };
+
 export type Rekordy = {
   listy: Lista;
   instruktorzy: Instruktor;
@@ -195,6 +253,10 @@ export type Rekordy = {
   faktury: Faktura;
   wydatki: Wydatek;
   pensje: Pensja;
+  plan_dni: PlanDzien;
+  plan_grupy: PlanGrupa;
+  plan_stan: PlanStan;
+  plan_odhaczenia: PlanOdhaczenie;
 };
 
 /** Wiersz z bazy tabletu (z kolumnami synchronizacji). */

@@ -1,12 +1,14 @@
 import { useSQLiteContext } from 'expo-sqlite';
 import { useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Fonts } from '@/constants/theme';
 import type { Platnosc, SprzetGracza, Wiersz } from '@/db/tabele';
 import type { Atrakcja, Cennik, Pakiet } from '@/logika/cennik';
 import { liczba, num, zl } from '@/logika/format';
 import { imionaZMowy } from '@/logika/glos';
+import { kafelkiPlanu, ladneImie, polaczZPlanem, type GrupaPlanu } from '@/logika/plan';
+import { usePlan } from '@/hooks/useDane';
 import { podzialPlatnosci } from '@/logika/platnosc';
 import { brutto, doPola, netto, zPola } from '@/logika/vat';
 import {
@@ -115,6 +117,19 @@ function TrescNowaGrupa({ data, instruktorId, cennik, onZamknij }: PropsNowaGrup
   const [fKdod, setFKdod] = useState('');
   const [fDym, setFDym] = useState('');
   const [fCatering, setFCatering] = useState(false);
+  // 🗓️ grupa z planu dnia: kafelek wpisuje organizatora, atrakcję i ilość osób, a po dodaniu odhacza ją w planie
+  const plan = usePlan(data);
+  const zPlanuLista = kafelkiPlanu(plan);
+  const [zPlanu, setZPlanu] = useState<GrupaPlanu | null>(null);
+  const wybierzZPlanu = (g: GrupaPlanu) => {
+    if (zPlanu?.id === g.id) return setZPlanu(null);
+    setZPlanu(g);
+    setOrg(ladneImie(g.organizator));
+    setBrakOrg(false);
+    const a = cennik?.atrakcje.find((x) => x.klucz === g.atrakcja);
+    if (a) setAtr(a);
+    if (g.osoby) setReczneOsoby(String(g.osoby));
+  };
 
   const dalej = () => {
     if (!org.trim()) {
@@ -134,6 +149,7 @@ function TrescNowaGrupa({ data, instruktorId, cennik, onZamknij }: PropsNowaGrup
     if (reczny) pakiet = { ...pakiet, typ: 'grupa', cena: zPola(Math.max(0, num(recznaKasa)), firma), limit: 0, extra: 0 };
     else if (firma) pakiet = { ...pakiet, cena: brutto(Math.max(0, num(fCena))) };
     const id = await dodajGrupe(db, data, instruktorId, org.trim(), atr, pakiet);
+    if (zPlanu) await polaczZPlanem(db, zPlanu, id);
     if (firma) {
       await zmienGrupe(db, id, {
         firma: 1,
@@ -164,6 +180,34 @@ function TrescNowaGrupa({ data, instruktorId, cennik, onZamknij }: PropsNowaGrup
       }>
       {krok === 1 ? (
         <>
+          {zPlanuLista.length ? (
+            <>
+              <Text style={[styles.label, { color: c.text2 }]}>🗓️ Z planu dnia — stuknij, żeby wpisać</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.bezFlex} contentContainerStyle={styles.planRzad} keyboardShouldPersistTaps="handled">
+                {zPlanuLista.map((g) => {
+                  const a = cennik?.atrakcje.find((x) => x.klucz === g.atrakcja);
+                  const wyb = zPlanu?.id === g.id;
+                  return (
+                    <Pressable
+                      key={g.id}
+                      onPress={() => wybierzZPlanu(g)}
+                      style={[
+                        styles.planKafel,
+                        { borderColor: wyb ? c.accent : c.border, borderLeftColor: a?.kolor ?? c.border2, backgroundColor: wyb ? 'rgba(249,115,22,0.12)' : c.surface2 },
+                      ]}>
+                      <Text style={[styles.planGodz, { color: c.text2 }]}>
+                        {g.godzina || '—'} · {a ? (a.stat === 'GOTHA' ? 'GOTCHA' : a.stat.replace('PAINTBALL ', '')) : '?'} · {g.osoby || '?'} os.
+                      </Text>
+                      <Text style={[styles.planOrg, { color: c.text }]} numberOfLines={1}>
+                        {wyb ? '✓ ' : ''}
+                        {ladneImie(g.organizator)}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            </>
+          ) : null}
           <Pole
             ref={poleOrg}
             etykieta="Imię organizatora *"
@@ -177,6 +221,7 @@ function TrescNowaGrupa({ data, instruktorId, cennik, onZamknij }: PropsNowaGrup
             autoFocus
             autoCapitalize="words"
             style={brakOrg ? { borderColor: c.red } : undefined}
+            styleWrap={styles.bezFlex}
           />
           {brakOrg ? <Text style={[styles.brakOrg, { color: c.red }]}>Wpisz imię organizatora — bez niego nie da się dodać grupy.</Text> : null}
           <Text style={[styles.label, { color: c.text2 }]}>Atrakcja</Text>
@@ -212,6 +257,14 @@ function TrescNowaGrupa({ data, instruktorId, cennik, onZamknij }: PropsNowaGrup
         </>
       ) : (
         <>
+          {zPlanu ? (
+            <View style={[styles.planInfo, { backgroundColor: c.surface2, borderColor: c.border }]}>
+              <Text style={[styles.planInfoTxt, { color: c.text }]}>
+                🗓️ Z planu: {zPlanu.godzina || '—'} · {zPlanu.osoby || '?'} os.{zPlanu.zadatek ? ` · zadatek ${zPlanu.zadatek}` : ''}
+                {zPlanu.uwagi ? `\n${zPlanu.uwagi}` : ''}
+              </Text>
+            </View>
+          ) : null}
           <ListaPakietow pakiety={atr?.pakiety ?? []} wybrany={pk} onWybierz={setPk} />
           {reczny ? (
             <>
@@ -1232,6 +1285,13 @@ function TrescFaktura({ grupa, onZamknij }: { grupa: GrupaPelna; onZamknij: () =
 }
 
 const styles = StyleSheet.create({
+  planRzad: { gap: 8, paddingBottom: 12 },
+  bezFlex: { flexGrow: 0, flexShrink: 0, flexBasis: 'auto' },
+  planKafel: { borderWidth: 1, borderLeftWidth: 6, borderRadius: 10, paddingVertical: 9, paddingHorizontal: 12, minWidth: 170, maxWidth: 260 },
+  planGodz: { fontFamily: Fonts.bold, fontSize: 11 },
+  planOrg: { fontFamily: Fonts.extrabold, fontSize: 15, marginTop: 2 },
+  planInfo: { borderWidth: 1, borderRadius: 10, padding: 10, marginBottom: 12 },
+  planInfoTxt: { fontFamily: Fonts.semibold, fontSize: 13, lineHeight: 19 },
   imieRzad: { flexDirection: 'row', alignItems: 'flex-end', gap: 8 },
   payMix: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderWidth: 1.5, borderRadius: 10, marginTop: 10 },
   gratis: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderWidth: 1.5, borderRadius: 10, marginTop: 10 },

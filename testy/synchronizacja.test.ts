@@ -19,7 +19,8 @@ import { odczytajKartke } from '../src/logika/kartka';
 import { BladSerwera, utworzKlienta } from '../src/sync/klient';
 import { jestPinAdmina, sprawdzHaslo, sprawdzPin, synchronizuj, tokenTabletu, wyslijStatystyki, zaloguj } from '../src/sync/synchronizacja';
 import { dodajPensje, zapiszWydatek } from '../src/logika/lista';
-import { setUstawienie } from '../src/db/ustawienia';
+import { getUstawienie, setUstawienie } from '../src/db/ustawienia';
+import { odhacz, ustawStatusPlanu, wczytajPlan, zapiszDzienPlanu, zapiszGrupePlanu } from '../src/logika/plan';
 
 const API = process.env.SILT_API;
 const HASLO = 'test123';
@@ -42,9 +43,9 @@ const wczoraj = (() => {
 test('synchronizacja z serwerem', { skip: !API && 'brak SILT_API (serwer testowy)' }, async (t) => {
   const { db, klient } = await nowyTablet();
 
-  await t.test('migracje: baza tabletu w wersji 6 (płatność gotówka + przelew)', async () => {
+  await t.test('migracje: baza tabletu w wersji 7 (plan dnia)', async () => {
     const v = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
-    assert.equal(v!.user_version, 6);
+    assert.equal(v!.user_version, 7);
   });
 
   await t.test('bez logowania → „zaloguj”, złe hasło → błąd, dobre → token', async () => {
@@ -153,6 +154,35 @@ test('synchronizacja z serwerem', { skip: !API && 'brak SILT_API (serwer testowy
     const poz = await wczytajGdzie(t2.db, 'pozycje', 'gracz_id = ?', ['p-1']);
     assert.equal(poz.length, 6);
     assert.equal(poz.find((p) => p.id === 'i-0')?.dokupione, true);
+  });
+
+  await t.test('plan dnia: poprawka i „przyszła” z jednego tabletu → drugi tablet; po aktualizacji aplikacji plan dociąga się od zera', async () => {
+    const PD = '2026-11-21';
+    const pid = await zapiszGrupePlanu(db, PD, { godzina: '09:00', organizator: 'JERZY NOWAK', atrakcja: 'emek', uwagi: 'WIATA', osoby: 20, zadatek: 'NIE' });
+    await zapiszDzienPlanu(db, PD, { pakowanie: { pb_kartony: 15 }, do_zabrania: 'AGREGAT' });
+    await ustawStatusPlanu(db, { id: pid, data: PD }, 'nie');
+    await odhacz(db, PD, 'pb_kartony', true);
+    assert.equal((await synchronizuj(db, klient)).stan, 'ok');
+    assert.equal(await niewyslane(db), 0);
+
+    const t2 = await nowyTablet();
+    await zaloguj(t2.db, t2.klient, HASLO, 'drugi-plan', '1.0.0');
+    assert.equal((await synchronizuj(t2.db, t2.klient)).stan, 'ok');
+    let p = await wczytajPlan(t2.db, PD);
+    assert.equal(p.grupy[0]?.organizator, 'JERZY NOWAK');
+    assert.equal(p.grupy[0]?.status, 'nie');
+    assert.equal(p.dzien?.pakowanie?.pb_kartony, 15);
+    assert.ok(p.spakowane.has('pb_kartony'));
+
+    // stara wersja aplikacji pobrała już wszystko „od rev”, ale bez tabel planu → po aktualizacji dociąga je
+    await t2.db.runAsync('DELETE FROM plan_grupy');
+    await t2.db.runAsync('DELETE FROM plan_dni');
+    await setUstawienie(t2.db, 'dociagnij_tabele', 'plan_dni,plan_grupy');
+    assert.equal((await synchronizuj(t2.db, t2.klient)).stan, 'ok');
+    p = await wczytajPlan(t2.db, PD);
+    assert.equal(p.grupy.length, 1);
+    assert.equal(p.dzien?.do_zabrania, 'AGREGAT');
+    assert.equal(await getUstawienie(t2.db, 'dociagnij_tabele'), null);
   });
 
   await t.test('cron 6:00 wysyła statystyki i SMS → tablet widzi to po synchronizacji', async () => {

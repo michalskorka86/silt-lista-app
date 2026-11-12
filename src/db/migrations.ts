@@ -224,5 +224,58 @@ export async function migrateDbIfNeeded(db: SQLiteDatabase) {
     version = 6;
   }
 
+  if (version < 7) {
+    const sync = `
+        zmieniono TEXT NOT NULL,
+        usunieto  TEXT,
+        rev       INTEGER`;
+    await transakcja(db, async (tx) => {
+      await tx.execAsync(`
+        -- Plan dnia (rozpiska): grupy z godzinami i uwagami, co spakować, odhaczenia.
+        CREATE TABLE IF NOT EXISTS plan_dni (
+          data TEXT PRIMARY KEY NOT NULL,
+          pakowanie TEXT,
+          do_zabrania TEXT NOT NULL DEFAULT '',
+          uwagi TEXT NOT NULL DEFAULT '',
+          ${sync}
+        );
+        CREATE TABLE IF NOT EXISTS plan_grupy (
+          id TEXT PRIMARY KEY NOT NULL,
+          data TEXT NOT NULL,
+          godzina TEXT NOT NULL DEFAULT '',
+          organizator TEXT NOT NULL,
+          atrakcja TEXT NOT NULL DEFAULT '',
+          uwagi TEXT NOT NULL DEFAULT '',
+          osoby INTEGER NOT NULL DEFAULT 0,
+          zadatek TEXT NOT NULL DEFAULT '',
+          kolejnosc INTEGER NOT NULL DEFAULT 0,
+          ${sync}
+        );
+        CREATE INDEX IF NOT EXISTS plan_grupy_data ON plan_grupy (data);
+        CREATE TABLE IF NOT EXISTS plan_stan (
+          plan_id TEXT PRIMARY KEY NOT NULL,
+          data TEXT NOT NULL,
+          status TEXT NOT NULL DEFAULT '',
+          grupa_id TEXT,
+          ${sync}
+        );
+        CREATE INDEX IF NOT EXISTS plan_stan_data ON plan_stan (data);
+        CREATE TABLE IF NOT EXISTS plan_odhaczenia (
+          id TEXT PRIMARY KEY NOT NULL,
+          data TEXT NOT NULL,
+          klucz TEXT NOT NULL,
+          zrobione INTEGER NOT NULL DEFAULT 0,
+          ${sync}
+        );
+        CREATE INDEX IF NOT EXISTS plan_odhaczenia_data ON plan_odhaczenia (data);
+        -- stara wersja aplikacji pomijała te tabele przy pobieraniu → dociągnij je raz od początku
+        INSERT INTO ustawienia (klucz, wartosc) VALUES ('dociagnij_tabele', 'plan_dni,plan_grupy,plan_stan,plan_odhaczenia')
+          ON CONFLICT(klucz) DO UPDATE SET wartosc = excluded.wartosc;
+        PRAGMA user_version = 7;
+      `);
+    });
+    version = 7;
+  }
+
   await db.execAsync(`PRAGMA user_version = ${version}`);
 }

@@ -8,6 +8,7 @@ import { PasekNowejWersji } from '@/components/NowaWersja';
 import { Tile } from '@/components/Tile';
 import { TopBar } from '@/components/TopBar';
 import { Fonts } from '@/constants/theme';
+import { dzisISO } from '@/logika/format';
 import { useMotyw } from '@/theme/motyw';
 
 /** Ekran startowy — układ jak #screen-home w v19. */
@@ -39,6 +40,13 @@ export default function Home() {
             <Tile ico="📅" nazwa="Rezerwacje" opis="Podgląd kalendarza" onPress={() => router.push('/rezerwacje')} style={styles.half} />
             <Tile ico="⚙️" nazwa="Opcje" opis="Synchronizacja, kiosk" onPress={() => setOpcje(true)} style={styles.half} />
           </View>
+          <Tile
+            ico="🗓️"
+            poziomo
+            nazwa="Plan dnia"
+            opis="Co spakować, które grupy przyjadą (dziś / jutro)"
+            onPress={() => router.push({ pathname: '/plan/[data]', params: { data: dzisISO() } })}
+          />
         </View>
 
         <Text style={[styles.ver, { color: c.text3 }]}>SILT Lista {wersja} · aplikacja</Text>

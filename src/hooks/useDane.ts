@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { nasluchujZmian } from '@/db/zapis';
 import { wczytajCennik, type Cennik } from '@/logika/cennik';
 import { datyList, listyMiesiaca, wczytajDzien, type Dzien, type ListaArchiwum } from '@/logika/lista';
+import { wczytajPlan, type Plan } from '@/logika/plan';
 import { wczytajPracownikow, type Pracownik } from '@/sync/synchronizacja';
 
 /** Odświeża dane po każdej zmianie na tablecie albo z serwera (zbiera kilka zmian w jedno odświeżenie). */
@@ -65,4 +66,13 @@ export function usePracownicy() {
   const wczytaj = useCallback(async () => setLista(await wczytajPracownikow(db)), [db]);
   useOdswiezanie(wczytaj);
   return lista;
+}
+
+/** Plan dnia (rozpiska) z bazy tabletu — odświeża się po synchronizacji i po każdej zmianie listy. */
+export function usePlan(data: string | null) {
+  const db = useSQLiteContext();
+  const [plan, setPlan] = useState<Plan | null>(null);
+  const wczytaj = useCallback(async () => setPlan(data ? await wczytajPlan(db, data) : null), [db, data]);
+  useOdswiezanie(wczytaj);
+  return plan;
 }

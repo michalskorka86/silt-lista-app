@@ -351,6 +351,83 @@ $r = api('wyslij', ['zmiany' => [$zla]]);
 sprawdz('nieznana reszta płatności → odrzucono', wyniki($r) === ['odrzucono'], $r);
 
 
+echo "Plan dnia (strona plan.php + tablet)\n";
+$planUrl = preg_replace('#/api\.php$#', '/plan.php', $URL);
+$ciastkaP = tempnam(sys_get_temp_dir(), 'pln');
+$pl = function (string $q, ?array $post = null) use ($planUrl, $ciastkaP): array {
+    $ch = curl_init($planUrl . $q);
+    curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_COOKIEJAR => $ciastkaP, CURLOPT_COOKIEFILE => $ciastkaP, CURLOPT_HEADER => true]);
+    if ($post !== null) { curl_setopt($ch, CURLOPT_POST, true); curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($post)); }
+    $r = (string)curl_exec($ch);
+    $hs = (int)curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+    $out = ['naglowki' => substr($r, 0, $hs), 'tresc' => substr($r, $hs)];
+    curl_close($ch);
+    return $out;
+};
+$PD = '2026-11-14';
+$r = $pl('?d=' . $PD);
+sprawdz('plan bez logowania → formularz hasła', strpos($r['tresc'], 'name="haslo"') !== false && strpos($r['tresc'], 'Do spakowania') === false, mb_substr($r['tresc'], 0, 200));
+$pl('', ['haslo' => 'panel-test']);
+$r = $pl('?d=' . $PD);
+preg_match('/name="csrf" value="([0-9a-f]+)"/', $r['tresc'], $m);
+$csrf = $m[1] ?? '';
+sprawdz('plan po zalogowaniu: SOBOTA 14.11.2026, formularz z tokenem', $csrf !== '' && strpos($r['tresc'], 'SOBOTA') !== false && strpos($r['tresc'], '14.11.2026') !== false, mb_substr(strip_tags($r['tresc']), 0, 300));
+$form = ['csrf' => $csrf, 'd' => $PD, 'rev_dnia' => 0,
+    'g' => [
+        ['id' => '', 'godzina' => '09:00', 'organizator' => 'JERZY NOWAK', 'atrakcja' => 'emek', 'uwagi' => "WIATA W LESIE /\n OGNISKO SAMO", 'osoby' => '20', 'zadatek' => 'NIE'],
+        ['id' => '', 'godzina' => '11:00', 'organizator' => 'DAMIAN MUCHA', 'atrakcja' => 'asg', 'uwagi' => '16 OS NA WYP.', 'osoby' => '31', 'zadatek' => 'TAK'],
+        ['id' => '', 'godzina' => '', 'organizator' => '', 'atrakcja' => '', 'uwagi' => '', 'osoby' => '', 'zadatek' => ''],
+    ],
+    'pak' => ['pb_osoby' => '38', 'pb_kartony' => '15', 'maski_worki' => '10', 'naraz' => ['klasyk' => '32', 'emek' => '41']],
+    'do_zabrania' => 'ŚMIESZNE STROJE / ŚWIECE DYMNE', 'uwagi' => ''];
+$pl('', array_merge($form, ['csrf' => 'zly']));
+sprawdz('plan: formularz bez dobrego tokenu → nic nie zapisane', (int)$pdo->query("SELECT COUNT(*) FROM plan_grupy WHERE data='$PD'")->fetchColumn() === 0);
+$r = $pl('', $form);
+$pg = $pdo->query("SELECT * FROM plan_grupy WHERE data='$PD' ORDER BY kolejnosc")->fetchAll(PDO::FETCH_ASSOC);
+$pdz = $pdo->query("SELECT * FROM plan_dni WHERE data='$PD'")->fetch(PDO::FETCH_ASSOC);
+$pak = json_decode((string)($pdz['pakowanie'] ?? ''), true);
+sprawdz('plan: zapis 2 grup (pusty wiersz pominięty), uwagi w jednej linii, pakowanie jako liczby',
+    count($pg) === 2 && $pg[0]['organizator'] === 'JERZY NOWAK' && $pg[0]['uwagi'] === 'WIATA W LESIE / OGNISKO SAMO' && (int)$pg[1]['osoby'] === 31
+    && $pg[0]['tablet_id'] === 'panel' && ($pak['pb_kartony'] ?? null) === 15 && ($pak['naraz']['emek'] ?? null) === 41 && $pdz['do_zabrania'] === 'ŚMIESZNE STROJE / ŚWIECE DYMNE',
+    [$pg, $pdz]);
+$revPrzed = (int)$pdo->query("SELECT rev FROM plan_grupy WHERE id='" . $pg[0]['id'] . "'")->fetchColumn();
+$pl('', array_merge($form, ['g' => [array_merge($form['g'][0], ['id' => $pg[0]['id'], 'rev' => $pg[0]['rev']]), array_merge($form['g'][1], ['id' => $pg[1]['id'], 'rev' => $pg[1]['rev']])], 'rev_dnia' => $pdz['rev']]));
+sprawdz('plan: zapis bez zmian nie rusza wierszy (rev ten sam)', (int)$pdo->query("SELECT rev FROM plan_grupy WHERE id='" . $pg[0]['id'] . "'")->fetchColumn() === $revPrzed);
+
+$r = api('pobierz', null, ['od_rev' => 0, 'tabele' => 'plan_grupy,plan_dni']);
+sprawdz('tablet: pobierz &tabele=plan_grupy,plan_dni → tylko plan (2 grupy, dzień, bez list)',
+    count($r['dane']['plan_grupy'] ?? []) === 2 && count($r['dane']['plan_dni'] ?? []) === 1 && !isset($r['dane']['grupy']) && ($r['dane']['plan_dni'][0]['pakowanie']['pb_kartony'] ?? null) === 15, array_keys($r['dane'] ?? []));
+$r = api('pobierz', null, ['od_rev' => 0]);
+sprawdz('tablet: zwykłe pobierz zawiera też plan', count($r['dane']['plan_grupy'] ?? []) >= 2 && count($r['dane']['grupy'] ?? []) > 0);
+
+$T9 = gmdate('Y-m-d\TH:i:s.000\Z');
+$r = api('wyslij', ['zmiany' => [
+    ['id' => 'ps1', 'tabela' => 'plan_stan', 'rekord' => ['plan_id' => $pg[0]['id'], 'data' => $PD, 'status' => 'przyszla', 'grupa_id' => 'g2'], 'zmieniono' => $T9, 'usunieto' => null],
+    ['id' => 'ps2', 'tabela' => 'plan_stan', 'rekord' => ['plan_id' => $pg[1]['id'], 'data' => $PD, 'status' => 'nie', 'grupa_id' => null], 'zmieniono' => $T9, 'usunieto' => null],
+    ['id' => 'ps3', 'tabela' => 'plan_odhaczenia', 'rekord' => ['id' => 'po-' . $PD . '-pb_kartony', 'data' => $PD, 'klucz' => 'pb_kartony', 'zrobione' => true], 'zmieniono' => $T9, 'usunieto' => null],
+    ['id' => 'ps4', 'tabela' => 'plan_stan', 'rekord' => ['plan_id' => 'x1', 'data' => $PD, 'status' => 'byla', 'grupa_id' => null], 'zmieniono' => $T9, 'usunieto' => null],
+]]);
+sprawdz('tablet: przyszła / nie przyszła / spakowane → zapisano; zły status → odrzucono', wyniki($r) === ['zapisano', 'zapisano', 'zapisano', 'odrzucono'], $r);
+$r = $pl('?d=' . $PD);
+sprawdz('plan: strona pokazuje stan z tabletu (na liście + instruktor, nie przyszła)', strpos($r['tresc'], '✅ na liście') !== false && strpos($r['tresc'], '❌ nie przyszła') !== false, mb_substr(strip_tags($r['tresc']), 0, 600));
+
+// poprawka z tabletu (PIN) w czasie, gdy strona była otwarta → strona jej nie nadpisuje
+$r = api('wyslij', ['zmiany' => [['id' => 'ps5', 'tabela' => 'plan_grupy', 'rekord' => array_merge(array_intersect_key($pg[1], array_flip(['id', 'data', 'godzina', 'organizator', 'atrakcja', 'uwagi', 'zadatek', 'kolejnosc'])), ['osoby' => 33]), 'zmieniono' => gmdate('Y-m-d\TH:i:s.000\Z', time() + 2), 'usunieto' => null]]]);
+$r = $pl('', array_merge($form, ['g' => [array_merge($form['g'][0], ['id' => $pg[0]['id'], 'rev' => $pg[0]['rev'], 'godzina' => '09:30']), array_merge($form['g'][1], ['id' => $pg[1]['id'], 'rev' => $pg[1]['rev'], 'osoby' => '35'])], 'rev_dnia' => $pdz['rev']]));
+sprawdz('plan: wiersz zmieniony w międzyczasie na tablecie nie jest nadpisany, reszta tak',
+    (int)$pdo->query("SELECT osoby FROM plan_grupy WHERE id='" . $pg[1]['id'] . "'")->fetchColumn() === 33
+    && $pdo->query("SELECT godzina FROM plan_grupy WHERE id='" . $pg[0]['id'] . "'")->fetchColumn() === '09:30'
+    && strpos(urldecode($r['naglowki']), 'DAMIAN MUCHA') !== false, $r['naglowki']);
+$g0 = $pdo->query("SELECT * FROM plan_grupy WHERE id='" . $pg[0]['id'] . "'")->fetch(PDO::FETCH_ASSOC);
+$pl('', ['csrf' => $csrf, 'd' => $PD, 'g' => [array_merge($form['g'][0], ['id' => $g0['id'], 'rev' => $g0['rev'], 'usun' => '1'])], 'pak' => $form['pak'], 'do_zabrania' => $form['do_zabrania'], 'uwagi' => '']);
+sprawdz('plan: 🗑 usuń → wiersz w koszu (tablet dostanie usunieto)', $pdo->query("SELECT usunieto FROM plan_grupy WHERE id='" . $g0['id'] . "'")->fetchColumn() !== null);
+$pl('', ['csrf' => $csrf, 'd' => '2026-11-21', 'kopiuj' => '1', 'z' => $PD]);
+sprawdz('plan: kopiuj do pustego dnia (bez usuniętych, bez odhaczeń)', (int)$pdo->query("SELECT COUNT(*) FROM plan_grupy WHERE data='2026-11-21' AND usunieto IS NULL")->fetchColumn() === 1
+    && (int)$pdo->query("SELECT COUNT(*) FROM plan_stan WHERE data='2026-11-21'")->fetchColumn() === 0);
+$r = $pl('?d=' . $PD . '&druk=1');
+sprawdz('plan: wydruk z organizatorem i sumą osób', strpos($r['tresc'], 'DAMIAN MUCHA') !== false && strpos($r['tresc'], 'RAZEM') !== false);
+@unlink($ciastkaP);
+
 echo "Wylogowanie i blokada haseł\n";
 $r = api('wyloguj', []);
 $r = api('start');

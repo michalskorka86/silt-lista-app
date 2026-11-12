@@ -110,6 +110,36 @@ const TABELE = [
         'premia_stawka' => 'dec',
         'kolejnosc'     => 'int',
     ]],
+    // ── Plan dnia (rozpiska): wpisywany na stronie plan.php, poprawiany na tablecie z PIN-em ──
+    'plan_dni' => ['pk' => 'data', 'kol' => [
+        'data'        => 'date!',
+        'pakowanie'   => 'json?',
+        'do_zabrania' => 'str:500',
+        'uwagi'       => 'str:500',
+    ]],
+    'plan_grupy' => ['pk' => 'id', 'kol' => [
+        'id'          => 'id!',
+        'data'        => 'date!',
+        'godzina'     => 'str:20',
+        'organizator' => 'str:80!',
+        'atrakcja'    => 'str:20',
+        'uwagi'       => 'str:500',
+        'osoby'       => 'int',
+        'zadatek'     => 'str:20',
+        'kolejnosc'   => 'int',
+    ]],
+    'plan_stan' => ['pk' => 'plan_id', 'kol' => [
+        'plan_id'  => 'id!',
+        'data'     => 'date!',
+        'status'   => 'str:10',
+        'grupa_id' => 'id?',
+    ]],
+    'plan_odhaczenia' => ['pk' => 'id', 'kol' => [
+        'id'       => 'id!',
+        'data'     => 'date!',
+        'klucz'    => 'str:40!',
+        'zrobione' => 'bool',
+    ]],
 ];
 
 /** Dozwolone wartości kolumn tekstowych o zamkniętej liście. */
@@ -119,6 +149,7 @@ const WARTOSCI = [
     'grupy.platnosc_reszta' => ['', 'Karta', 'Przelew'],
     'pozycje.rodzaj'   => ['kulki', 'dym', 'inne'],
     'faktury.platnosc' => ['Gotówka', 'Karta', 'Przelew'],
+    'plan_stan.status' => ['', 'przyszla', 'nie'],
 ];
 
 function opis_kolumny(string $spec): array

@@ -8,7 +8,7 @@ import { useMotyw } from '@/theme/motyw';
 
 import { OknoMenu } from './Menu';
 
-/** Dolne menu listy (.nav-menu z v19): Dom / Lista / Wydatki / Menu. */
+/** Dolne menu listy (.nav-menu z v19): Dom / Lista / Wydatki / Plan dnia / Menu. */
 export function DolneMenu({ data }: { data: string }) {
   const { c } = useMotyw();
   const [menu, setMenu] = useState(false);
@@ -19,6 +19,7 @@ export function DolneMenu({ data }: { data: string }) {
     { ico: '🏠', nazwa: 'Dom', akt: false, onPress: () => router.dismissTo('/') },
     { ico: '📋', nazwa: 'Lista', akt: sciezka.startsWith('/lista'), onPress: () => router.replace({ pathname: '/lista/[data]', params: { data } }) },
     { ico: '📝', nazwa: 'Wydatki', akt: sciezka.startsWith('/wydatki'), onPress: () => router.replace({ pathname: '/wydatki/[data]', params: { data } }) },
+    { ico: '🗓️', nazwa: 'Plan', akt: false, onPress: () => router.push({ pathname: '/plan/[data]', params: { data } }) },
     { ico: '☰', nazwa: 'Menu', akt: menu, onPress: () => setMenu(true) },
   ];
 

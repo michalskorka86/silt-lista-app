@@ -147,9 +147,35 @@ async function wyslijKolejke(db: Baza, klient: Klient): Promise<void> {
 
 type OdpowiedzPobierz = { do_rev: number; wiecej: boolean; dane: Partial<Record<Tabela, Record<string, unknown>[]>> };
 
-async function pobierzZmiany(db: Baza, klient: Klient): Promise<void> {
-  let od = parseInt((await getUstawienie(db, 'rev')) ?? '0', 10) || 0;
+/**
+ * Tabele dodane w nowej wersji aplikacji (np. plan dnia): stara wersja pomijała je przy pobieraniu,
+ * więc po aktualizacji pobieramy je raz od rev 0 (tylko te tabele — listy zostają, jak są).
+ */
+async function dociagnijNoweTabele(db: Baza, klient: Klient): Promise<boolean> {
+  const lista = (await getUstawienie(db, 'dociagnij_tabele')) ?? '';
+  const tabele = lista.split(',').filter((t): t is Tabela => t in TABELE);
+  if (!tabele.length) return false;
+  let od = 0;
   let zmieniono = false;
+  for (let strona = 0; strona < 500; strona++) {
+    const r = await klient<OdpowiedzPobierz>('pobierz', { params: { od_rev: od, tabele: tabele.join(',') } });
+    await transakcja(db, async (tx) => {
+      for (const tabela of tabele) {
+        for (const w of r.dane[tabela] ?? []) {
+          if (await zastosujWiersz(tx, tabela, w)) zmieniono = true;
+        }
+      }
+    });
+    od = r.do_rev;
+    if (!r.wiecej) break;
+  }
+  await setUstawienie(db, 'dociagnij_tabele', null);
+  return zmieniono;
+}
+
+async function pobierzZmiany(db: Baza, klient: Klient): Promise<void> {
+  let zmieniono = await dociagnijNoweTabele(db, klient);
+  let od = parseInt((await getUstawienie(db, 'rev')) ?? '0', 10) || 0;
   for (let strona = 0; strona < 500; strona++) {
     const r = await klient<OdpowiedzPobierz>('pobierz', { params: { od_rev: od } });
     await transakcja(db, async (tx) => {

@@ -135,11 +135,14 @@ function zapamietaj_odrzucona(string $tabletId, string $zid, string $tabela, $re
  * Odpowiedź: {"ok":true, "od_rev":0, "do_rev":2000, "wiecej":true,
  *             "dane":{"listy":[…], "instruktorzy":[…], "grupy":[…], …}}
  * Zawiera też wiersze w koszu (usunieto != null). Tablet pyta dalej od do_rev, dopóki wiecej = true.
+ * &tabele=a,b — tylko te tabele (po aktualizacji aplikacji z nowymi tabelami: dociągnięcie od rev 0).
  * ------------------------------------------------------------------ */
 function akcja_pobierz(): void
 {
     $od = (int)($_GET['od_rev'] ?? 0);
     if ($od < 0) $od = 0;
+    // &tabele=plan_dni,plan_grupy — tylko wybrane tabele (tablet po aktualizacji dociąga nowe tabele od zera)
+    $tylko = array_values(array_filter(explode(',', (string)($_GET['tabele'] ?? '')), function ($t) { return isset(TABELE[$t]); }));
     $pdo = baza();
 
     // Jeden spójny obraz bazy dla licznika i wszystkich tabel.
@@ -150,6 +153,7 @@ function akcja_pobierz(): void
         $do = min($max, $od + ROZMIAR_STRONY_REV);
         $dane = [];
         foreach (TABELE as $tabela => $_) {
+            if ($tylko && !in_array($tabela, $tylko, true)) continue;
             $st = $pdo->prepare("SELECT * FROM `$tabela` WHERE rev > ? AND rev <= ? ORDER BY rev");
             $st->execute([$od, $do]);
             $dane[$tabela] = array_map(function ($w) use ($tabela) { return rekord_dla_tabletu($tabela, $w); }, $st->fetchAll());
