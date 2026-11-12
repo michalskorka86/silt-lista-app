@@ -8,11 +8,18 @@ declare(strict_types=1);
 /** GET ?akcja=rezerwacje&od=2026-10-01&do=2026-10-31 */
 function akcja_rezerwacje(): void
 {
+    $od = (string)($_GET['od'] ?? '');
+    $do = (string)($_GET['do'] ?? '');
+    $j = rez_pobierz($od, $do);
+    odpowiedz(['ok' => true, 'od' => $od, 'do' => $do, 'rezerwacje' => $j['data'] ?? [], 'atrakcje' => $j['atrakcje'] ?? []]);
+}
+
+/** Rezerwacje z podglad.php systemu rezerwacji (także dla strony planu dnia: „📥 Wczytaj z rezerwacji”). */
+function rez_pobierz(string $od, string $do): array
+{
     if (REZ_PODGLAD_URL === '' || strpos(REZ_PODGLAD_URL, 'TWOJA-DOMENA') !== false) {
         throw new BladApi('rez_konfiguracja', 'Podgląd rezerwacji nie jest skonfigurowany (REZ_PODGLAD_URL w config.php)', 503);
     }
-    $od = (string)($_GET['od'] ?? '');
-    $do = (string)($_GET['do'] ?? '');
     foreach ([$od, $do] as $d) {
         if (!preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $d, $m) || !checkdate((int)$m[2], (int)$m[3], (int)$m[1])) {
             throw new BladApi('zle_dane', 'Zła data');
@@ -30,5 +37,5 @@ function akcja_rezerwacje(): void
         throw new BladApi('rez_serwer', 'Serwer rezerwacji nie odpowiada (HTTP ' . $kod . ')', 502);
     }
     if (empty($j['ok'])) throw new BladApi('rez_serwer', 'Rezerwacje: ' . ($j['msg'] ?? 'błąd'), 502);
-    odpowiedz(['ok' => true, 'od' => $od, 'do' => $do, 'rezerwacje' => $j['data'] ?? [], 'atrakcje' => $j['atrakcje'] ?? []]);
+    return $j;
 }

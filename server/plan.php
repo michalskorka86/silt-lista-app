@@ -23,7 +23,7 @@ textarea{resize:vertical}input:focus,select:focus,textarea:focus{outline:none;bo
 .ok,.blad{margin:0 20px 12px;padding:10px 14px;border-radius:10px;font-weight:600}.ok{background:rgba(34,197,94,.12);color:#22c55e}.blad{background:rgba(239,68,68,.12);color:#ef4444}
 .sekcja{margin:0 20px 16px;padding:14px;background:#18181b;border:1px solid #27272a;border-radius:12px}
 .sekcja h3{margin:0 0 12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:16px}.razem{color:#a1a1aa;font-weight:600;font-size:13px;flex:1}
-.w{display:grid;grid-template-columns:26px 92px minmax(150px,1.2fr) 130px minmax(200px,2fr) 70px 90px auto;gap:8px;align-items:end;padding:8px 8px 8px 10px;margin-bottom:6px;border-radius:10px;background:#1f1f23;border-left:6px solid var(--k)}
+.w{display:grid;grid-template-columns:26px 112px minmax(150px,1.2fr) 130px minmax(200px,2fr) 70px 100px auto;gap:8px;align-items:end;padding:8px 8px 8px 10px;margin-bottom:6px;border-radius:10px;background:#1f1f23;border-left:6px solid var(--k)}
 .w.usuniety{opacity:.35}.lp{color:#71717a;font-weight:800;align-self:center}
 .f{display:flex;flex-direction:column;gap:3px}.f i{font-style:normal;font-size:11px;color:#a1a1aa;font-weight:700}
 .akc{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}.st{font-size:12px;font-weight:700;white-space:nowrap}.st.ok{color:#22c55e}.st.nie{color:#ef4444}
@@ -67,6 +67,22 @@ const PLAN_JS = '
     w.sort(function(a,b){return k(a)<k(b)?-1:k(a)>k(b)?1:0;}).forEach(function(x){wiersze.appendChild(x);});nr();zmien();};
   [].forEach.call(document.querySelectorAll("[data-wpisz]"),function(b){b.onclick=function(){var k=b.getAttribute("data-wpisz");
     document.querySelector("[name=\'pak["+k+"]\']").value=document.querySelector("[data-suma="+k+"]").textContent;zmien();};});
+  document.getElementById("zrez").onclick=function(){var b=this,info=document.getElementById("rezinfo");b.disabled=true;b.textContent="⏳ Wczytuję…";
+    fetch("plan.php?d="+f.querySelector("[name=d]").value+"&rez=1",{credentials:"same-origin"}).then(function(r){return r.json();}).then(function(j){
+      b.disabled=false;b.textContent="📥 Wczytaj z rezerwacji";info.hidden=false;
+      if(!j.ok){info.className="blad";info.textContent="Nie udało się: "+j.msg;return;}
+      function norm(t){return t.toLowerCase().replace(/\s+/g," ").trim();}
+      var sa={};[].forEach.call(wiersze.children,function(w){var o=norm(w.querySelector("[name$=\'[organizator]\']").value);if(o)sa[o]=1;});
+      var dod=0,jest=0;
+      j.wiersze.forEach(function(r){if(sa[norm(r.organizator)]){jest++;return;}
+        var w=[].filter.call(wiersze.children,function(x){return !x.querySelector("[name$=\'[organizator]\']").value.trim()&&!x.querySelector("[name$=\'[id]\']").value;})[0];
+        if(!w){document.getElementById("dodaj").click();w=wiersze.lastElementChild;}
+        function u(n,v){w.querySelector("[name$=\'["+n+"]\']").value=v;}
+        u("godzina",r.godzina);u("organizator",r.organizator);u("atrakcja",r.atrakcja);u("uwagi",r.uwagi);u("osoby",r.osoby||"");u("zadatek",r.zadatek);
+        kolor(w);dod++;});
+      info.className="ok";info.textContent=j.wiersze.length?("Wczytano z rezerwacji: "+dod+(jest?" (już w planie: "+jest+")":"")+" — sprawdź, popraw i kliknij „💾 Zapisz plan”."):"Brak rezerwacji SILT w tym dniu.";
+      if(dod){zmien();licz();document.getElementById("sortuj").click();}
+    }).catch(function(){b.disabled=false;b.textContent="📥 Wczytaj z rezerwacji";info.hidden=false;info.className="blad";info.textContent="Brak połączenia z serwerem rezerwacji.";});};
   licz();
 })();
 ';
@@ -113,6 +129,15 @@ if (isset($_GET['ok'])) $komunikat = mb_substr((string)$_GET['ok'], 0, 400);
 $atrakcje = plan_atrakcje();
 $plan = plan_dnia($data);
 
+if (isset($_GET['rez'])) {   // „📥 Wczytaj z rezerwacji” — JSON dla przycisku na stronie (nic nie zapisuje)
+    header('Content-Type: application/json; charset=utf-8');
+    try {
+        echo json_encode(['ok' => true, 'wiersze' => plan_z_rezerwacji($data)], JSON_UNESCAPED_UNICODE);
+    } catch (BladApi $e) {
+        echo json_encode(['ok' => false, 'msg' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
+    }
+    exit;
+}
 if (isset($_GET['druk'])) {
     druk_planu($plan, $atrakcje);
     exit;
@@ -201,7 +226,9 @@ function widok_planu(array $plan, array $atrakcje, array $dni, string $komunikat
         . '<form method="post" id="plan"><input type="hidden" name="csrf" value="' . r_h(panel_csrf()) . '"><input type="hidden" name="d" value="' . $data . '">'
         . '<input type="hidden" name="rev_dnia" value="' . (int)$plan['rev'] . '">'
         . '<div class="sekcja"><h3>Grupy <span class="razem">razem osób: <b id="razem">0</b></span>'
+        . '<button type="button" class="btn mal" id="zrez">📥 Wczytaj z rezerwacji</button>'
         . '<button type="button" class="btn mal" id="sortuj">↕ Ułóż po godzinie</button></h3>'
+        . '<div class="ok" id="rezinfo" hidden></div>'
         . '<div id="wiersze">' . $wiersze . '</div>'
         . '<button type="button" class="btn" id="dodaj">＋ Dodaj wiersz</button>'
         . '<p class="info">Zadatek: wpisz kwotę (np. 200) — przejdzie na tablet do grupy. Samo TAK = instruktor wpisze kwotę przy dodawaniu grupy.</p></div>'

@@ -426,6 +426,13 @@ sprawdz('plan: kopiuj do pustego dnia (bez usuniętych, bez odhaczeń)', (int)$p
     && (int)$pdo->query("SELECT COUNT(*) FROM plan_stan WHERE data='2026-11-21'")->fetchColumn() === 0);
 $r = $pl('?d=' . $PD . '&druk=1');
 sprawdz('plan: wydruk z organizatorem i sumą osób', strpos($r['tresc'], 'DAMIAN MUCHA') !== false && strpos($r['tresc'], 'RAZEM') !== false);
+$r = $pl('?d=2026-11-28&rez=1');
+$j = json_decode($r['tresc'], true);
+$w = $j['wiersze'][0] ?? [];
+sprawdz('plan: 📥 z rezerwacji — tylko SILT, godzina od-do, atrakcja z cennika, zadatek TAK 100, dodatki + uwagi + dla instruktora',
+    ($j['ok'] ?? false) && count($j['wiersze']) === 1 && $w['organizator'] === 'Jan Kowalski' && $w['godzina'] === '10:00-12:00' && $w['atrakcja'] === 'klasyk'
+    && $w['zadatek'] === 'TAK 100' && $w['osoby'] === 12 && $w['uwagi'] === 'Ognisko / Urodziny / DLA INSTRUKTORA: Przygotować 2 pola'
+    && (int)$pdo->query("SELECT COUNT(*) FROM plan_grupy WHERE data='2026-11-28'")->fetchColumn() === 0, $j);
 @unlink($ciastkaP);
 
 echo "Wylogowanie i blokada haseł\n";

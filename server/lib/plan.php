@@ -198,3 +198,52 @@ function plan_kopiuj(string $z, string $do): int
     }, $zrodlo['grupy']);
     return plan_zapisz_dzien($do, $grupy, $zrodlo['pakowanie'], $zrodlo['do_zabrania'], $zrodlo['uwagi'])['zapisane'];
 }
+
+/**
+ * „📥 Wczytaj z rezerwacji” na stronie planu: rezerwacje SILT z danego dnia → wiersze planu do sprawdzenia.
+ * Nic się nie zapisuje — strona wpisuje je do formularza, a Michał poprawia i klika „Zapisz plan”.
+ * Zadatek opłacony → „TAK 100” (standardowy zadatek), brak → „NIE”.
+ */
+function plan_z_rezerwacji(string $data): array
+{
+    require_once __DIR__ . '/rezerwacje.php';
+    $j = rez_pobierz($data, $data);
+    $atrakcje = baza()->query('SELECT klucz, nazwa, stat_nazwa FROM atrakcje')->fetchAll();
+    $wiersze = [];
+    foreach ($j['data'] ?? [] as $r) {
+        if (($r['data'] ?? '') !== $data || ($r['marka'] ?? 'silt') !== 'silt') continue;
+        $uwagi = [];
+        $dod = array_values(array_filter(array_map('trim', is_array($r['dodatki'] ?? null) ? $r['dodatki'] : [])));
+        if ($dod) $uwagi[] = implode(' / ', $dod);
+        if (trim((string)($r['uwagi'] ?? '')) !== '') $uwagi[] = trim((string)$r['uwagi']);
+        if (trim((string)($r['instrukcje'] ?? '')) !== '') $uwagi[] = 'DLA INSTRUKTORA: ' . trim((string)$r['instrukcje']);
+        if (empty($r['potw'])) $uwagi[] = '(NIEPOTWIERDZONA)';
+        $od = substr((string)($r['od'] ?? ''), 0, 5);
+        $do = substr((string)($r['do'] ?? ''), 0, 5);
+        $wiersze[] = [
+            'rez' => (int)($r['id'] ?? 0),
+            'godzina' => $od . ($do !== '' ? '-' . $do : ''),
+            'organizator' => trim((string)($r['klient'] ?? '')),
+            'atrakcja' => plan_klucz_atrakcji((string)($r['atrakcja'] ?? ''), $atrakcje),
+            'uwagi' => mb_substr(preg_replace('/\s+/u', ' ', implode(' / ', $uwagi)), 0, 500),
+            'osoby' => max(0, (int)($r['osoby'] ?? 0)),
+            'zadatek' => !empty($r['zadatek']) ? 'TAK 100' : 'NIE',
+        ];
+    }
+    usort($wiersze, function ($a, $b) { return strcmp($a['godzina'], $b['godzina']); });
+    return $wiersze;
+}
+
+/** Nazwa atrakcji z rezerwacji („Paintball Klasyczny”) → klucz z cennika listy (klasyk); '' gdy nie wiadomo. */
+function plan_klucz_atrakcji(string $nazwa, array $atrakcje): string
+{
+    $n = mb_strtolower(trim($nazwa));
+    if ($n === '') return '';
+    foreach ($atrakcje as $a) {
+        if ($n === mb_strtolower((string)$a['nazwa']) || $n === mb_strtolower((string)$a['stat_nazwa'])) return (string)$a['klucz'];
+    }
+    foreach (['laser' => 'laser', 'gel' => 'gel', 'gotcha' => 'gotcha', 'gotha' => 'gotcha', 'sport' => 'sportowy', 'emek' => 'emek', 'asg' => 'asg', 'klasy' => 'klasyk'] as $sl => $k) {
+        if (strpos($n, $sl) !== false) return $k;
+    }
+    return '';
+}
