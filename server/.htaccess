@@ -11,3 +11,6 @@ Options -Indexes
 </FilesMatch>
 
 RedirectMatch 403 /(lib|sql|testy)/
+
+# Krótkie adresy bez „.php”: /lista-api/plan → plan.php, /lista-api/panel → panel.php
+RedirectMatch 302 ^(.*)/(plan|panel)/?$ $1/$2.php
