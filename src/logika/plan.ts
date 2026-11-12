@@ -46,7 +46,9 @@ export async function wczytajPlan(db: Baza, data: string): Promise<Plan> {
       const s = stany.find((x) => x.plan_id === g.id);
       const gid = s?.grupa_id ?? null;
       const jest = !!gid && instr.has(gid);
-      return { ...g, status: s?.status ?? '', grupa_id: gid, naLiscie: jest, instruktor: jest ? (instr.get(gid!) ?? null) : null };
+      // „przyszła” ustawione przez dodanie grupy z kafelka: grupa (albo cała lista) skasowana → grupa w planie znowu czeka
+      const status = s?.status === 'przyszla' && gid && !jest ? '' : (s?.status ?? '');
+      return { ...g, status, grupa_id: gid, naLiscie: jest, instruktor: jest ? (instr.get(gid!) ?? null) : null };
     }),
     spakowane: new Set(odh.map((o) => o.klucz)),
   };

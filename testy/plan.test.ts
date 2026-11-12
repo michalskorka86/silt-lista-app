@@ -86,10 +86,13 @@ test('kafelek przy „Dodaj grupę” → grupa na liście z ilością osób, w 
   assert.equal(p.grupy[0].instruktor, 'Monika');
   assert.equal(zalatwiona(p.grupy[0]), true);
   assert.deepEqual(kafelkiPlanu(p).map((g) => g.id), ['p2', 'p3']);
-  // grupa usunięta z listy → w planie znowu czeka, kafelek wraca
+  // grupa usunięta z listy → w planie znowu czeka (nie ciemna), kafelek wraca
   await usun(db, 'grupy', gid);
   p = await wczytajPlan(db, D);
   assert.equal(p.grupy[0].naLiscie, false);
+  assert.equal(p.grupy[0].status, '');
+  assert.equal(zalatwiona(p.grupy[0]), false);
+  assert.equal(kafelkiPlanu(p).length, 3);
 });
 
 test('❌ nie przyszła → znika z kafelków, nie liczy się do sumy; cofnięcie przywraca', async () => {

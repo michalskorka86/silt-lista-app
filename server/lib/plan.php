@@ -46,6 +46,12 @@ function plan_dnia(string $data): array
          ORDER BY p.kolejnosc, p.godzina, p.id'
     );
     $st->execute([$data]);
+    $grupy = $st->fetchAll();
+    foreach ($grupy as &$g) {
+        // „przyszła” z kafelka, a grupa na liście skasowana → grupa w planie znowu czeka (jak na tablecie)
+        if ($g['status'] === 'przyszla' && $g['grupa_id'] !== null && !(int)$g['na_liscie']) $g['status'] = '';
+    }
+    unset($g);
     return [
         'data' => $data,
         'jest' => $dzien !== null,
@@ -53,7 +59,7 @@ function plan_dnia(string $data): array
         'pakowanie' => $pak,
         'do_zabrania' => $dzien['do_zabrania'] ?? '',
         'uwagi' => $dzien['uwagi'] ?? '',
-        'grupy' => $st->fetchAll(),
+        'grupy' => $grupy,
     ];
 }
 
