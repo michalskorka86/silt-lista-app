@@ -109,13 +109,27 @@ export function ladneImie(s: string): string {
     .replace(/(^|[\s-])(\p{L})/gu, (_, a: string, b: string) => a + b.toLocaleUpperCase('pl-PL'));
 }
 
+/**
+ * Kwota zadatku z rozpiski: „200”, „TAK 200 zł”, „150,50” → liczba; „TAK” / „NIE” / puste → 0
+ * (w rozpisce bywa samo TAK — wtedy instruktor wpisuje kwotę przy dodawaniu grupy).
+ */
+export function kwotaZadatku(z: string): number {
+  const m = /(\d+(?:[.,]\d{1,2})?)/.exec(z.replace(/\s+(?=\d{3}\b)/g, ''));
+  return m ? Math.round(parseFloat(m[1].replace(',', '.')) * 100) / 100 : 0;
+}
+
+/** Czy w rozpisce zaznaczono, że był zadatek (TAK albo kwota). */
+export const bylZadatek = (z: string) => /tak/i.test(z) || kwotaZadatku(z) > 0;
+
 /** Kafelki przy „Dodaj grupę”: grupy z planu, których jeszcze nie ma na liście (i które nie odpadły). */
 export const kafelkiPlanu = (plan: Plan | null) => (plan?.grupy ?? []).filter((g) => !g.naLiscie && g.status !== 'nie');
 
-/** Po dodaniu grupy z kafelka: ilość osób z planu + odhaczenie „przyszła” z powiązaniem do grupy. */
+/** Po dodaniu grupy z kafelka: ilość osób i zadatek z planu + odhaczenie „przyszła” z powiązaniem do grupy. */
 export async function polaczZPlanem(db: Baza, g: PlanGrupa, grupaId: string, zmiany: Partial<Grupa> = {}) {
   const osoby = Math.max(0, Math.round(g.osoby || 0));
-  if (osoby > 0 || Object.keys(zmiany).length) await zmienGrupe(db, grupaId, { ...(osoby > 0 ? { gracze_reczne: osoby } : {}), ...zmiany });
+  const zadatek = kwotaZadatku(g.zadatek);
+  const z: Partial<Grupa> = { ...(osoby > 0 ? { gracze_reczne: osoby } : {}), ...(zadatek > 0 ? { zadatek } : {}), ...zmiany };
+  if (Object.keys(z).length) await zmienGrupe(db, grupaId, z);
   await ustawStatusPlanu(db, g, 'przyszla', grupaId);
 }
 

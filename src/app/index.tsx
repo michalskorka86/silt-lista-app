@@ -44,7 +44,7 @@ export default function Home() {
             ico="🗓️"
             poziomo
             nazwa="Plan dnia"
-            opis="Co spakować, które grupy przyjadą (dziś / jutro)"
+            opis="Co spakować i kto przyjedzie"
             onPress={() => router.push({ pathname: '/plan/[data]', params: { data: dzisISO() } })}
           />
         </View>

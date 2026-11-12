@@ -48,7 +48,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', justifyContent: 'center', gap: 14, paddingVertical: 20 },
   ico: { fontSize: 36 },
   textsCenter: { alignItems: 'center', gap: 2 },
-  textsLeft: { alignItems: 'flex-start', gap: 2 },
+  textsLeft: { alignItems: 'flex-start', gap: 2, flexShrink: 1 },
   name: { fontFamily: Fonts.extrabold, fontSize: 18 },
   sub: { fontFamily: Fonts.regular, fontSize: 12 },
 });

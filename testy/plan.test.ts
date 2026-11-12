@@ -9,6 +9,7 @@ import type { Atrakcja } from '../src/logika/cennik';
 import { dodajGrupe, utworzListe, wczytajDzien } from '../src/logika/lista';
 import {
   kafelkiPlanu,
+  kwotaZadatku,
   ladneImie,
   odhacz,
   polaczZPlanem,
@@ -134,6 +135,30 @@ test('poprawki z PIN-em: dodanie i zmiana grupy planu, liczby pakowania, usunię
   assert.equal(p.dzien!.pakowanie!.pb_kartony, 15);
   assert.equal(p.grupy.some((g) => g.id === 'p3'), false);
   assert.equal(await liczNiewyslane(db), 4);
+});
+
+test('zadatek z planu: kwota przechodzi do grupy, samo TAK nie wpisuje kwoty', async () => {
+  assert.equal(kwotaZadatku('200'), 200);
+  assert.equal(kwotaZadatku('TAK 200 zł'), 200);
+  assert.equal(kwotaZadatku('1 200'), 1200);
+  assert.equal(kwotaZadatku('150,50'), 150.5);
+  assert.equal(kwotaZadatku('TAK'), 0);
+  assert.equal(kwotaZadatku('NIE'), 0);
+  await planSoboty();
+  await zSerwera('plan_grupy', { id: 'p4', data: D, godzina: '15:00', organizator: 'OLA', atrakcja: 'emek', uwagi: '', osoby: 10, zadatek: 'TAK 300', kolejnosc: 3 });
+  const t = (await utworzListe(db, D, 'Monika'))!;
+  const p = await wczytajPlan(db, D);
+  const g1 = await dodajGrupe(db, D, t, 'Ola', EMEK, EMEK.pakiety[0]);
+  await polaczZPlanem(db, p.grupy[3], g1);
+  const g2 = await dodajGrupe(db, D, t, 'Damian', EMEK, EMEK.pakiety[0]);
+  await polaczZPlanem(db, p.grupy[1], g2);
+  const g3 = await dodajGrupe(db, D, t, 'Patrycja', EMEK, EMEK.pakiety[0]);
+  await polaczZPlanem(db, p.grupy[2], g3, { zadatek: 250 });
+  const dz = await wczytajDzien(db, D);
+  const zad = (id: string) => dz.grupy.find((g) => g.id === id)!.zadatek;
+  assert.equal(zad(g1), 300);
+  assert.equal(zad(g2), 0);
+  assert.equal(zad(g3), 250, 'kwota wpisana przy dodawaniu grupy');
 });
 
 test('ladneImie: wielkie litery → normalne, reszta bez zmian', () => {

@@ -7,7 +7,7 @@ import type { Platnosc, SprzetGracza, Wiersz } from '@/db/tabele';
 import type { Atrakcja, Cennik, Pakiet } from '@/logika/cennik';
 import { liczba, num, zl } from '@/logika/format';
 import { imionaZMowy } from '@/logika/glos';
-import { kafelkiPlanu, ladneImie, polaczZPlanem, type GrupaPlanu } from '@/logika/plan';
+import { bylZadatek, kafelkiPlanu, kwotaZadatku, ladneImie, polaczZPlanem, type GrupaPlanu } from '@/logika/plan';
 import { usePlan } from '@/hooks/useDane';
 import { podzialPlatnosci } from '@/logika/platnosc';
 import { brutto, doPola, netto, zPola } from '@/logika/vat';
@@ -121,9 +121,12 @@ function TrescNowaGrupa({ data, instruktorId, cennik, onZamknij }: PropsNowaGrup
   const plan = usePlan(data);
   const zPlanuLista = kafelkiPlanu(plan);
   const [zPlanu, setZPlanu] = useState<GrupaPlanu | null>(null);
+  const [zadatekPlanu, setZadatekPlanu] = useState('');
   const wybierzZPlanu = (g: GrupaPlanu) => {
     if (zPlanu?.id === g.id) return setZPlanu(null);
     setZPlanu(g);
+    const kw = kwotaZadatku(g.zadatek);
+    setZadatekPlanu(kw > 0 ? String(kw).replace('.', ',') : '');
     setOrg(ladneImie(g.organizator));
     setBrakOrg(false);
     const a = cennik?.atrakcje.find((x) => x.klucz === g.atrakcja);
@@ -149,7 +152,7 @@ function TrescNowaGrupa({ data, instruktorId, cennik, onZamknij }: PropsNowaGrup
     if (reczny) pakiet = { ...pakiet, typ: 'grupa', cena: zPola(Math.max(0, num(recznaKasa)), firma), limit: 0, extra: 0 };
     else if (firma) pakiet = { ...pakiet, cena: brutto(Math.max(0, num(fCena))) };
     const id = await dodajGrupe(db, data, instruktorId, org.trim(), atr, pakiet);
-    if (zPlanu) await polaczZPlanem(db, zPlanu, id);
+    if (zPlanu) await polaczZPlanem(db, zPlanu, id, zadatekPlanu.trim() ? { zadatek: Math.max(0, num(zadatekPlanu)) } : {});
     if (firma) {
       await zmienGrupe(db, id, {
         firma: 1,
@@ -264,6 +267,15 @@ function TrescNowaGrupa({ data, instruktorId, cennik, onZamknij }: PropsNowaGrup
                 {zPlanu.uwagi ? `\n${zPlanu.uwagi}` : ''}
               </Text>
             </View>
+          ) : null}
+          {zPlanu && bylZadatek(zPlanu.zadatek) ? (
+            <PoleLiczby
+              etykieta={`💰 Zadatek (zł) — w planie: ${zPlanu.zadatek}`}
+              value={zadatekPlanu}
+              onChangeText={setZadatekPlanu}
+              placeholder="wpisz kwotę zadatku"
+              tytul="Zadatek wpłacony przed przyjazdem (zł)"
+            />
           ) : null}
           <ListaPakietow pakiety={atr?.pakiety ?? []} wybrany={pk} onWybierz={setPk} />
           {reczny ? (

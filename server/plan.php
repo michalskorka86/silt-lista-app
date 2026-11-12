@@ -155,7 +155,7 @@ function wiersz_grupy(int $i, array $g, array $atrakcje): string
         . '<label class="f atr"><i>Atrakcja</i><select name="g[' . $i . '][atrakcja]">' . $opcje . '</select></label>'
         . '<label class="f uw"><i>Uwagi</i><textarea name="g[' . $i . '][uwagi]" rows="2" maxlength="500" placeholder="pakiet, ognisko, wiata…">' . r_h($g['uwagi'] ?? '') . '</textarea></label>'
         . '<label class="f os"><i>Osób</i><input name="g[' . $i . '][osoby]" value="' . ((int)($g['osoby'] ?? 0) ?: '') . '" inputmode="numeric" placeholder="0"></label>'
-        . '<label class="f zad"><i>Zadatek</i><input name="g[' . $i . '][zadatek]" value="' . r_h($zad) . '" list="zadatki" maxlength="20" placeholder="TAK / NIE"></label>'
+        . '<label class="f zad"><i>Zadatek</i><input name="g[' . $i . '][zadatek]" value="' . r_h($zad) . '" list="zadatki" maxlength="20" placeholder="TAK / 200"></label>'
         . '<div class="akc">' . $stan
         . '<button type="button" class="mini" data-gora title="Wyżej">↑</button><button type="button" class="mini" data-dol title="Niżej">↓</button>'
         . '<label class="usun" title="Usuń z planu"><input type="checkbox" name="g[' . $i . '][usun]" value="1"> 🗑</label></div>'
@@ -203,7 +203,8 @@ function widok_planu(array $plan, array $atrakcje, array $dni, string $komunikat
         . '<div class="sekcja"><h3>Grupy <span class="razem">razem osób: <b id="razem">0</b></span>'
         . '<button type="button" class="btn mal" id="sortuj">↕ Ułóż po godzinie</button></h3>'
         . '<div id="wiersze">' . $wiersze . '</div>'
-        . '<button type="button" class="btn" id="dodaj">＋ Dodaj wiersz</button></div>'
+        . '<button type="button" class="btn" id="dodaj">＋ Dodaj wiersz</button>'
+        . '<p class="info">Zadatek: wpisz kwotę (np. 200) — przejdzie na tablet do grupy. Samo TAK = instruktor wpisze kwotę przy dodawaniu grupy.</p></div>'
         . '<div class="sekcja"><h3>Do spakowania</h3>'
         . '<p class="info">Graczy w jednym czasie:</p><div class="siatka">' . $naraz . '</div>'
         . '<div class="siatka">' . $liczby . '</div>'

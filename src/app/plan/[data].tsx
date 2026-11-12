@@ -1,17 +1,19 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
-import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { OknoGrupyPlanu, OknoPakowania } from '@/components/plan/OknaPlanu';
+import { Kalendarz } from '@/components/ui/Kalendarz';
 import { useKomunikaty } from '@/components/ui/Komunikaty';
+import { Okno } from '@/components/ui/Okno';
 import { Fonts, Size } from '@/constants/theme';
 import type { PlanDzien } from '@/db/tabele';
 import { useCennik, usePlan } from '@/hooks/useDane';
 import { atrakcja as znajdzAtrakcje } from '@/logika/cennik';
 import { dataPL, dzisISO } from '@/logika/format';
-import { odhacz, POZYCJE_PAKOWANIA, rzeczyDoZabrania, sumyPlanu, ustawStatusPlanu, zalatwiona, type GrupaPlanu } from '@/logika/plan';
+import { datyPlanu, odhacz, POZYCJE_PAKOWANIA, rzeczyDoZabrania, sumyPlanu, ustawStatusPlanu, zalatwiona, type GrupaPlanu } from '@/logika/plan';
 import { useSync } from '@/sync/SyncProvider';
 import { useMotyw } from '@/theme/motyw';
 
@@ -45,6 +47,17 @@ export default function PlanDnia() {
   const [edycja, setEdycja] = useState(() => Date.now() < edycjaDo);
   const [oknoGrupy, setOknoGrupy] = useState<{ data: string; grupa?: GrupaPlanu } | null>(null);
   const [oknoPak, setOknoPak] = useState<{ data: string; dzien: PlanDzien | null } | null>(null);
+  const [kalendarz, setKalendarz] = useState(false);
+  const [dniZPlanem, setDniZPlanem] = useState<Set<string>>(new Set());
+  const { width } = useWindowDimensions();
+  const waski = width < 760; // telefon: pasek w dwóch rzędach, przyciski grupy pod spodem
+
+  useEffect(() => {
+    if (!kalendarz) return;
+    const d = new Date();
+    d.setMonth(d.getMonth() - 2);
+    datyPlanu(db, dzisISO(d)).then((x) => setDniZPlanem(new Set(x)));
+  }, [kalendarz, db]);
 
   const dzis = dzisISO();
   const jutro = przesun(dzis, 1);
@@ -83,47 +96,115 @@ export default function PlanDnia() {
       onOk: () => ustawStatusPlanu(db, g, 'nie'),
     });
 
+  const nawigacja = (
+    <>
+      <Pressable onPress={() => setData(przesun(data, -1))} style={[styles.strz, { backgroundColor: c.surface2, borderColor: c.border }]} hitSlop={6} accessibilityLabel="Dzień wcześniej">
+        <Text style={[styles.strzTxt, { color: c.text }]}>←</Text>
+      </Pressable>
+      <Pressable onPress={() => setKalendarz(true)} style={[styles.chip, waski && styles.rosnie, { borderColor: c.border, backgroundColor: c.surface2 }]} accessibilityLabel="Wybierz dzień">
+        <Text style={[styles.chipTxt, { color: c.text }]}>📅 {waski ? dataPL(data).slice(0, 5) : 'Wybierz dzień'}</Text>
+      </Pressable>
+      <Pressable onPress={() => setData(przesun(data, 1))} style={[styles.strz, { backgroundColor: c.surface2, borderColor: c.border }]} hitSlop={6} accessibilityLabel="Dzień później">
+        <Text style={[styles.strzTxt, { color: c.text }]}>→</Text>
+      </Pressable>
+      {[
+        { iso: dzis, tekst: 'Dziś' },
+        { iso: jutro, tekst: 'Jutro' },
+      ].map((d) => (
+        <Pressable
+          key={d.tekst}
+          onPress={() => setData(d.iso)}
+          style={[styles.chip, { borderColor: data === d.iso ? c.accent : c.border, backgroundColor: data === d.iso ? 'rgba(249,115,22,0.12)' : c.surface2 }]}>
+          <Text style={[styles.chipTxt, { color: data === d.iso ? c.accent : c.text }]}>{d.tekst}</Text>
+        </Pressable>
+      ))}
+    </>
+  );
+
   return (
     <View style={[styles.root, { backgroundColor: c.bg }]}>
-      {/* pasek: ✕, dzień, strzałki, dziś / jutro, edycja */}
+      {/* pasek: ✕, dzień, edycja · strzałki, kalendarz, dziś / jutro (na telefonie w dwóch rzędach) */}
       <View style={[styles.bar, { paddingTop: insets.top + 8, backgroundColor: c.surface, borderBottomColor: c.border }]}>
-        <Pressable onPress={zamknij} style={[styles.x, { backgroundColor: c.surface2, borderColor: c.border }]} hitSlop={8} accessibilityLabel="Zamknij plan">
-          <Text style={[styles.xTxt, { color: c.text }]}>✕</Text>
-        </Pressable>
-        <Pressable onPress={() => setData(przesun(data, -1))} style={[styles.strz, { backgroundColor: c.surface2, borderColor: c.border }]} hitSlop={6}>
-          <Text style={[styles.strzTxt, { color: c.text }]}>←</Text>
-        </Pressable>
-        <View style={styles.tytulWrap}>
-          <Text style={[styles.tytul, { color: c.text }]} numberOfLines={1}>
-            🗓️ {dzienTyg(data)} <Text style={{ color: c.accent }}>{dataPL(data)}</Text>
-          </Text>
-          <Text style={[styles.podtytul, { color: c.text2 }]} numberOfLines={1}>
-            {data === dzis ? 'dziś · ' : data === jutro ? 'jutro · ' : ''}
-            {grupy.length ? `${grupy.length} grup · ${sumy.osoby} osób${czeka && czeka !== grupy.length ? ` · czeka ${czeka}` : ''}` : 'brak planu'}
-          </Text>
-        </View>
-        <Pressable onPress={() => setData(przesun(data, 1))} style={[styles.strz, { backgroundColor: c.surface2, borderColor: c.border }]} hitSlop={6}>
-          <Text style={[styles.strzTxt, { color: c.text }]}>→</Text>
-        </Pressable>
-        {[
-          { iso: dzis, tekst: 'Dziś' },
-          { iso: jutro, tekst: 'Jutro' },
-        ].map((d) => (
-          <Pressable
-            key={d.tekst}
-            onPress={() => setData(d.iso)}
-            style={[styles.chip, { borderColor: data === d.iso ? c.accent : c.border, backgroundColor: data === d.iso ? 'rgba(249,115,22,0.12)' : c.surface2 }]}>
-            <Text style={[styles.chipTxt, { color: data === d.iso ? c.accent : c.text }]}>{d.tekst}</Text>
+        <View style={styles.barRzad}>
+          <Pressable onPress={zamknij} style={[styles.x, { backgroundColor: c.surface2, borderColor: c.border }]} hitSlop={8} accessibilityLabel="Zamknij plan">
+            <Text style={[styles.xTxt, { color: c.text }]}>✕</Text>
           </Pressable>
-        ))}
-        <Pressable
-          onPress={wlaczEdycje}
-          style={[styles.chip, { borderColor: edycja ? c.accent : c.border, backgroundColor: edycja ? c.accent : c.surface2 }]}>
-          <Text style={[styles.chipTxt, { color: edycja ? '#fff' : c.text }]}>{edycja ? '✓ Gotowe' : '✏️ Edytuj'}</Text>
-        </Pressable>
+          <View style={styles.tytulWrap}>
+            <Text style={[styles.tytul, { color: c.text }]} numberOfLines={1}>
+              🗓️ {dzienTyg(data)} <Text style={{ color: c.accent }}>{dataPL(data)}</Text>
+            </Text>
+            <Text style={[styles.podtytul, { color: c.text2 }]} numberOfLines={1}>
+              {data === dzis ? 'dziś · ' : data === jutro ? 'jutro · ' : ''}
+              {grupy.length ? `${grupy.length} grup · ${sumy.osoby} osób${czeka && czeka !== grupy.length ? ` · czeka ${czeka}` : ''}` : 'brak planu'}
+            </Text>
+          </View>
+          {waski ? null : nawigacja}
+          <Pressable
+            onPress={wlaczEdycje}
+            style={[styles.chip, { borderColor: edycja ? c.accent : c.border, backgroundColor: edycja ? c.accent : c.surface2 }]}>
+            <Text style={[styles.chipTxt, { color: edycja ? '#fff' : c.text }]}>{edycja ? '✓ Gotowe' : '✏️ Edytuj'}</Text>
+          </Pressable>
+        </View>
+        {waski ? <View style={styles.barRzad}>{nawigacja}</View> : null}
       </View>
 
       <ScrollView contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + 24 }]}>
+        {/* ── Grupy ── */}
+        {grupy.map((g, i) => {
+          const a = znajdzAtrakcje(cennik, g.atrakcja);
+          const ciemna = zalatwiona(g);
+          return (
+            <View key={g.id} style={[styles.grupa, waski && styles.grupaWaska, { backgroundColor: c.surface, borderColor: c.border, borderLeftColor: a?.kolor ?? c.border2, opacity: ciemna ? 0.45 : 1 }]}>
+              <View style={[styles.gLewa, waski && styles.gLewaWaska]}>
+                <Text style={[styles.gNr, { color: c.text3 }]}>{i + 1}</Text>
+                <Text style={[styles.gGodz, { color: c.text }]}>{g.godzina || '—'}</Text>
+              </View>
+              <View style={styles.gSrodek}>
+                <View style={styles.gRzad}>
+                  <Text style={[styles.gOrg, { color: c.text }]}>{g.organizator}</Text>
+                  {a ? (
+                    <View style={[styles.gAtr, { backgroundColor: a.kolor }]}>
+                      <Text style={styles.gAtrTxt}>{a.stat === 'GOTHA' ? 'GOTCHA' : a.stat.replace('PAINTBALL ', '')}</Text>
+                    </View>
+                  ) : null}
+                  <Text style={[styles.gOs, { color: c.text }]}>👥 {g.osoby || '?'}</Text>
+                  {g.zadatek ? (
+                    <Text style={[styles.gZad, { color: /^nie$/i.test(g.zadatek) ? c.red : c.green }]}>
+                      zadatek: {g.zadatek}
+                    </Text>
+                  ) : null}
+                </View>
+                {g.uwagi ? <Text style={[styles.gUwagi, { color: c.text }]}>{g.uwagi}</Text> : null}
+              </View>
+              <View style={[styles.gPrawa, waski && styles.gPrawaWaska]}>
+                {edycja ? (
+                  <Pressable onPress={() => setOknoGrupy({ data, grupa: g })} style={[styles.btn, waski && styles.rosnie, { borderColor: c.accent }]}>
+                    <Text style={[styles.btnTxt, { color: c.accent }]}>✏️ Popraw</Text>
+                  </Pressable>
+                ) : g.naLiscie ? (
+                  <Text style={[styles.stan, waski && styles.rosnie, { color: c.green }]}>✅ na liście{g.instruktor ? `\n${g.instruktor}` : ''}</Text>
+                ) : g.status ? (
+                  <>
+                    <Text style={[styles.stan, waski && styles.rosnie, { color: g.status === 'nie' ? c.red : c.green }]}>{g.status === 'nie' ? '❌ nie przyszła' : '✅ przyszła'}</Text>
+                    <Pressable onPress={() => ustawStatusPlanu(db, g, '')} style={[styles.btn, waski && styles.rosnie, { borderColor: c.border }]}>
+                      <Text style={[styles.btnTxt, { color: c.text2 }]}>↩ Cofnij</Text>
+                    </Pressable>
+                  </>
+                ) : (
+                  <>
+                    <Pressable onPress={() => ustawStatusPlanu(db, g, 'przyszla')} style={[styles.btn, waski && styles.rosnie, { borderColor: c.green, backgroundColor: 'rgba(34,197,94,0.1)' }]}>
+                      <Text style={[styles.btnTxt, { color: c.green }]}>✅ Przyszła</Text>
+                    </Pressable>
+                    <Pressable onPress={() => nieprzyszla(g)} style={[styles.btn, waski && styles.rosnie, { borderColor: 'rgba(239,68,68,0.4)' }]}>
+                      <Text style={[styles.btnTxt, { color: c.red }]}>❌ Nie przyszła</Text>
+                    </Pressable>
+                  </>
+                )}
+              </View>
+            </View>
+          );
+        })}
+
         {/* ── Do spakowania ── */}
         {jestPakowanie || edycja ? (
           <View style={[styles.karta, { backgroundColor: c.surface, borderColor: c.border }]}>
@@ -193,62 +274,6 @@ export default function PlanDnia() {
           </View>
         ) : null}
 
-        {/* ── Grupy ── */}
-        {grupy.map((g, i) => {
-          const a = znajdzAtrakcje(cennik, g.atrakcja);
-          const ciemna = zalatwiona(g);
-          return (
-            <View key={g.id} style={[styles.grupa, { backgroundColor: c.surface, borderColor: c.border, borderLeftColor: a?.kolor ?? c.border2, opacity: ciemna ? 0.45 : 1 }]}>
-              <View style={styles.gLewa}>
-                <Text style={[styles.gNr, { color: c.text3 }]}>{i + 1}</Text>
-                <Text style={[styles.gGodz, { color: c.text }]}>{g.godzina || '—'}</Text>
-              </View>
-              <View style={styles.gSrodek}>
-                <View style={styles.gRzad}>
-                  <Text style={[styles.gOrg, { color: c.text }]}>{g.organizator}</Text>
-                  {a ? (
-                    <View style={[styles.gAtr, { backgroundColor: a.kolor }]}>
-                      <Text style={styles.gAtrTxt}>{a.stat === 'GOTHA' ? 'GOTCHA' : a.stat.replace('PAINTBALL ', '')}</Text>
-                    </View>
-                  ) : null}
-                  <Text style={[styles.gOs, { color: c.text }]}>👥 {g.osoby || '?'}</Text>
-                  {g.zadatek ? (
-                    <Text style={[styles.gZad, { color: /^nie$/i.test(g.zadatek) ? c.red : c.green }]}>
-                      zadatek: {g.zadatek}
-                    </Text>
-                  ) : null}
-                </View>
-                {g.uwagi ? <Text style={[styles.gUwagi, { color: c.text }]}>{g.uwagi}</Text> : null}
-              </View>
-              <View style={styles.gPrawa}>
-                {edycja ? (
-                  <Pressable onPress={() => setOknoGrupy({ data, grupa: g })} style={[styles.btn, { borderColor: c.accent }]}>
-                    <Text style={[styles.btnTxt, { color: c.accent }]}>✏️ Popraw</Text>
-                  </Pressable>
-                ) : g.naLiscie ? (
-                  <Text style={[styles.stan, { color: c.green }]}>✅ na liście{g.instruktor ? `\n${g.instruktor}` : ''}</Text>
-                ) : g.status ? (
-                  <>
-                    <Text style={[styles.stan, { color: g.status === 'nie' ? c.red : c.green }]}>{g.status === 'nie' ? '❌ nie przyszła' : '✅ przyszła'}</Text>
-                    <Pressable onPress={() => ustawStatusPlanu(db, g, '')} style={[styles.btn, { borderColor: c.border }]}>
-                      <Text style={[styles.btnTxt, { color: c.text2 }]}>↩ Cofnij</Text>
-                    </Pressable>
-                  </>
-                ) : (
-                  <>
-                    <Pressable onPress={() => ustawStatusPlanu(db, g, 'przyszla')} style={[styles.btn, { borderColor: c.green, backgroundColor: 'rgba(34,197,94,0.1)' }]}>
-                      <Text style={[styles.btnTxt, { color: c.green }]}>✅ Przyszła</Text>
-                    </Pressable>
-                    <Pressable onPress={() => nieprzyszla(g)} style={[styles.btn, { borderColor: 'rgba(239,68,68,0.4)' }]}>
-                      <Text style={[styles.btnTxt, { color: c.red }]}>❌ Nie przyszła</Text>
-                    </Pressable>
-                  </>
-                )}
-              </View>
-            </View>
-          );
-        })}
-
         {edycja ? (
           <Pressable onPress={() => setOknoGrupy({ data })} style={({ pressed }) => [styles.dodaj, { borderColor: pressed ? c.accent : c.border2 }]}>
             <Text style={[styles.dodajTxt, { color: c.text2 }]}>＋ Dodaj grupę do planu</Text>
@@ -269,6 +294,18 @@ export default function PlanDnia() {
         ) : null}
       </ScrollView>
 
+      <Okno widoczne={kalendarz} onZamknij={() => setKalendarz(false)} tytul="📅 Wybierz dzień planu" podtytul="Kropka = dzień z planem" rozmiar="sm">
+        {kalendarz ? (
+          <Kalendarz
+            wybrana={data}
+            zaznaczone={dniZPlanem}
+            onWybierz={(iso) => {
+              setData(iso);
+              setKalendarz(false);
+            }}
+          />
+        ) : null}
+      </Okno>
       <OknoGrupyPlanu stan={oknoGrupy} cennik={cennik} onZamknij={() => setOknoGrupy(null)} />
       <OknoPakowania stan={oknoPak} cennik={cennik} onZamknij={() => setOknoPak(null)} />
     </View>
@@ -277,12 +314,14 @@ export default function PlanDnia() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  bar: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingBottom: 8, borderBottomWidth: 1, flexWrap: 'wrap' },
+  bar: { paddingHorizontal: 12, paddingBottom: 8, borderBottomWidth: 1, gap: 8 },
+  barRzad: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  rosnie: { flex: 1, alignItems: 'center' },
   x: { width: 48, height: 48, borderRadius: 12, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   xTxt: { fontFamily: Fonts.black, fontSize: 20 },
   strz: { borderWidth: 1, borderRadius: 10, paddingVertical: 10, paddingHorizontal: 14 },
   strzTxt: { fontFamily: Fonts.bold, fontSize: 16 },
-  tytulWrap: { flex: 1, minWidth: 180, paddingHorizontal: 4 },
+  tytulWrap: { flex: 1, minWidth: 0, paddingHorizontal: 4 },
   tytul: { fontFamily: Fonts.extrabold, fontSize: 18 },
   podtytul: { fontFamily: Fonts.regular, fontSize: 12, marginTop: 1 },
   chip: { borderWidth: 1, borderRadius: 10, paddingVertical: 11, paddingHorizontal: 14 },
@@ -295,7 +334,7 @@ const styles = StyleSheet.create({
   mini: { borderWidth: 1, borderRadius: 8, paddingVertical: 7, paddingHorizontal: 12 },
   miniTxt: { fontFamily: Fonts.bold, fontSize: 13 },
   kafle: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  kafel: { flexGrow: 1, flexBasis: 200, borderWidth: 2, borderRadius: 12, paddingVertical: 12, paddingHorizontal: 14 },
+  kafel: { flexGrow: 1, flexBasis: 150, borderWidth: 2, borderRadius: 12, paddingVertical: 12, paddingHorizontal: 14 },
   kafelLiczba: { fontFamily: Fonts.black, fontSize: 30, lineHeight: 36 },
   kafelNazwa: { fontFamily: Fonts.semibold, fontSize: 13 },
   kafelChk: { position: 'absolute', top: 8, right: 12, fontFamily: Fonts.black, fontSize: 22 },
@@ -309,6 +348,8 @@ const styles = StyleSheet.create({
   uwagiDnia: { fontFamily: Fonts.semibold, fontSize: 14 },
   grupa: { flexDirection: 'row', borderWidth: 1, borderLeftWidth: 8, borderRadius: Size.r2, padding: 12, gap: 12, alignItems: 'center' },
   gLewa: { width: 92, alignItems: 'flex-start' },
+  gLewaWaska: { width: 'auto', flexDirection: 'row', alignItems: 'baseline', gap: 8 },
+  grupaWaska: { flexDirection: 'column', alignItems: 'stretch', gap: 8 },
   gNr: { fontFamily: Fonts.bold, fontSize: 11 },
   gGodz: { fontFamily: Fonts.black, fontSize: 20 },
   gSrodek: { flex: 1, gap: 6 },
@@ -320,6 +361,7 @@ const styles = StyleSheet.create({
   gZad: { fontFamily: Fonts.bold, fontSize: 13 },
   gUwagi: { fontFamily: Fonts.semibold, fontSize: 15, lineHeight: 21 },
   gPrawa: { width: 150, gap: 8, alignItems: 'stretch' },
+  gPrawaWaska: { width: 'auto', flexDirection: 'row', alignItems: 'center' },
   stan: { fontFamily: Fonts.extrabold, fontSize: 14, textAlign: 'center' },
   btn: { borderWidth: 1, borderRadius: 10, paddingVertical: 11, paddingHorizontal: 10, alignItems: 'center' },
   btnSrodek: { alignSelf: 'center', paddingHorizontal: 20, marginTop: 8 },
