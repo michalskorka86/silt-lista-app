@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View, type ImageSourcePropType } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { OknoGrupyPlanu, OknoPakowania } from '@/components/plan/OknaPlanu';
@@ -16,6 +16,14 @@ import { dataPL, dzisISO } from '@/logika/format';
 import { datyPlanu, odhacz, POZYCJE_PAKOWANIA, rzeczyDoZabrania, sumyPlanu, ustawStatusPlanu, zalatwiona, type GrupaPlanu } from '@/logika/plan';
 import { useSync } from '@/sync/SyncProvider';
 import { useMotyw } from '@/theme/motyw';
+
+/** Zdjęcia przy „Do spakowania” (zamiast emoji) — żeby instruktor od razu wiedział, który karton wziąć. */
+const OBRAZY: Partial<Record<string, ImageSourcePropType>> = {
+  pb_kartony: require('@/assets/images/plan/kulki-pb.jpg'),
+  em_kartony: require('@/assets/images/plan/kulki-em.jpg'),
+  maski_worki: require('@/assets/images/plan/maski.jpg'),
+  gotcha_worki: require('@/assets/images/plan/maski-gotcha.jpg'),
+};
 
 const DNI = ['NIEDZIELA', 'PONIEDZIAŁEK', 'WTOREK', 'ŚRODA', 'CZWARTEK', 'PIĄTEK', 'SOBOTA'];
 const dzienTyg = (iso: string) => DNI[new Date(`${iso}T12:00:00`).getDay()];
@@ -227,13 +235,19 @@ export default function PlanDnia() {
                     <Pressable
                       key={p.klucz}
                       onPress={() => odhacz(db, data, p.klucz, !ok)}
-                      style={[styles.kafel, { borderColor: ok ? c.green : c.border, backgroundColor: ok ? 'rgba(34,197,94,0.12)' : c.surface2 }]}>
-                      <Text style={[styles.kafelLiczba, { color: ok ? c.green : c.text }]}>
-                        {p.ikona} {pak[p.klucz]}
-                      </Text>
-                      <Text style={[styles.kafelNazwa, { color: c.text2 }]}>
-                        {p.jedn} · {p.nazwa}
-                      </Text>
+                      style={[styles.kafel, waski && styles.kafelWaski, { borderColor: ok ? c.green : c.border, backgroundColor: ok ? 'rgba(34,197,94,0.12)' : c.surface2 }]}>
+                      <View style={styles.kafelRzad}>
+                        {OBRAZY[p.klucz] ? <Image source={OBRAZY[p.klucz]!} style={styles.kafelObraz} resizeMode="contain" /> : null}
+                        <View style={styles.flex1}>
+                          <Text style={[styles.kafelLiczba, { color: ok ? c.green : c.text }]}>
+                            {OBRAZY[p.klucz] ? '' : `${p.ikona} `}
+                            {pak[p.klucz]}
+                          </Text>
+                          <Text style={[styles.kafelNazwa, { color: c.text2 }]}>
+                            {p.jedn} · {p.nazwa}
+                          </Text>
+                        </View>
+                      </View>
                       <Text style={[styles.kafelChk, { color: ok ? c.green : c.text3 }]}>{ok ? '✓' : '○'}</Text>
                     </Pressable>
                   );
@@ -336,6 +350,10 @@ const styles = StyleSheet.create({
   kafle: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   kafel: { flexGrow: 1, flexBasis: 150, borderWidth: 2, borderRadius: 12, paddingVertical: 12, paddingHorizontal: 14 },
   kafelLiczba: { fontFamily: Fonts.black, fontSize: 30, lineHeight: 36 },
+  kafelWaski: { flexBasis: '100%' },
+  kafelRzad: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  kafelObraz: { width: 72, height: 72, borderRadius: 10, backgroundColor: '#fff' },
+  flex1: { flex: 1, minWidth: 0 },
   kafelNazwa: { fontFamily: Fonts.semibold, fontSize: 13 },
   kafelChk: { position: 'absolute', top: 8, right: 12, fontFamily: Fonts.black, fontSize: 22 },
   narazRzad: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6 },
