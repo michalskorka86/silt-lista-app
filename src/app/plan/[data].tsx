@@ -142,50 +142,61 @@ export default function PlanDnia() {
         {grupy.map((g, i) => {
           const a = znajdzAtrakcje(cennik, g.atrakcja);
           const ciemna = zalatwiona(g);
+          // cała karta w kolorze atrakcji (jak w rozpisce z Excela) — od razu widać, co to za grupa
+          const kol = a?.kolor;
+          const T = kol ? '#fff' : c.text;
+          const T2 = kol ? 'rgba(255,255,255,0.85)' : c.text3;
+          const ciemne = 'rgba(0,0,0,0.28)';
           return (
-            <View key={g.id} style={[styles.grupa, waski && styles.grupaWaska, { backgroundColor: c.surface, borderColor: c.border, borderLeftColor: a?.kolor ?? c.border2, opacity: ciemna ? 0.45 : 1 }]}>
+            <View
+              key={g.id}
+              style={[
+                styles.grupa,
+                waski && styles.grupaWaska,
+                { backgroundColor: kol ?? c.surface, borderColor: kol ?? c.border, borderLeftColor: kol ?? c.border2, opacity: ciemna ? 0.38 : 1 },
+              ]}>
               <View style={[styles.gLewa, waski && styles.gLewaWaska]}>
-                <Text style={[styles.gNr, { color: c.text3 }]}>{i + 1}</Text>
-                <Text style={[styles.gGodz, { color: c.text }]}>{g.godzina || '—'}</Text>
+                <Text style={[styles.gNr, { color: T2 }]}>{i + 1}</Text>
+                <Text style={[styles.gGodz, { color: T }]}>{g.godzina || '—'}</Text>
               </View>
               <View style={styles.gSrodek}>
                 <View style={styles.gRzad}>
-                  <Text style={[styles.gOrg, { color: c.text }]}>{g.organizator}</Text>
+                  <Text style={[styles.gOrg, { color: T }]}>{g.organizator}</Text>
                   {a ? (
-                    <View style={[styles.gAtr, { backgroundColor: a.kolor }]}>
+                    <View style={[styles.gAtr, { backgroundColor: ciemne }]}>
                       <Text style={styles.gAtrTxt}>{a.stat === 'GOTHA' ? 'GOTCHA' : a.stat.replace('PAINTBALL ', '')}</Text>
                     </View>
                   ) : null}
-                  <Text style={[styles.gOs, { color: c.text }]}>👥 {g.osoby || '?'}</Text>
+                  <Text style={[styles.gOs, { color: T }]}>👥 {g.osoby || '?'}</Text>
                   {g.zadatek ? (
-                    <Text style={[styles.gZad, { color: /^nie$/i.test(g.zadatek) ? c.red : c.green }]}>
-                      zadatek: {g.zadatek}
-                    </Text>
+                    <View style={[styles.gAtr, { backgroundColor: kol ? ciemne : 'transparent' }]}>
+                      <Text style={[styles.gZad, { color: kol ? '#fff' : /^nie$/i.test(g.zadatek) ? c.red : c.green }]}>zadatek: {g.zadatek}</Text>
+                    </View>
                   ) : null}
                 </View>
-                {g.uwagi ? <Text style={[styles.gUwagi, { color: c.text }]}>{g.uwagi}</Text> : null}
+                {g.uwagi ? <Text style={[styles.gUwagi, { color: T }]}>{g.uwagi}</Text> : null}
               </View>
               <View style={[styles.gPrawa, waski && styles.gPrawaWaska]}>
                 {edycja ? (
-                  <Pressable onPress={() => setOknoGrupy({ data, grupa: g })} style={[styles.btn, waski && styles.rosnie, { borderColor: c.accent }]}>
-                    <Text style={[styles.btnTxt, { color: c.accent }]}>✏️ Popraw</Text>
+                  <Pressable onPress={() => setOknoGrupy({ data, grupa: g })} style={[styles.btn, waski && styles.rosnie, { borderColor: kol ? '#fff' : c.accent, backgroundColor: kol ? ciemne : 'transparent' }]}>
+                    <Text style={[styles.btnTxt, { color: kol ? '#fff' : c.accent }]}>✏️ Popraw</Text>
                   </Pressable>
                 ) : g.naLiscie ? (
-                  <Text style={[styles.stan, waski && styles.rosnie, { color: c.green }]}>✅ na liście{g.instruktor ? `\n${g.instruktor}` : ''}</Text>
+                  <Text style={[styles.stan, waski && styles.rosnie, { color: kol ? '#fff' : c.green }]}>✅ na liście{g.instruktor ? `\n${g.instruktor}` : ''}</Text>
                 ) : g.status ? (
                   <>
-                    <Text style={[styles.stan, waski && styles.rosnie, { color: g.status === 'nie' ? c.red : c.green }]}>{g.status === 'nie' ? '❌ nie przyszła' : '✅ przyszła'}</Text>
-                    <Pressable onPress={() => ustawStatusPlanu(db, g, '')} style={[styles.btn, waski && styles.rosnie, { borderColor: c.border }]}>
-                      <Text style={[styles.btnTxt, { color: c.text2 }]}>↩ Cofnij</Text>
+                    <Text style={[styles.stan, waski && styles.rosnie, { color: kol ? '#fff' : g.status === 'nie' ? c.red : c.green }]}>{g.status === 'nie' ? '❌ nie przyszła' : '✅ przyszła'}</Text>
+                    <Pressable onPress={() => ustawStatusPlanu(db, g, '')} style={[styles.btn, waski && styles.rosnie, { borderColor: kol ? '#fff' : c.border, backgroundColor: kol ? ciemne : 'transparent' }]}>
+                      <Text style={[styles.btnTxt, { color: kol ? '#fff' : c.text2 }]}>↩ Cofnij</Text>
                     </Pressable>
                   </>
                 ) : (
                   <>
-                    <Pressable onPress={() => ustawStatusPlanu(db, g, 'przyszla')} style={[styles.btn, waski && styles.rosnie, { borderColor: c.green, backgroundColor: 'rgba(34,197,94,0.1)' }]}>
-                      <Text style={[styles.btnTxt, { color: c.green }]}>✅ Przyszła</Text>
+                    <Pressable onPress={() => ustawStatusPlanu(db, g, 'przyszla')} style={[styles.btn, waski && styles.rosnie, kol ? { borderColor: '#fff', backgroundColor: '#fff' } : { borderColor: c.green, backgroundColor: 'rgba(34,197,94,0.1)' }]}>
+                      <Text style={[styles.btnTxt, { color: kol ? '#15803d' : c.green }]}>✅ Przyszła</Text>
                     </Pressable>
-                    <Pressable onPress={() => nieprzyszla(g)} style={[styles.btn, waski && styles.rosnie, { borderColor: 'rgba(239,68,68,0.4)' }]}>
-                      <Text style={[styles.btnTxt, { color: c.red }]}>❌ Nie przyszła</Text>
+                    <Pressable onPress={() => nieprzyszla(g)} style={[styles.btn, waski && styles.rosnie, kol ? { borderColor: 'rgba(255,255,255,0.6)', backgroundColor: ciemne } : { borderColor: 'rgba(239,68,68,0.4)' }]}>
+                      <Text style={[styles.btnTxt, { color: kol ? '#fff' : c.red }]}>❌ Nie przyszła</Text>
                     </Pressable>
                   </>
                 )}
